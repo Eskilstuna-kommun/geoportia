@@ -98,6 +98,9 @@ catalog:
     #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/acme-corp.yaml
     #   rules:
     #     - allow: [User, Group]
+  providers:
+    postgresql:
+      uri: "postgresql://postgres:postgres@localhost:15432/postgres"
 
 kubernetes:
   # see https://backstage.io/docs/features/kubernetes/configuration for kubernetes configuration options
