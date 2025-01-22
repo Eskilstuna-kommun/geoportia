@@ -1,0 +1,12 @@
+services:
+  postgis:
+    image: postgis/postgis
+    ports:
+      - 15432:5432
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    volumes:
+      - type: bind
+        source: ./demo.sql
+        target: /docker-entrypoint-initdb.d/demo.sql
