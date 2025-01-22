@@ -37,6 +37,11 @@ import { CatalogGraphPage } from '@backstage/plugin-catalog-graph';
 import { RequirePermission } from '@backstage/plugin-permission-react';
 import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
 
+import { githubAuthApiRef } from '@backstage/core-plugin-api';
+import { UnifiedThemeProvider } from '@backstage/theme';
+import { eskilstunaTheme } from './theme/eskilstuna';
+import WbSunny from '@material-ui/icons/WbSunny';
+
 const app = createApp({
   apis,
   bindRoutes({ bind }) {
@@ -57,8 +62,32 @@ const app = createApp({
     });
   },
   components: {
-    SignInPage: props => <SignInPage {...props} auto providers={['guest']} />,
+    SignInPage: props => (
+      <SignInPage
+        {...props}
+        auto
+        provider={{
+          id: 'github-auth-provider',
+          title: 'GitHub',
+          message: 'Sign in using GitHub',
+          apiRef: githubAuthApiRef,
+        }}
+      />
+    ),
   },
+  themes: [
+    {
+      id: 'eskilstuna',
+      title: 'Eskilstuna',
+      variant: 'light',
+      icon: <WbSunny />,
+      Provider: ({ children }) => (
+        <UnifiedThemeProvider theme={eskilstunaTheme}>
+          {children}
+        </UnifiedThemeProvider>
+      ),
+    },
+  ],
 });
 
 const routes = (
