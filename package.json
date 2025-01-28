@@ -52,5 +52,9 @@
       "prettier --write"
     ]
   },
-  "packageManager": "yarn@4.4.1"
+  "packageManager": "yarn@4.4.1",
+  "dependencies": {
+    "@backstage/repo-tools": "^0.12.1",
+    "@useoptic/optic": "^1.0.5"
+  }
 }

@@ -1,0 +1,268 @@
+openapi: "3.0.0"
+info:
+  version: "1"
+  title: geoportia-metadata
+  description: ""
+paths:
+  /databasspecifikation/{database}/{table}:
+    get:
+      operationId: "GetTableDescription"
+      description: ""
+      security:
+        - {}
+        - JWT: []
+      parameters:
+        - in: "path"
+          name: "database"
+          required: true
+          schema:
+            type: "string"
+        - in: "path"
+          name: "table"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TableResponse"
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    post:
+      operationId: "CreateTableDescription"
+      description: ""
+      security:
+        - {}
+        - JWT: []
+      parameters:
+        - in: "path"
+          name: "database"
+          required: true
+          schema:
+            type: "string"
+        - in: "path"
+          name: "table"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TableCreate"
+      responses:
+        200:
+          description: "New version of existing table description created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TableResponse"
+        201:
+          description: "New table description created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TableResponse"
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /databasspecifikation/{database}/{table}/{version}:
+    get:
+      operationId: "GetTableDescriptionAtVersion"
+      description: ""
+      security:
+        - {}
+        - JWT: []
+      parameters:
+        - in: "path"
+          name: "database"
+          required: true
+          schema:
+            type: "string"
+        - in: "path"
+          name: "table"
+          required: true
+          schema:
+            type: "string"
+        - in: "path"
+          name: "version"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TableResponse"
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+  /databasspecifikation/{database}/{table}/{version}/activate:
+    post:
+      operationId: "ActivateTableDescriptionVersion"
+      description: ""
+      security:
+        - {}
+        - JWT: []
+      parameters:
+        - in: "path"
+          name: "database"
+          required: true
+          schema:
+            type: "string"
+        - in: "path"
+          name: "table"
+          required: true
+          schema:
+            type: "string"
+        - in: "path"
+          name: "version"
+          required: true
+          schema:
+            type: "integer"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TableResponse"
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+components:
+  securitySchemes:
+    JWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    ErrorResponse:
+      description: An error response from the backend.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            name:
+              type: string
+            message:
+              type: string
+          required:
+            - name
+            - message
+        request:
+          type: object
+          properties:
+            method:
+              type: string
+            url:
+              type: string
+          required:
+            - method
+            - url
+        response:
+          type: object
+          properties:
+            statusCode:
+              type: number
+          required:
+            - statusCode
+      required:
+        - error
+        - request
+        - response
+    TableResponse:
+      type: object
+      required: [database, name, version, active, title, owner, properties, attributes]
+      additionalProperties: false
+      properties:
+        database:
+          nullable: false
+          type: "string"
+        name:
+          nullable: false
+          type: "string"
+        version:
+          nullable: false
+          type: "integer"
+        active:
+          nullable: false
+          type: "boolean"
+        title:
+          nullable: false
+          type: "string"
+        owner:
+          nullable: false
+          type: "string"
+        properties:
+          nullable: false
+          type: "object"
+          additionalProperties:
+            anyOf:
+              - type: "string"
+              - type: "number"
+              - type: "boolean"
+        attributes:
+          nullable: false
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Attribute"
+    Attribute:
+      type: object
+      required: [name, title, type, properties]
+      additionalProperties: false
+      properties:
+        name:
+          nullable: false
+          type: "string"
+        title:
+          nullable: false
+          type: "string"
+        type:
+          nullable: false
+          type: "string"
+          enum: ["string", "number", "boolean", "date", "datetime"]
+        properties:
+          nullable: false
+          type: "object"
+          additionalProperties:
+            anyOf:
+              - type: "string"
+              - type: "number"
+              - type: "boolean"
+    TableCreate:
+      type: object
+      required: [title, owner, properties, attributes]
+      additionalProperties: false
+      properties:
+        title:
+          nullable: false
+          type: "string"
+        owner:
+          nullable: false
+          type: "string"
+        properties:
+          nullable: false
+          type: "object"
+          additionalProperties:
+            anyOf:
+              - type: "string"
+              - type: "number"
+              - type: "boolean"
+        attributes:
+          nullable: false
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Attribute"
