@@ -41,6 +41,7 @@ import { githubAuthApiRef } from '@backstage/core-plugin-api';
 import { UnifiedThemeProvider } from '@backstage/theme';
 import { eskilstunaTheme } from './theme/eskilstuna';
 import WbSunny from '@material-ui/icons/WbSunny';
+import { CustomTablePage } from './components/table/CustomTableIndex';
 
 const app = createApp({
   apis,
@@ -94,6 +95,9 @@ const routes = (
   <FlatRoutes>
     <Route path="/" element={<Navigate to="catalog" />} />
     <Route path="/catalog" element={<CatalogIndexPage />} />
+    <Route path="/tables" element={<CatalogIndexPage />}>
+      <CustomTablePage />
+    </Route>
     <Route
       path="/catalog/:namespace/:kind/:name"
       element={<CatalogEntityPage />}
