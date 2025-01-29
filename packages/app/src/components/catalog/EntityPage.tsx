@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Grid } from '@material-ui/core';
+import { Box, Button, Grid } from '@material-ui/core';
 import {
   EntityApiDefinitionCard,
   EntityConsumedApisCard,
@@ -58,6 +58,7 @@ import {
   EntityKubernetesContent,
   isKubernetesAvailable,
 } from '@backstage/plugin-kubernetes';
+import { EntityMetadataCard } from '@internal/backstage-plugin-geoportia-metadata';
 
 const techdocsContent = (
   <EntityTechdocsContent>
@@ -259,6 +260,36 @@ const componentPage = (
   </EntitySwitch>
 );
 
+const tablePage = (
+  <EntityLayout>
+    <EntityLayout.Route path="/" title="Overview">
+      <Grid container spacing={3}>
+        {entityWarningContent}
+        <Grid item md={6}>
+          {/* TODO: Ersätt med anpassad */}
+          <EntityAboutCard />
+        </Grid>
+        <Grid item md={6} xs={12}>
+          <EntityCatalogGraphCard variant="gridItem" height={400} />
+        </Grid>
+        <Grid item md={4} xs={12}>
+          {/* TODO: Använda processor för att hämta länkar ur metadata? */}
+          <EntityLinksCard />
+        </Grid>
+      </Grid>
+    </EntityLayout.Route>
+    <EntityLayout.Route path="/metadata" title="Metadata">
+      <EntityMetadataCard />
+    </EntityLayout.Route>
+    <EntityLayout.Route path="/processes" title="Processes">
+      <EntityCatalogGraphCard variant="gridItem" height={400} />
+    </EntityLayout.Route>
+    <EntityLayout.Route path="/data-preview" title="Preview">
+      <Box>Preview</Box>
+    </EntityLayout.Route>
+  </EntityLayout>
+);
+
 const apiPage = (
   <EntityLayout>
     <EntityLayout.Route path="/" title="Overview">
@@ -406,6 +437,7 @@ export const entityPage = (
     <EntitySwitch.Case if={isKind('user')} children={userPage} />
     <EntitySwitch.Case if={isKind('system')} children={systemPage} />
     <EntitySwitch.Case if={isKind('domain')} children={domainPage} />
+    <EntitySwitch.Case if={isKind('table')} children={tablePage} />
 
     <EntitySwitch.Case>{defaultEntityPage}</EntitySwitch.Case>
   </EntitySwitch>
