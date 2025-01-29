@@ -132,7 +132,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TableResponse"
+                allOf:
+                  - $ref: "#/components/schemas/TableResponse"
+                  - type: object
+                    required: [versions]
+                    properties:
+                      versions:
+                        type: array
+                        items:
+                          type: object
+                          required: [version, active]
+                          properties:
+                            version:
+                              type: integer
+                            active:
+                              type: boolean
         default:
           $ref: '#/components/responses/ErrorResponse'
 components:

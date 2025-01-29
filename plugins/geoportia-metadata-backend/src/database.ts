@@ -6,12 +6,12 @@ export interface TableRow {
   active: boolean;
   title: string;
   owner: string;
-  properties: Record<string, any>;
+  properties: string;
 }
 export interface AttributeRow {
   table_id: number;
   name: string;
   title: string;
   type: string;
-  properties: Record<string, any>;
+  properties: string;
 }

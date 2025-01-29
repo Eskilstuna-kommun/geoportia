@@ -12,7 +12,7 @@ import { MetadataService } from './services/MetadataService';
  * @public
  */
 export const geoportiaMetadataBackendPlugin = createBackendPlugin({
-  pluginId: 'geoportia-metadata-backend',
+  pluginId: 'geoportia-metadata',
   register(env) {
     env.registerInit({
       deps: {
