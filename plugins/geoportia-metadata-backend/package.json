@@ -21,13 +21,14 @@
     "clean": "backstage-cli package clean",
     "prepack": "backstage-cli package prepack",
     "postpack": "backstage-cli package postpack",
-    "generate": "backstage-repo-tools package schema openapi generate --server --client-package plugins/geoportia-metadata"
+    "generate": "backstage-repo-tools package schema openapi generate --server --client-package plugins/geoportia-metadata-common"
   },
   "dependencies": {
     "@backstage/backend-defaults": "^0.7.0",
     "@backstage/backend-openapi-utils": "^0.4.1",
     "@backstage/backend-plugin-api": "^1.1.1",
     "@backstage/catalog-client": "^1.9.1",
+    "@backstage/catalog-model": "^1.7.3",
     "@backstage/errors": "^1.2.7",
     "@backstage/plugin-catalog-node": "^1.15.1",
     "@backstage/repo-tools": "^0.12.1",

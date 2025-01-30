@@ -30,6 +30,7 @@ export class PostgreSQLDataProvider implements EntityProvider {
         await this.run();
       },
     });
+    await this.run();
   }
 
   async run() {

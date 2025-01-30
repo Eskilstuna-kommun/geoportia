@@ -55,7 +55,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TableResponse"
+                $ref: "#/components/schemas/ExtendedTableResponse"
         default:
           $ref: '#/components/responses/ErrorResponse'
     post:
@@ -158,21 +158,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: "#/components/schemas/TableResponse"
-                  - type: object
-                    required: [versions]
-                    properties:
-                      versions:
-                        type: array
-                        items:
-                          type: object
-                          required: [version, active]
-                          properties:
-                            version:
-                              type: integer
-                            active:
-                              type: boolean
+                $ref: "#/components/schemas/ExtendedTableResponse"
         default:
           $ref: '#/components/responses/ErrorResponse'
 components:
@@ -223,6 +209,22 @@ components:
         - error
         - request
         - response
+    ExtendedTableResponse:
+      allOf:
+        - $ref: "#/components/schemas/TableResponse"
+        - type: object
+          required: [versions]
+          properties:
+            versions:
+              type: array
+              items:
+                type: object
+                required: [version, active]
+                properties:
+                  version:
+                    type: integer
+                  active:
+                    type: boolean
     TableResponse:
       type: object
       required: [database, name, version, active, title, owner, properties, attributes]

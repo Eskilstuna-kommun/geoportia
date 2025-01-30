@@ -4,7 +4,7 @@ import {
   resolvePackagePath,
 } from '@backstage/backend-plugin-api';
 import { createRouter } from './router';
-import { MetadataService } from './services/MetadataService';
+import { MetadataService } from './services/MetadataService/MetadataService';
 
 /**
  * geoportiaMetadataBackendPlugin backend plugin
@@ -16,14 +16,12 @@ export const geoportiaMetadataBackendPlugin = createBackendPlugin({
   register(env) {
     env.registerInit({
       deps: {
-        logger: coreServices.logger,
         auth: coreServices.auth,
         httpAuth: coreServices.httpAuth,
         httpRouter: coreServices.httpRouter,
         database: coreServices.database,
       },
-      async init({ logger, httpAuth, httpRouter, database }) {
-        logger.info('Initializing database');
+      async init({ httpAuth, httpRouter, database }) {
         const client = await database.getClient();
         if (!database.migrations?.skip) {
           await client.migrate.latest({
@@ -33,13 +31,11 @@ export const geoportiaMetadataBackendPlugin = createBackendPlugin({
             ),
           });
         }
-
-        const metadataService = new MetadataService(client);
-
+        const metadata = new MetadataService(client);
         httpRouter.use(
           await createRouter({
             httpAuth,
-            metadataService,
+            metadataService: metadata,
           }),
         );
       },

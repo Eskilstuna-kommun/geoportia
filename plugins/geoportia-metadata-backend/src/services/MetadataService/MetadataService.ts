@@ -39,29 +39,28 @@ export class MetadataService implements IMetadataService {
               .nulls as number;
             if (value.type === 'USER-DEFINED') {
               return { nulls };
-            } else {
-              const unique = await db(input.name)
-                .select(key)
-                .count('* AS count')
-                .whereNotNull(key)
-                .groupBy(key)
-                .orderBy([{ column: 'count', order: 'desc' }, { column: key }])
-                .limit(10);
-              const hasWorthwhileUnique = unique.some(
-                u => (u.count as number) > 1,
-              );
-              return {
-                nulls,
-                countUnique: (await db(input.name).countDistinct(key).first())!
-                  .count as number,
-                unique: hasWorthwhileUnique
-                  ? unique.map(u => ({
-                      value: u[key],
-                      count: u.count as number,
-                    }))
-                  : undefined,
-              };
             }
+            const unique = await db(input.name)
+              .select(key)
+              .count('* AS count')
+              .whereNotNull(key)
+              .groupBy(key)
+              .orderBy([{ column: 'count', order: 'desc' }, { column: key }])
+              .limit(10);
+            const hasWorthwhileUnique = unique.some(
+              u => (u.count as number) > 1,
+            );
+            return {
+              nulls,
+              countUnique: (await db(input.name).countDistinct(key).first())!
+                .count as number,
+              unique: hasWorthwhileUnique
+                ? unique.map(u => ({
+                    value: u[key],
+                    count: u.count as number,
+                  }))
+                : undefined,
+            };
           }),
         ),
       };
@@ -73,7 +72,7 @@ export class MetadataService implements IMetadataService {
     _options: {
       credentials: BackstageCredentials<BackstageUserPrincipal>;
     },
-  ): Promise<TableItem> {
+  ): Promise<ExtendedTableItem> {
     return await this.database.transaction(async db => {
       await db<TableRow>('table')
         .where({ database: input.database, name: input.name })
@@ -84,7 +83,17 @@ export class MetadataService implements IMetadataService {
       if (!result) {
         throw new NotFoundError('Table not found');
       }
-      return this.getTableAtVersionImpl(input, db);
+      const versions = await db<TableRow>('table')
+        .where(input)
+        .select(['active', 'version']);
+      const table = await this.getTableAtVersionImpl(input, db);
+      return {
+        ...table,
+        versions: versions.map(v => ({
+          active: !!v.active,
+          version: v.version,
+        })),
+      };
     });
   }
   async createTableVersion(

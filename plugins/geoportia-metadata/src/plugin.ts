@@ -9,8 +9,9 @@ import {
 import { rootRouteRef } from './routes';
 import { MetadataCardProps } from './components/MetadataCard';
 import { metadataApiRef } from './client';
-import { DefaultApiClient } from './schema/openapi';
 import { PreviewCardProps } from './components/PreviewCard';
+import { MetadataClient } from '@internal/geoportia-metadata-common';
+import { FC } from 'react';
 
 export const geoportiaMetadataPlugin = createPlugin({
   id: 'geoportia-metadata',
@@ -25,12 +26,12 @@ export const geoportiaMetadataPlugin = createPlugin({
         fetchApi: fetchApiRef,
       },
       factory: ({ discoveryApi, fetchApi }) =>
-        new DefaultApiClient({ discoveryApi, fetchApi }),
+        new MetadataClient({ discoveryApi, fetchApi }),
     }),
   ],
 });
 
-export const EntityMetadataCard: (props: MetadataCardProps) => JSX.Element =
+export const EntityMetadataCard: FC<MetadataCardProps> =
   geoportiaMetadataPlugin.provide(
     createComponentExtension({
       name: 'EntityMetadataCard',
@@ -41,7 +42,7 @@ export const EntityMetadataCard: (props: MetadataCardProps) => JSX.Element =
     }),
   );
 
-export const EntityPreviewCard: (props: PreviewCardProps) => JSX.Element =
+export const EntityPreviewCard: FC<PreviewCardProps> =
   geoportiaMetadataPlugin.provide(
     createComponentExtension({
       name: 'EntityPreviewCard',

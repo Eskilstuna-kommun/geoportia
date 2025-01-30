@@ -24,7 +24,7 @@ import {
 } from '@material-ui/core';
 import Close from '@material-ui/icons/Close';
 import { TableMetadataForm } from './MetadataForm';
-import { TableResponse } from '../schema/openapi';
+import { TableResponse } from '@internal/geoportia-metadata-common/src/schema/openapi';
 
 export interface MetadataCardProps {}
 

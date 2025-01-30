@@ -7,6 +7,7 @@
  */
 
 import { createBackend } from '@backstage/backend-defaults';
+import { geoportiaMetadataBackendModule } from '@internal/backstage-plugin-geoportia-metadata-backend';
 
 const backend = createBackend();
 
@@ -57,4 +58,5 @@ backend.add(
   import('@internal/backstage-plugin-catalog-backend-module-postgresql-data'),
 );
 backend.add(import('@internal/backstage-plugin-geoportia-metadata-backend'));
+backend.add(geoportiaMetadataBackendModule);
 backend.start();

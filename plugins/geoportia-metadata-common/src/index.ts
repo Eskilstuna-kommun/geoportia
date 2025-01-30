@@ -4,3 +4,5 @@
  *
  * @packageDocumentation
  */
+
+export { type MetadataApi, MetadataClient } from './api';

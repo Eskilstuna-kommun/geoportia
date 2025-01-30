@@ -1,1 +1,0 @@
-export { MetadataService } from './MetadataService';
