@@ -4,6 +4,7 @@ import {
 } from '@backstage/backend-plugin-api';
 import {
   AttributeTypeEnum,
+  PreviewResponse,
   TableResponsePropertiesValue,
 } from '../../schema/openapi/generated/models';
 
@@ -28,6 +29,10 @@ export interface Attribute {
 }
 
 export interface MetadataService {
+  preview(
+    input: Pick<TableItem, 'database' | 'name'>,
+  ): Promise<PreviewResponse>;
+
   createTableVersion(
     input: TableItem,
     options: {

@@ -4,6 +4,8 @@ import {
   CreateTableDescription,
   GetTableDescription,
   GetTableDescriptionAtVersion,
+  GetTablePreview,
+  PreviewResponse,
   RequestOptions,
   TableResponse,
   TypedResponse,
@@ -11,10 +13,15 @@ import {
 import { createApiRef } from '@backstage/core-plugin-api';
 
 export interface MetadataApi {
+  getTablePreview(
+    request: GetTablePreview,
+    options?: RequestOptions,
+  ): Promise<TypedResponse<PreviewResponse>>;
+
   activateTableDescriptionVersion(
     request: ActivateTableDescriptionVersion,
     options?: RequestOptions,
-  ): Promise<TypedResponse<TableResponse>>;
+  ): Promise<TypedResponse<ActivateTableDescriptionVersion200Response>>;
 
   createTableDescription(
     request: CreateTableDescription,
@@ -24,7 +31,7 @@ export interface MetadataApi {
   getTableDescription(
     request: GetTableDescription,
     options?: RequestOptions,
-  ): Promise<TypedResponse<ActivateTableDescriptionVersion200Response>>;
+  ): Promise<TypedResponse<TableResponse>>;
 
   getTableDescriptionAtVersion(
     request: GetTableDescriptionAtVersion,

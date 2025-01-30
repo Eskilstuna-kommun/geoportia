@@ -7006,11 +7006,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/backstage-plugin-geoportia-metadata@workspace:plugins/geoportia-metadata"
   dependencies:
+    "@backstage/catalog-model": "npm:^1.7.3"
     "@backstage/cli": "npm:^0.29.5"
     "@backstage/core-app-api": "npm:^1.15.4"
     "@backstage/core-components": "npm:^0.16.3"
     "@backstage/core-plugin-api": "npm:^1.10.3"
     "@backstage/dev-utils": "npm:^1.1.6"
+    "@backstage/plugin-catalog-react": "npm:^1.15.1"
     "@backstage/test-utils": "npm:^1.7.4"
     "@backstage/theme": "npm:^0.6.3"
     "@internal/geoportia-metadata-common": "link:../geoportia-metadata-common"
@@ -7020,9 +7022,12 @@ __metadata:
     "@testing-library/jest-dom": "npm:^6.0.0"
     "@testing-library/react": "npm:^14.0.0"
     "@testing-library/user-event": "npm:^14.0.0"
+    "@types/lodash": "npm:^4.17.15"
     cross-fetch: "npm:^4.1.0"
+    lodash: "npm:^4.17.21"
     msw: "npm:^1.0.0"
     react: "npm:^16.13.1 || ^17.0.0 || ^18.0.0"
+    react-hook-form: "npm:^7.54.2"
     react-use: "npm:^17.2.4"
     uri-template: "npm:^2.0.0"
   peerDependencies:
@@ -13003,6 +13008,13 @@ __metadata:
   dependencies:
     keyv: "npm:*"
   checksum: 10c0/ad626918f1843035b732b582263890a67d73dc3ff80da97e51fbe0ae3f2fe7a1ada2eef1bd89605c5fb739444110e696c0e0703d9b49a842a2f924c6e9164faa
+  languageName: node
+  linkType: hard
+
+"@types/lodash@npm:^4.17.15":
+  version: 4.17.15
+  resolution: "@types/lodash@npm:4.17.15"
+  checksum: 10c0/2eb2dc6d231f5fb4603d176c08c8d7af688f574d09af47466a179cd7812d9f64144ba74bb32ca014570ffdc544eedc51b7a5657212bad083b6eecbd72223f9bb
   languageName: node
   linkType: hard
 
@@ -29648,7 +29660,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-hook-form@npm:^7.12.2":
+"react-hook-form@npm:^7.12.2, react-hook-form@npm:^7.54.2":
   version: 7.54.2
   resolution: "react-hook-form@npm:7.54.2"
   peerDependencies:

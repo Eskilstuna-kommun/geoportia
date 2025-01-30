@@ -1,1 +1,5 @@
-export { geoportiaMetadataPlugin, EntityMetadataCard } from './plugin';
+export {
+  geoportiaMetadataPlugin,
+  EntityMetadataCard,
+  EntityPreviewCard,
+} from './plugin';

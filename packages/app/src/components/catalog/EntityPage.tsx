@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Grid } from '@material-ui/core';
+import { Button, Grid } from '@material-ui/core';
 import {
   EntityApiDefinitionCard,
   EntityConsumedApisCard,
@@ -58,7 +58,10 @@ import {
   EntityKubernetesContent,
   isKubernetesAvailable,
 } from '@backstage/plugin-kubernetes';
-import { EntityMetadataCard } from '@internal/backstage-plugin-geoportia-metadata';
+import {
+  EntityMetadataCard,
+  EntityPreviewCard,
+} from '@internal/backstage-plugin-geoportia-metadata';
 
 const techdocsContent = (
   <EntityTechdocsContent>
@@ -285,7 +288,7 @@ const tablePage = (
       <EntityCatalogGraphCard variant="gridItem" height={400} />
     </EntityLayout.Route>
     <EntityLayout.Route path="/data-preview" title="Preview">
-      <Box>Preview</Box>
+      <EntityPreviewCard />
     </EntityLayout.Route>
   </EntityLayout>
 );

@@ -52,58 +52,6 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-/*
-type User = {
-  gender: string; // "male"
-  name: {
-    title: string; // "Mr",
-    first: string; // "Duane",
-    last: string; // "Reed"
-  };
-  email: string; // "duane.reed@example.com"
-  picture: string; // "https://api.dicebear.com/6.x/open-peeps/svg?seed=Duane"
-  nat: string; // "AU"
-};
-
-type DenseTableProps = {
-  users: User[];
-};
-
-export const DenseTable = ({ users }: DenseTableProps) => {
-  const classes = useStyles();
-
-  const columns: TableColumn[] = [
-    { title: 'Avatar', field: 'avatar' },
-    { title: 'Name', field: 'name' },
-    { title: 'Email', field: 'email' },
-    { title: 'Nationality', field: 'nationality' },
-  ];
-
-  const data = users.map(user => {
-    return {
-      avatar: (
-        <img
-          src={user.picture}
-          className={classes.avatar}
-          alt={user.name.first}
-        />
-      ),
-      name: `${user.name.first} ${user.name.last}`,
-      email: user.email,
-      nationality: user.nat,
-    };
-  });
-
-  return (
-    <Table
-      title="Attributes"
-      options={{ search: false, paging: false }}
-      columns={columns}
-      data={data}
-    />
-  );
-};*/
-
 class NotFoundError extends Error {
   constructor(message: string) {
     super(message);
@@ -142,7 +90,7 @@ const MetadataDrawer: FC<{
   );
 };
 
-export const MetadataCard = () => {
+export const MetadataCard: FC = () => {
   const api = useApi(metadataApiRef);
   const { entity } = useEntity();
 

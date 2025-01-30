@@ -4,6 +4,33 @@ info:
   title: geoportia-metadata
   description: ""
 paths:
+  /data/{database}/{table}/preview:
+    get:
+      operationId: "GetTablePreview"
+      description: ""
+      security:
+          - {}
+          - JWT: []
+      parameters:
+        - in: "path"
+          name: "database"
+          required: true
+          schema:
+            type: "string"
+        - in: "path"
+          name: "table"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreviewResponse"
+        default:
+          $ref: '#/components/responses/ErrorResponse'
   /databasspecifikation/{database}/{table}:
     get:
       operationId: "GetTableDescription"
@@ -31,7 +58,6 @@ paths:
                 $ref: "#/components/schemas/TableResponse"
         default:
           $ref: '#/components/responses/ErrorResponse'
-
     post:
       operationId: "CreateTableDescription"
       description: ""
@@ -280,3 +306,54 @@ components:
           type: "array"
           items:
             $ref: "#/components/schemas/Attribute"
+    PreviewResponse:
+      type: object
+      additionalProperties: false
+      required: [columns, head, values]
+      properties:
+        rows:
+          type: "number"
+        columns:
+          nullable: false
+          type: "array"
+          items:
+              type: "string"
+        head:
+          nullable: false
+          type: "array"
+          items:
+            type: "array"
+            items:
+              anyOf:
+                - type: "string"
+                  nullable: true
+                - type: "number"
+                - type: "boolean"
+        values:
+          nullable: false
+          type: "array"
+          items:
+            type: object
+            required: [nulls]
+            properties:
+              nulls:
+                type: "number"
+                nullable: false
+              countUnique:
+                type: "number"
+                nullable: false
+              unique:
+                type: "array"
+                nullable: false
+                items:
+                  type: object
+                  required: [count, value]
+                  properties:
+                    count:
+                      nullable: false
+                      type: "number"
+                    value:
+                      anyOf:
+                        - type: "string"
+                        - type: "number"
+                        - type: "boolean"

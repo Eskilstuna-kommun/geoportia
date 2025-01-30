@@ -12,6 +12,15 @@ export async function createRouter({
 }): Promise<express.Router> {
   const router = await createOpenApiRouter();
 
+  router.get('/data/:database/:table/preview', async (req, res) => {
+    const result = await metadataService.preview({
+      database: req.params.database,
+      name: req.params.table,
+    });
+
+    res.json(result);
+  });
+
   router.get('/databasspecifikation/:database/:table', async (req, res) => {
     const result = await metadataService.getTable({
       database: req.params.database,

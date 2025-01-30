@@ -8,12 +8,65 @@ import {
   MetadataService as IMetadataService,
   TableItem,
 } from './types';
-import { Knex } from 'knex';
+import Database, { Knex } from 'knex';
 import { AttributeRow, TableRow } from '../../database';
-import { AttributeTypeEnum } from '../../schema/openapi/generated/models';
+import {
+  AttributeTypeEnum,
+  PreviewResponse,
+} from '../../schema/openapi/generated/models';
 
 export class MetadataService implements IMetadataService {
   constructor(private readonly database: Knex) {}
+
+  preview(
+    input: Pick<TableItem, 'database' | 'name'>,
+  ): Promise<PreviewResponse> {
+    const database = Database({ client: 'pg', connection: input.database });
+    return database.transaction(async db => {
+      const columns = await db.table(input.name.split('.')[1]).columnInfo();
+      const head = await db.select().from(input.name).limit(10);
+      return {
+        rows: (await db(input.name).count().first())!.count as number,
+        columns: Object.keys(columns),
+        head: head.map(row =>
+          Object.entries(columns).map(([key, value]) =>
+            value.type === 'USER-DEFINED' ? '[geometry]' : row[key],
+          ),
+        ),
+        values: await Promise.all(
+          Object.entries(columns).map(async ([key, value]) => {
+            const nulls = (await db(input.name).count().whereNull(key).first())!
+              .nulls as number;
+            if (value.type === 'USER-DEFINED') {
+              return { nulls };
+            } else {
+              const unique = await db(input.name)
+                .select(key)
+                .count('* AS count')
+                .whereNotNull(key)
+                .groupBy(key)
+                .orderBy([{ column: 'count', order: 'desc' }, { column: key }])
+                .limit(10);
+              const hasWorthwhileUnique = unique.some(
+                u => (u.count as number) > 1,
+              );
+              return {
+                nulls,
+                countUnique: (await db(input.name).countDistinct(key).first())!
+                  .count as number,
+                unique: hasWorthwhileUnique
+                  ? unique.map(u => ({
+                      value: u[key],
+                      count: u.count as number,
+                    }))
+                  : undefined,
+              };
+            }
+          }),
+        ),
+      };
+    });
+  }
 
   async activateTableVersion(
     input: Pick<TableItem, 'database' | 'name' | 'version'>,
