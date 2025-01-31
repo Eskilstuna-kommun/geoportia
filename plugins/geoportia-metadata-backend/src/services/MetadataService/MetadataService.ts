@@ -1,4 +1,5 @@
 import {
+  AuthService,
   BackstageCredentials,
   BackstageUserPrincipal,
 } from '@backstage/backend-plugin-api';
@@ -14,9 +15,14 @@ import {
   AttributeTypeEnum,
   PreviewResponse,
 } from '../../schema/openapi/generated/models';
+import { CatalogService } from '@backstage/plugin-catalog-node';
 
 export class MetadataService implements IMetadataService {
-  constructor(private readonly database: Knex) {}
+  constructor(
+    private readonly database: Knex,
+    private readonly catalogApi: CatalogService,
+    private readonly auth: AuthService,
+  ) {}
 
   preview(
     input: Pick<TableItem, 'database' | 'name'>,
@@ -73,7 +79,7 @@ export class MetadataService implements IMetadataService {
       credentials: BackstageCredentials<BackstageUserPrincipal>;
     },
   ): Promise<ExtendedTableItem> {
-    return await this.database.transaction(async db => {
+    const res = await this.database.transaction(async db => {
       await db<TableRow>('table')
         .where({ database: input.database, name: input.name })
         .update({ active: false });
@@ -83,6 +89,7 @@ export class MetadataService implements IMetadataService {
       if (!result) {
         throw new NotFoundError('Table not found');
       }
+
       const versions = await db<TableRow>('table')
         .where(input)
         .select(['active', 'version']);
@@ -95,6 +102,16 @@ export class MetadataService implements IMetadataService {
         })),
       };
     });
+
+    try {
+      await this.catalogApi.refreshEntity(`table:default/${input.name}`, {
+        credentials: await this.auth.getOwnServiceCredentials(),
+      });
+    } catch (_e) {
+      // no-op
+    }
+
+    return res;
   }
   async createTableVersion(
     input: TableItem,
@@ -102,7 +119,7 @@ export class MetadataService implements IMetadataService {
       credentials: BackstageCredentials<BackstageUserPrincipal>;
     },
   ): Promise<TableItem> {
-    return await this.database.transaction(async db => {
+    const res = await this.database.transaction(async db => {
       const previousVersion = await db<TableRow>('table')
         .where({ database: input.database, name: input.name })
         .orderBy('version', 'desc')
@@ -142,6 +159,16 @@ export class MetadataService implements IMetadataService {
         db,
       );
     });
+
+    try {
+      await this.catalogApi.refreshEntity(`table:default/${input.name}`, {
+        credentials: await this.auth.getOwnServiceCredentials(),
+      });
+    } catch (_e) {
+      // no-op
+    }
+
+    return res;
   }
   async getTable(
     request: Pick<TableItem, 'database' | 'name'>,

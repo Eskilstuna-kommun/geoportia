@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import {
   Progress,
@@ -87,6 +87,28 @@ const MetadataDrawer: FC<{
         />
       </div>
     </>
+  );
+};
+
+const ActivateButton: FC<{ version: number }> = ({ version }) => {
+  const api = useApi(metadataApiRef);
+  const { entity } = useEntity();
+
+  const perform = useCallback(async () => {
+    await api.activateTableDescriptionVersion({
+      path: {
+        database: entity.metadata.annotations![ANNOTATION_LOCATION]!,
+        table: entity.metadata.name,
+        version,
+      },
+    });
+    window.location.reload();
+  }, [api, entity, version]);
+
+  return (
+    <Button variant="contained" color="primary" onClick={perform}>
+      Activate
+    </Button>
   );
 };
 
@@ -217,6 +239,11 @@ export const MetadataCard: FC = () => {
           columns={[
             { field: 'version', title: 'Version' },
             { field: 'active', title: 'Is active' },
+            {
+              title: 'Actions',
+              render: row =>
+                row.active ? null : <ActivateButton version={row.version} />,
+            },
           ]}
           data={value.versions}
           options={{ search: false, paging: false }}

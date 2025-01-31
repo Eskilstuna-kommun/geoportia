@@ -34,6 +34,9 @@ export class MetadataEntitiesProcessor implements CatalogProcessor {
         name: entity.metadata.name,
         database: entity.metadata.annotations![ANNOTATION_LOCATION],
       });
+      entity.metadata.title = metadata.title;
+      entity.metadata.description =
+        `${metadata.properties.description}` || entity.metadata.description;
       emit({
         type: 'relation',
         relation: {

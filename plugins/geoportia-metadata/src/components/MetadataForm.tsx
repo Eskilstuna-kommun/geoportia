@@ -1,6 +1,5 @@
 import React, { FC, useCallback } from 'react';
 import { ANNOTATION_LOCATION, Entity } from '@backstage/catalog-model';
-import { TableCreate, TableResponse } from '../schema/openapi';
 import {
   FormProvider,
   useFieldArray,
@@ -17,6 +16,10 @@ import {
 } from '@backstage/plugin-catalog-react';
 import { Table, TableColumn } from '@backstage/core-components';
 import _ from 'lodash';
+import {
+  TableCreate,
+  TableResponse,
+} from '@internal/geoportia-metadata-common/src/schema/openapi';
 
 const asInputRef = (renderResult: UseFormRegisterReturn) => {
   const { ref, ...rest } = renderResult;
