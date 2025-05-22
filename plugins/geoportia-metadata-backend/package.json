@@ -24,23 +24,24 @@
     "generate": "backstage-repo-tools package schema openapi generate --server --client-package plugins/geoportia-metadata-common"
   },
   "dependencies": {
-    "@backstage/backend-defaults": "^0.7.0",
-    "@backstage/backend-openapi-utils": "^0.4.1",
-    "@backstage/backend-plugin-api": "^1.1.1",
+    "@backstage/backend-defaults": "^0.9.0",
+    "@backstage/backend-openapi-utils": "^0.5.2",
+    "@backstage/backend-plugin-api": "^1.3.0",
     "@backstage/catalog-client": "^1.9.1",
     "@backstage/catalog-model": "^1.7.3",
     "@backstage/errors": "^1.2.7",
-    "@backstage/plugin-catalog-node": "^1.15.1",
-    "@backstage/repo-tools": "^0.12.1",
-    "@internal/geoportia-metadata-common": "link:../geoportia-metadata-common",
+    "@backstage/plugin-catalog-node": "^1.16.3",
+    "@backstage/repo-tools": "^0.13.2",
+    "@internal/backstage-plugin-geoportia-metadata-backend": "file:",
+    "@internal/geoportia-metadata-common": "file:../geoportia-metadata-common",
     "express": "^4.17.1",
     "express-promise-router": "^4.1.0",
     "knex": "^3.1.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@backstage/backend-test-utils": "^1.2.1",
-    "@backstage/cli": "^0.29.5",
+    "@backstage/backend-test-utils": "^1.4.0",
+    "@backstage/cli": "^0.32.0",
     "@types/express": "^4.17.6",
     "@types/supertest": "^2.0.12",
     "supertest": "^6.2.4"

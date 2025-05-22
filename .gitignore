@@ -56,3 +56,6 @@ e2e-test-report/
 /packages/backend/database/
 /plugins/geoportia-metadata-backend/src/schema/
 /plugins/geoportia-metadata/src/schema/
+/plugins/geoportia-metadata-common/src/schema/
+/plugins/geoportia-metadata/
+/.cache/

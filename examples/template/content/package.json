@@ -1,5 +1,7 @@
 {
   "name": "${{ values.name }}",
   "private": true,
-  "dependencies": {}
+  "dependencies": {
+    "root": "file:../../.."
+  }
 }
