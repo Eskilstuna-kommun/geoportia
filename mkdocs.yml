@@ -1,0 +1,46 @@
+site_name: GeoPortia
+site_url: https://eskilstuna-kommun.github.io/geoportia
+copyright: "&copy; Eskilstuna kommun och andra bidragsgivare"
+site_description: Metadata & tjänsteadminstration för geodata
+repo_url: https://github.com/Eskilstuna-kommun/geoportia
+theme:
+  name: material
+  language: sv
+  features:
+    - content.action.edit
+    - navigation.footer
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+  icon:
+    repo: fontawesome/brands/github
+plugins:
+  - privacy
+  - search
+  - include-markdown
+  - social
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.keys
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 4
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+nav:
+  - Hem:
+    - index.md
+    - licens.md
+  - Användning:
+    - anvandning/index.md
+    - Kom igång:
+      - anvandning/kom-igang/snabbstart.md
+      - anvandning/kom-igang/installation.md
+      - anvandning/kom-igang/konfiguration.md
+  - Utveckling:
+    - utveckling/index.md

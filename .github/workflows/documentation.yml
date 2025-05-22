@@ -1,0 +1,54 @@
+name: "Documentation"
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - '.github/workflows/documentation.yml'
+      - 'docs/**/*'
+      - '*.md'
+    tags:
+      - "*"
+
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - '.github/workflows/documentation.yml'
+      - 'docs/**/*'
+      - '*.md'
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Get source code
+      uses: actions/checkout@v4
+    - name: Configure Git Credentials
+      run: |
+        git config user.name github-actions[bot]
+        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+    - uses: actions/setup-python@v5
+      with:
+        python-version: 3.x
+    - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+    - uses: actions/cache@v4
+      with:
+        key: mkdocs-material-${{ env.cache_id }}
+        path: .cache
+        restore-keys: |
+          mkdocs-material-
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+    - run: uvx --with-requirements docs/requirements.txt mkdocs gh-deploy --force
