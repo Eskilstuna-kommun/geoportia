@@ -33,7 +33,7 @@
     "@backstage/plugin-catalog-node": "^1.16.3",
     "@backstage/repo-tools": "^0.13.2",
     "@internal/backstage-plugin-geoportia-metadata-backend": "file:",
-    "@internal/geoportia-metadata-common": "file:../geoportia-metadata-common",
+    "@internal/geoportia-metadata-common": "link:../geoportia-metadata-common",
     "express": "^4.17.1",
     "express-promise-router": "^4.1.0",
     "knex": "^3.1.0",
