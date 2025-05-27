@@ -63,11 +63,26 @@ techdocs:
   publisher:
     type: 'local' # Alternatives - 'googleGcs' or 'awsS3'. Read documentation for using alternatives.
 
+# auth:
+#   # see https://backstage.io/docs/auth/ to learn about auth providers
+#   providers:
+#     # See https://backstage.io/docs/auth/guest/provider
+#     #guest: {}
+# 4f911a3b8b61c9a21684d9c91bf5c2754022854e
+
+# Sign in with GitHub in development environment
 auth:
-  # see https://backstage.io/docs/auth/ to learn about auth providers
+  environment: development
   providers:
-    # See https://backstage.io/docs/auth/guest/provider
-    #guest: {}
+    github:
+      development:
+        clientId:
+          $env: GITHUB_CLIENT_ID
+        clientSecret:
+          $env: GITHUB_CLIENT_SECRET
+        signIn:
+          resolvers:
+            - resolver: usernameMatchingUserEntityName
 
 scaffolder:
   # see https://backstage.io/docs/features/software-templates/configuration for software template options
@@ -100,7 +115,7 @@ catalog:
     #     - allow: [User, Group]
   providers:
     postgresql:
-      uri: "postgresql://postgres:postgres@localhost:15432/postgres"
+      uri: "postgresql://postgres:postgres@localhost:5432/postgres"
 
 kubernetes:
   # see https://backstage.io/docs/features/kubernetes/configuration for kubernetes configuration options

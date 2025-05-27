@@ -14,6 +14,22 @@ metadata:
 spec:
   memberOf: [users]
 ---
+---
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: sweco-seyemi
+spec:
+  memberOf: [users]
+---
+---
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: sweco-se1g7y
+spec:
+  memberOf: [users]
+---
 # https://backstage.io/docs/features/software-catalog/descriptor-format#kind-group
 apiVersion: backstage.io/v1alpha1
 kind: Group
