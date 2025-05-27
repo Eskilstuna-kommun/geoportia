@@ -6,6 +6,12 @@
  * Happy hacking!
  */
 
+import dotenv from 'dotenv';
+import path from 'path';
+
+//Make sure to load before any config-related imports
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
 import { createBackend } from '@backstage/backend-defaults';
 import { geoportiaMetadataBackendModule } from '@internal/backstage-plugin-geoportia-metadata-backend';
 
