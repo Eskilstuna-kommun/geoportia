@@ -115,7 +115,7 @@ catalog:
     #     - allow: [User, Group]
   providers:
     postgresql:
-      uri: "postgresql://postgres:postgres@localhost:5432/postgres"
+      uri: "postgresql://postgres:postgres@localhost:15432/postgres"
 
 kubernetes:
   # see https://backstage.io/docs/features/kubernetes/configuration for kubernetes configuration options
