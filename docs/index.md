@@ -14,4 +14,5 @@ For full documentation visit [mkdocs.org](https://www.mkdocs.org).
     mkdocs.yml    # The configuration file.
     docs/
         index.md  # The documentation homepage.
+        schema_update.md    # The page detailing the triggers for updating PostgreSQL entities.
         ...       # Other markdown pages, images and other files.
