@@ -36,6 +36,7 @@ nav:
   - Hem:
     - index.md
     - licens.md
+    - Schema Update: schema_update.md
   - Användning:
     - anvandning/index.md
     - Kom igång:
