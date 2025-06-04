@@ -4,7 +4,6 @@ import {
 } from '@backstage/plugin-catalog-node';
 import { LocationSpec } from '@backstage/plugin-catalog-common';
 import {
-  ANNOTATION_LOCATION,
   Entity,
   getCompoundEntityRef,
 } from '@backstage/catalog-model';
@@ -12,7 +11,6 @@ import {
   postgresqlTableEntityValidator,
   postgresqlViewEntityValidator,
 } from '@internal/postgresql-data-common';
-import Knex from 'knex';
 
 export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
   getProcessorName() {
@@ -37,27 +35,20 @@ export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
     emit: CatalogProcessorEmit,
   ) {
     if (entity.kind === 'View') {
-      const db = Knex({
-        client: 'pg',
-        connection: entity.metadata.annotations?.[ANNOTATION_LOCATION],
+      const seen = new Set<string>();
+      // @ts-ignore
+      const dependencies = entity.spec.view.columns
+      // @ts-ignore
+      .filter(column => column.source && column.source.schema && column.source.table)
+      // @ts-ignore
+      .filter(column => {
+        const key = `${column.source.schema}.${column.source.table}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
       });
 
-      const dependencies = await db.raw(`SELECT cl_d.relname AS ref_table
-                                         FROM pg_rewrite AS r
-                                                  JOIN pg_class AS cl_r ON r.ev_class = cl_r.oid
-                                                  JOIN pg_depend AS d ON r.oid = d.objid
-                                                  JOIN pg_class AS cl_d ON d.refobjid = cl_d.oid
-                                         WHERE cl_d.relkind IN ('r', 'v')
-                                           AND cl_r.relname = 'hospitals'
-                                         GROUP BY cl_d.relname
-                                         ORDER BY cl_d.relname;`);
-
-      for (const dependency of dependencies.rows) {
-        if (
-          dependency.ref_table === entity.metadata.name.replace('public.', '')
-        ) {
-          continue;
-        }
+      for (const dependency of dependencies) {
         emit({
           type: 'relation',
           relation: {
@@ -65,8 +56,8 @@ export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
             source: getCompoundEntityRef(entity),
             target: {
               kind: 'Table',
-              namespace: 'default',
-              name: `public.${dependency.ref_table}`,
+              namespace: `${dependency.source.namespace || 'default'}`,
+              name: `${dependency.source.schema}.${dependency.source.table}`,
             },
           },
         });
@@ -77,8 +68,8 @@ export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
             target: getCompoundEntityRef(entity),
             source: {
               kind: 'Table',
-              namespace: 'default',
-              name: `public.${dependency.ref_table}`,
+              namespace: `${dependency.source.namespace || 'default'}`,
+              name: `${dependency.source.schema}.${dependency.source.table}`,
             },
           },
         });
