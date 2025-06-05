@@ -12,6 +12,14 @@ import {
   postgresqlViewEntityValidator,
 } from '@internal/postgresql-data-common';
 
+  interface ViewColumn { 
+    source: {
+      schema: string;
+      table: string;
+      namespace?: string;
+    }
+  }
+
 export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
   getProcessorName() {
     return 'PostgreSQLEntitiesProcessor';
@@ -35,13 +43,16 @@ export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
     emit: CatalogProcessorEmit,
   ) {
     if (entity.kind === 'View') {
+
+      if (!entity.spec || !entity.spec.view) {
+        throw new Error("View entity must have 'spec.view' defined");
+      }
+
       const seen = new Set<string>();
       // @ts-ignore
-      const dependencies = entity.spec.view.columns
-      // @ts-ignore
-      .filter(column => column.source && column.source.schema && column.source.table)
-      // @ts-ignore
-      .filter(column => {
+      const dependencies:ViewColumn[] = entity.spec.view.columns
+      .filter((column : ViewColumn) => column.source && column.source.schema && column.source.table)
+      .filter((column : ViewColumn) => {
         const key = `${column.source.schema}.${column.source.table}`;
         if (seen.has(key)) return false;
         seen.add(key);
