@@ -5,6 +5,7 @@ import {
 import { catalogProcessingExtensionPoint } from '@backstage/plugin-catalog-node/alpha';
 import { PostgreSQLDataProvider } from './PostgreSQLDataProvider';
 import { PostgreSQLEntitiesProcessor } from './PostgreSQLEntitiesProcessor';
+import { PostgresNotificationService } from './PostgresNotificationService';
 
 export const catalogModulePostgresqlData = createBackendModule({
   pluginId: 'catalog',
@@ -17,17 +18,30 @@ export const catalogModulePostgresqlData = createBackendModule({
         scheduler: coreServices.scheduler,
         rootConfig: coreServices.rootConfig,
       },
-      async init({ catalog, scheduler, rootConfig }) {
+      async init({ catalog, scheduler, rootConfig, logger }) {
         const taskRunner = scheduler.createScheduledTaskRunner({
           frequency: { minutes: 5 },
           timeout: { minutes: 5 },
         });
+        const postgresUri = rootConfig.getString('catalog.providers.postgresql.uri');
         const provider = new PostgreSQLDataProvider(
-          rootConfig.getString('catalog.providers.postgresql.uri'),
+          postgresUri,
           taskRunner,
         );
         catalog.addEntityProvider(provider);
         catalog.addProcessor(new PostgreSQLEntitiesProcessor());
+        
+        // Performs a full refresh from the PostgreSQL database
+        const updateFunction = async () => {
+          try {
+            await provider.run();
+          } catch (error) {
+            logger.error("Error running PostgreSQL data provider: " + error);
+          }
+        }
+
+        const notificationService = new PostgresNotificationService(postgresUri, updateFunction, logger);
+        notificationService.start();
       },
     });
   },
