@@ -44,13 +44,14 @@ export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
   ) {
     if (entity.kind === 'View') {
 
-      if (!entity.spec || !entity.spec.view) {
+      if (!entity.spec) {
         throw new Error("View entity must have 'spec.view' defined");
       }
 
       const seen = new Set<string>();
       // @ts-ignore
-      const dependencies:ViewColumn[] = entity.spec.view.columns
+      const dependencies:ViewColumn[] = entity.spec.columns
+      // @ts-ignore
       .filter((column : ViewColumn) => column.source && column.source.schema && column.source.table)
       .filter((column : ViewColumn) => {
         const key = `${column.source.schema}.${column.source.table}`;
