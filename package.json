@@ -57,6 +57,7 @@
   "packageManager": "yarn@4.4.1",
   "dependencies": {
     "@backstage/repo-tools": "^0.13.3",
-    "@useoptic/optic": "^1.0.5"
+    "@useoptic/optic": "^1.0.5",
+    "pg-listen": "^1.7.0"
   }
 }
