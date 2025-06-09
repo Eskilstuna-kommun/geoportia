@@ -28288,6 +28288,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pg-listen@npm:^1.7.0":
+  version: 1.7.0
+  resolution: "pg-listen@npm:1.7.0"
+  dependencies:
+    debug: "npm:^4.1.1"
+    pg-format: "npm:^1.0.4"
+    typed-emitter: "npm:^0.1.0"
+  peerDependencies:
+    pg: 7.x || 8.x
+  checksum: 10c0/a2f3f7ddd7a0cc1f747055c15b732b06e07bed03a3f398428cd4fbff9a31d2d2aa2064c5ab74cc57ba231cc488f7b83f99a8d7f474fd4d1014386f39c7fedd25
+  languageName: node
+  linkType: hard
+
 "pg-pool@npm:^3.7.0":
   version: 3.7.0
   resolution: "pg-pool@npm:3.7.0"
@@ -31020,6 +31033,7 @@ __metadata:
     "@playwright/test": "npm:^1.32.3"
     "@useoptic/optic": "npm:^1.0.5"
     node-gyp: "npm:^10.0.0"
+    pg-listen: "npm:^1.7.0"
     prettier: "npm:^2.3.2"
     typescript: "npm:~5.4.0"
   languageName: unknown
@@ -33657,6 +33671,13 @@ __metadata:
     possible-typed-array-names: "npm:^1.0.0"
     reflect.getprototypeof: "npm:^1.0.6"
   checksum: 10c0/e38f2ae3779584c138a2d8adfa8ecf749f494af3cd3cdafe4e688ce51418c7d2c5c88df1bd6be2bbea099c3f7cea58c02ca02ed438119e91f162a9de23f61295
+  languageName: node
+  linkType: hard
+
+"typed-emitter@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "typed-emitter@npm:0.1.0"
+  checksum: 10c0/76ef3e0650962e8fbea2d51341cf40a3dfc5223fe057af8024e0ad74acbfa0c30c9ba6e4a7994c4ce3661d56ec154c945f93012587c0afeeb5b73249a1e46821
   languageName: node
   linkType: hard
 
