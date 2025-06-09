@@ -1,5 +1,5 @@
 ---
-title: Licens
+title: License
 search:
   exclude: true
 hide:
