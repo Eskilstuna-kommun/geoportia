@@ -1,11 +1,11 @@
 site_name: GeoPortia
 site_url: https://eskilstuna-kommun.github.io/geoportia
-copyright: "&copy; Eskilstuna kommun och andra bidragsgivare"
-site_description: Metadata & tjänsteadminstration för geodata
+copyright: "&copy; Eskilstuna municipality and other contributors"
+site_description: Metadata & service administration for geodata
 repo_url: https://github.com/Eskilstuna-kommun/geoportia
 theme:
   name: material
-  language: sv
+  language: en
   features:
     - content.action.edit
     - navigation.footer
@@ -18,7 +18,7 @@ plugins:
   - privacy
   - search
   - include-markdown
-  - social
+#  - social
 markdown_extensions:
   - admonition
   - attr_list
@@ -33,14 +33,10 @@ markdown_extensions:
       emoji_index: !!python/name:materialx.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
 nav:
-  - Hem:
+  - Home:
     - index.md
     - licens.md
-  - Användning:
-    - anvandning/index.md
-    - Kom igång:
-      - anvandning/kom-igang/snabbstart.md
-      - anvandning/kom-igang/installation.md
-      - anvandning/kom-igang/konfiguration.md
-  - Utveckling:
-    - utveckling/index.md
+  - Use:
+    - use/index.md
+    - Get Started:
+      - Automatic Schema Updates: use/get-started/postgresql/automatic-schema-updates.md
