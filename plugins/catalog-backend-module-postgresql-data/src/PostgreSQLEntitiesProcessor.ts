@@ -45,7 +45,7 @@ export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
     if (entity.kind === 'View') {
 
       if (!entity.spec) {
-        throw new Error("View entity must have 'spec.view' defined");
+        throw new Error("View entity must have 'spec' defined");
       }
 
       const seen = new Set<string>();
