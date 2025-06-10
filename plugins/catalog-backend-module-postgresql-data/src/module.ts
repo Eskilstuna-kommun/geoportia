@@ -23,24 +23,27 @@ export const catalogModulePostgresqlData = createBackendModule({
           frequency: { minutes: 5 },
           timeout: { minutes: 5 },
         });
-        const postgresUri = rootConfig.getString('catalog.providers.postgresql.uri');
-        const provider = new PostgreSQLDataProvider(
-          postgresUri,
-          taskRunner,
+        const postgresUri = rootConfig.getString(
+          'catalog.providers.postgresql.uri',
         );
+        const provider = new PostgreSQLDataProvider(postgresUri, taskRunner);
         catalog.addEntityProvider(provider);
         catalog.addProcessor(new PostgreSQLEntitiesProcessor());
-        
+
         // Performs a full refresh from the PostgreSQL database
         const updateFunction = async () => {
           try {
             await provider.run();
           } catch (error) {
-            logger.error("Error running PostgreSQL data provider: " + error);
+            logger.error('Error running PostgreSQL data provider: ' + error);
           }
-        }
+        };
 
-        const notificationService = new PostgresNotificationService(postgresUri, updateFunction, logger);
+        const notificationService = new PostgresNotificationService(
+          postgresUri,
+          updateFunction,
+          logger,
+        );
         notificationService.start();
       },
     });
