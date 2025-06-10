@@ -1,6 +1,6 @@
 site_name: GeoPortia
 site_url: https://eskilstuna-kommun.github.io/geoportia
-copyright: "&copy; Eskilstuna municipality and other contributors"
+copyright: '&copy; Eskilstuna municipality and other contributors'
 site_description: Metadata & service administration for geodata
 repo_url: https://github.com/Eskilstuna-kommun/geoportia
 theme:
@@ -34,9 +34,9 @@ markdown_extensions:
       emoji_generator: !!python/name:materialx.emoji.to_svg
 nav:
   - Home:
-    - index.md
-    - licens.md
+      - index.md
+      - licens.md
   - Use:
-    - use/index.md
-    - Get Started:
-      - Automatic Schema Updates: use/get-started/postgresql/automatic-schema-updates.md
+      - use/index.md
+      - Get Started:
+          - Automatic Schema Updates: use/get-started/postgresql/automatic-schema-updates.md

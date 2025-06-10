@@ -3,22 +3,19 @@ import {
   CatalogProcessorEmit,
 } from '@backstage/plugin-catalog-node';
 import { LocationSpec } from '@backstage/plugin-catalog-common';
-import {
-  Entity,
-  getCompoundEntityRef,
-} from '@backstage/catalog-model';
+import { Entity, getCompoundEntityRef } from '@backstage/catalog-model';
 import {
   postgresqlTableEntityValidator,
   postgresqlViewEntityValidator,
 } from '@internal/postgresql-data-common';
 
-  interface ViewColumn { 
-    source: {
-      schema: string;
-      table: string;
-      namespace?: string;
-    }
-  }
+interface ViewColumn {
+  source: {
+    schema: string;
+    table: string;
+    namespace?: string;
+  };
+}
 
 export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
   getProcessorName() {
@@ -43,22 +40,24 @@ export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
     emit: CatalogProcessorEmit,
   ) {
     if (entity.kind === 'View') {
-
       if (!entity.spec) {
         throw new Error("View entity must have 'spec' defined");
       }
 
       const seen = new Set<string>();
       // @ts-ignore
-      const dependencies:ViewColumn[] = entity.spec.columns
-      // @ts-ignore
-      .filter((column : ViewColumn) => column.source && column.source.schema && column.source.table)
-      .filter((column : ViewColumn) => {
-        const key = `${column.source.schema}.${column.source.table}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
+      const dependencies: ViewColumn[] = entity.spec.columns
+        // @ts-ignore
+        .filter(
+          (column: ViewColumn) =>
+            column.source && column.source.schema && column.source.table,
+        )
+        .filter((column: ViewColumn) => {
+          const key = `${column.source.schema}.${column.source.table}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
 
       for (const dependency of dependencies) {
         emit({
