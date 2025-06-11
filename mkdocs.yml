@@ -40,3 +40,6 @@ nav:
       - use/index.md
       - Get Started:
           - Automatic Schema Updates: use/get-started/postgresql/automatic-schema-updates.md
+  - Development:
+      - development/index.md
+      - development/geoserver.md
