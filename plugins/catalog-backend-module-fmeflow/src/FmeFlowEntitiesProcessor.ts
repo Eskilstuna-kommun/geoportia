@@ -8,6 +8,7 @@ import {
   getCompoundEntityRef,
   RELATION_OWNED_BY,
 } from '@backstage/catalog-model';
+import { isFmeWorkspaceEntity  } from '@internal/fmeflow-common';
 
 export class FmeFlowEntitiesProcessor implements CatalogProcessor {
   getProcessorName(): string {
@@ -15,11 +16,7 @@ export class FmeFlowEntitiesProcessor implements CatalogProcessor {
   }
 
   async validateEntityKind(entity: Entity): Promise<boolean> {
-    return (
-      entity.apiVersion === 'geoportia.se/v1alpha1' &&
-      entity.kind === 'FmeWorkspace' &&
-      typeof entity.spec === 'object' &&
-      typeof entity.spec.owner === 'string'
+    return (isFmeWorkspaceEntity(entity)
     );
   }
 
@@ -28,7 +25,7 @@ export class FmeFlowEntitiesProcessor implements CatalogProcessor {
     _location: LocationSpec,
     emit: CatalogProcessorEmit,
   ): Promise<Entity> {
-    if (entity.kind !== 'FmeWorkspace') {
+    if (!isFmeWorkspaceEntity(entity)) {
       return entity;
     }
 

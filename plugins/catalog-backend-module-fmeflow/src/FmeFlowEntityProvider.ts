@@ -2,14 +2,15 @@ import {
   EntityProvider,
   EntityProviderConnection,
 } from '@backstage/plugin-catalog-node';
-import { SchedulerServiceTaskRunner } from '@backstage/backend-plugin-api';
+import { LoggerService, SchedulerServiceTaskRunner } from '@backstage/backend-plugin-api';
 import {
   ANNOTATION_LOCATION,
   ANNOTATION_ORIGIN_LOCATION,
-  Entity,
 } from '@backstage/catalog-model';
+import { FmeWorkspaceEntity, isFmeWorkspaceEntity } from '@internal/fmeflow-common';
 
 type FmeFlowEntityProviderOptions = {
+  logger:LoggerService;
   baseUrl: string;
   token?: string;
   taskRunner: SchedulerServiceTaskRunner;
@@ -17,6 +18,7 @@ type FmeFlowEntityProviderOptions = {
 
 export class FmeFlowEntityProvider implements EntityProvider {
   private connection?: EntityProviderConnection;
+  private readonly logger: LoggerService;
   private readonly baseUrl: string;
   private readonly token?: string;
   private readonly taskRunner: SchedulerServiceTaskRunner;
@@ -25,6 +27,7 @@ export class FmeFlowEntityProvider implements EntityProvider {
     this.baseUrl = options.baseUrl;
     this.token = options.token;
     this.taskRunner = options.taskRunner;
+    this.logger = options.logger;
   }
 
   getProviderName(): string {
@@ -46,26 +49,25 @@ export class FmeFlowEntityProvider implements EntityProvider {
     if (!this.connection) {
       throw new Error('FmeFlowEntityProvider is not connected');
     }
-  
     let data: any[] = [];
     try {
       data = await this.fetchFmeFlowData();
     } catch (error) {
-      console.error('❌ Failed to fetch from FME Flow:', error);
+      this.logger.warn('Failed to fetch from FME Flow:' + JSON.stringify(error));
       return;
     }
-  
-    const entities: Entity[] = [];
-  
+
+    const entities: FmeWorkspaceEntity[] = [];
+
     for (const item of data) {
       const cleanName = item.name
         ?.replace(/\.fmw$/, '')
         .toLowerCase()
         .replace(/[^a-z0-9\-]/g, '');
-  
+
       if (!cleanName) continue;
-  
-      const entity: Entity = {
+
+      const entity: FmeWorkspaceEntity = {
         apiVersion: 'geoportia.se/v1alpha1',
         kind: 'FmeWorkspace',
         metadata: {
@@ -83,10 +85,15 @@ export class FmeFlowEntityProvider implements EntityProvider {
           owner: 'user:default/data-team',
         },
       };
-  
+
+      if (!isFmeWorkspaceEntity(entity)) {
+        this.logger.warn('Invalid FmeWorkspaceEntity generated: ' + JSON.stringify(entity));
+        continue;
+      }
+
       entities.push(entity);
     }
-  
+
     await this.connection.applyMutation({
       type: 'full',
       entities: entities.map(entity => ({
@@ -95,7 +102,6 @@ export class FmeFlowEntityProvider implements EntityProvider {
       })),
     });
   }
-  
 
   private async fetchFmeFlowData(): Promise<any[]> {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';

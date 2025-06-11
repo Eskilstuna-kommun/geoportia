@@ -17,7 +17,7 @@ export const catalogModuleFmeflow = createBackendModule({
         scheduler: coreServices.scheduler,
         config: coreServices.rootConfig,
       },
-      async init({ catalog, scheduler, config }) {
+      async init({ catalog, scheduler, config, logger}) {
         const taskRunner = scheduler.createScheduledTaskRunner({
           frequency: { minutes: 5 },
           timeout: { minutes: 5 },
@@ -27,6 +27,7 @@ export const catalogModuleFmeflow = createBackendModule({
         const token = config.getOptionalString('catalog.providers.fmeflow.token');
 
         const provider = new FmeFlowEntityProvider({
+          logger,
           baseUrl,
           token,
           taskRunner,

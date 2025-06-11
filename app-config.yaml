@@ -118,8 +118,8 @@ catalog:
       uri: "postgresql://postgres:postgres@localhost:5432/postgres"
 
     fmeflow:
-      baseUrl: https://dataflowdemo.sweco.net/fmerest/v3
-      token: 7e6480be839b4530be3439e000fbeccc3992e1c5
+      baseUrl: ${FMEFLOW_BASE_URL}
+      token: ${FMEFLOW_TOKEN}
 
 
 kubernetes:
