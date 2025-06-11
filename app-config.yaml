@@ -92,7 +92,7 @@ catalog:
 #    entityFilename: catalog-info.yaml
 #    pullRequestBranchName: backstage-integration
   rules:
-    - allow: [Component, System, API, Resource, Location]
+    - allow: [Component, System, API, Resource, Location, FmeWorkspace]
   locations:
     # Local example data, file locations are relative to the backend process, typically `packages/backend`
 #    - type: file
@@ -115,7 +115,12 @@ catalog:
     #     - allow: [User, Group]
   providers:
     postgresql:
-      uri: "postgresql://postgres:postgres@localhost:15432/postgres"
+      uri: "postgresql://postgres:postgres@localhost:5432/postgres"
+
+    fmeflow:
+      baseUrl: ${FMEFLOW_BASE_URL}
+      token: ${FMEFLOW_TOKEN}
+
 
 kubernetes:
   # see https://backstage.io/docs/features/kubernetes/configuration for kubernetes configuration options

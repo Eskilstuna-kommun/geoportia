@@ -60,9 +60,8 @@ backend.add(import('@backstage/plugin-search-backend-module-techdocs'));
 // kubernetes
 backend.add(import('@backstage/plugin-kubernetes-backend'));
 
-backend.add(
-  import('@internal/backstage-plugin-catalog-backend-module-postgresql-data'),
-);
+backend.add(import('@internal/backstage-plugin-catalog-backend-module-postgresql-data'));
 backend.add(import('@internal/backstage-plugin-geoportia-metadata-backend'));
 backend.add(geoportiaMetadataBackendModule);
+backend.add(import('@internal/backstage-plugin-catalog-backend-module-fmeflow'));
 backend.start();
