@@ -115,7 +115,7 @@ catalog:
     #     - allow: [User, Group]
   providers:
     postgresql:
-      uri: "postgresql://postgres:postgres@localhost:5432/postgres"
+      uri: "postgresql://postgres:postgres@localhost:15432/postgres"
 
     fmeflow:
       baseUrl: ${FMEFLOW_BASE_URL}
