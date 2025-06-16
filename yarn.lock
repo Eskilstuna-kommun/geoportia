@@ -3765,6 +3765,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/runtime@npm:^7.23.1":
+  version: 7.27.6
+  resolution: "@babel/runtime@npm:7.27.6"
+  checksum: 10c0/89726be83f356f511dcdb74d3ea4d873a5f0cf0017d4530cb53aa27380c01ca102d573eff8b8b77815e624b1f8c24e7f0311834ad4fb632c90a770fda00bd4c8
+  languageName: node
+  linkType: hard
+
 "@babel/runtime@npm:^7.27.6":
   version: 7.27.6
   resolution: "@babel/runtime@npm:7.27.6"
@@ -22113,6 +22120,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"geoserver-rest-client@https://github.com/sweco-se1g7y/geoserver-node-client.git":
+  version: 1.4.7
+  resolution: "geoserver-rest-client@https://github.com/sweco-se1g7y/geoserver-node-client.git#commit=ae20945815649647ae05ec4b7793fae41437ff36"
+  dependencies:
+    "@babel/runtime": "npm:^7.23.1"
+    node-fetch: "npm:^3.3.2"
+  checksum: 10c0/84c312823ca8d5677f4e972cc1a0bdae32854aa2e36ee71a32f791b0c41dc656480d8d78ce2c583d1ddf8d4a2ecb77ee29a64c1857a9ab9cb9ebb4a5524675c7
+  languageName: node
+  linkType: hard
+
 "geoserver-rest-client@https://github.com/sweco-se1g7y/geoserver-node-client.git#typescript":
   version: 1.4.8
   resolution: "geoserver-rest-client@https://github.com/sweco-se1g7y/geoserver-node-client.git#commit=cbe98efc1ffe60eab6deda1e60db9ad9130658af"
@@ -32267,6 +32284,7 @@ __metadata:
     "@backstage/repo-tools": "npm:^0.13.3"
     "@playwright/test": "npm:^1.32.3"
     "@useoptic/optic": "npm:^1.0.5"
+    geoserver-rest-client: "https://github.com/sweco-se1g7y/geoserver-node-client.git"
     node-gyp: "npm:^10.0.0"
     pg-listen: "npm:^1.7.0"
     prettier: "npm:^2.3.2"
