@@ -4,12 +4,22 @@ import createSubscriber from 'pg-listen';
 // A class that listens on the schema_update channel in PostgreSQL and calls the update function when a notification is received.
 export class PostgresNotificationService {
   private subscriber: ReturnType<typeof createSubscriber>;
-  private update: () => void;
+  private update: (
+    updateType: string,
+    entityType: string,
+    entityName: string,
+    schemaName: string,
+  ) => void;
   private logger: LoggerService;
 
   constructor(
     connectionString: string,
-    updateFunction: () => void,
+    updateFunction: (
+      updateType: string,
+      entityType: string,
+      entityName: string,
+      schemaName: string,
+    ) => void,
     logger: LoggerService,
   ) {
     this.subscriber = createSubscriber({ connectionString });
@@ -18,9 +28,16 @@ export class PostgresNotificationService {
   }
 
   async start() {
-    this.subscriber.notifications.on('schema_update', _payload => {
-      this.logger.info('Received schema update notification from PostgreSQL');
-      this.update();
+    this.subscriber.notifications.on('schema_update', payload => {
+      try {
+        const { update, type, schema, identity } = payload;
+        this.update(update, type, identity, schema);
+      } catch (error) {
+        this.logger.error(
+          'Error processing schema_update notification: ' +
+            JSON.stringify(error),
+        );
+      }
     });
 
     this.subscriber.events.on('error', error => {

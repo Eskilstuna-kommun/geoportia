@@ -33,6 +33,55 @@ export class PostgreSQLDataProvider implements EntityProvider {
     await this.run();
   }
 
+  async update (updateType: string, entityType: string, entityName: string, schemaName: string) {
+    if (!this.connection) {
+      throw new Error('Not initialized');
+    }
+
+    // Check that the entity type is one of the supported types
+    if (entityType.toLowerCase() === 'table') {
+      entityType = 'Table';
+    } else if (entityType.toLowerCase() === 'view') {
+      entityType = 'View';
+    } else {
+      return;
+    }
+
+    const entity: Entity = {
+      apiVersion: 'geoportia.se/v1alpha1',
+      kind: entityType,
+      metadata: {
+        name: entityName,
+        title: entityName.replace(schemaName + '.', ''),
+        annotations: {
+          [ANNOTATION_LOCATION]: this.uri,
+          [ANNOTATION_ORIGIN_LOCATION]: this.uri,
+        },
+      },
+    };
+
+    // We can extend this later as we add more update types
+    switch (updateType) {
+      case 'DROP':
+        await this.connection.applyMutation({
+          type: 'delta',
+          added: [],
+          removed: [
+            {
+              entity,
+              locationKey: this.getProviderName(),
+            },
+          ],
+        });
+
+        break;
+
+      default:
+        // For all other update types, we will re-run the extraction
+        await this.run();
+    }
+  }
+
   async run() {
     if (!this.connection) {
       throw new Error('Not initialized');
