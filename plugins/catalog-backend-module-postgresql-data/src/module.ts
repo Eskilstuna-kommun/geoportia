@@ -31,9 +31,9 @@ export const catalogModulePostgresqlData = createBackendModule({
         catalog.addProcessor(new PostgreSQLEntitiesProcessor());
 
         // Performs a full refresh from the PostgreSQL database
-        const updateFunction = async () => {
+        const updateFunction = async (updateType: string, entityType: string, entityName: string, schemaName: string) => {
           try {
-            await provider.run();
+            await provider.update(updateType, entityType, entityName, schemaName);
           } catch (error) {
             logger.error('Error running PostgreSQL data provider: ' + error);
           }
