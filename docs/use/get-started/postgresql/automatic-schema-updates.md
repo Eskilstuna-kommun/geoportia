@@ -15,25 +15,39 @@ Add the following to the schema of your connected PostgreSQL database:
 CREATE OR REPLACE FUNCTION notify_ddl_watch() RETURNS event_trigger AS $$
 DECLARE
   cmd record;
+  comment text;
+  commentLine text;
 BEGIN
   FOR cmd IN SELECT * FROM pg_event_trigger_ddl_commands()
   LOOP
     IF cmd.command_tag IN (
-      'CREATE SCHEMA', 'ALTER SCHEMA'
-    , 'CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO', 'ALTER TABLE'
-    , 'CREATE FOREIGN TABLE', 'ALTER FOREIGN TABLE'
-    , 'CREATE VIEW', 'ALTER VIEW'
-    , 'CREATE MATERIALIZED VIEW', 'ALTER MATERIALIZED VIEW'
-    , 'CREATE FUNCTION', 'ALTER FUNCTION'
-    , 'CREATE TRIGGER'
-    , 'CREATE TYPE', 'ALTER TYPE'
-    , 'CREATE RULE'
+      'CREATE TABLE'
+    , 'CREATE TABLE AS'
+    , 'CREATE FOREIGN TABLE'
     , 'COMMENT'
+    , 'CREATE VIEW'
+    , 'ALTER VIEW'
+    , 'CREATE MATERIALIZED VIEW'
+    , 'ALTER MATERIALIZED VIEW'
     )
     -- don't notify in case of CREATE TEMP table or other objects created on pg_temp
     AND cmd.schema_name is distinct from 'pg_temp'
     THEN
-      NOTIFY schema_update, '{ "message": "schema altered" }';
+      SELECT obj_description(cmd.object_identity::regclass, 'pg_class') INTO comment;
+
+      IF comment IS NULL THEN
+        commentLine := '';
+      ELSE
+        commentLine := '", "comment": "' || replace(replace(comment, '"', '\"'), '\n', '\\n');
+      END IF;
+      PERFORM pg_notify('schema_update', '{ "update": "ALTER", ' ||
+      '"type": "' || cmd.object_type || '", ' ||
+      '"schema": "' || cmd.schema_name || '", ' ||
+      '"identity": "' || cmd.object_identity || '", ' ||
+      '"tag": "' || cmd.command_tag || 
+      commentLine ||
+      '" }'
+      );
     END IF;
   END LOOP;
 END; $$ LANGUAGE plpgsql;
@@ -46,19 +60,18 @@ BEGIN
   FOR obj IN SELECT * FROM pg_event_trigger_dropped_objects()
   LOOP
     IF obj.object_type IN (
-      'schema'
-    , 'table'
-    , 'foreign table'
+      'table'
     , 'view'
-    , 'materialized view'
-    , 'function'
-    , 'trigger'
-    , 'type'
-    , 'rule'
     )
     AND obj.is_temporary IS false -- no pg_temp objects
     THEN
-      NOTIFY schema_update, '{ "message": "part of schema removed" }';
+      PERFORM pg_notify('schema_update', '{ "update": "DROP", ' || 
+      '"type": "' || obj.object_type || 
+      '", "schema": "' || obj.schema_name ||
+      '", "identity": "' || obj.object_identity || 
+      '", "name": "' || obj.object_name || 
+      '" }'
+      ); 
     END IF;
   END LOOP;
 END; $$ LANGUAGE plpgsql;
