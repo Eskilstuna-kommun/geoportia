@@ -5,4 +5,4 @@
  * @packageDocumentation
  */
 
-export { catalogModuleFmeflow as default } from './module';
+export { catalogModuleFMEflow as default } from './module';
