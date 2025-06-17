@@ -92,7 +92,7 @@ catalog:
 #    entityFilename: catalog-info.yaml
 #    pullRequestBranchName: backstage-integration
   rules:
-    - allow: [Component, System, API, Resource, Location, FmeWorkspace]
+    - allow: [Component, System, API, Resource, Location, FMEWorkspace]
   locations:
     # Local example data, file locations are relative to the backend process, typically `packages/backend`
 #    - type: file
@@ -120,6 +120,7 @@ catalog:
     fmeflow:
       baseUrl: ${FMEFLOW_BASE_URL}
       token: ${FMEFLOW_TOKEN}
+      repository: ${FME_REPOSITORY_NAME}
 
     geoserver:
       uri: 

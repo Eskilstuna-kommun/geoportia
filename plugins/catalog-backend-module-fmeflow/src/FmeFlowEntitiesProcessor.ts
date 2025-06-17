@@ -1,23 +1,25 @@
 import {
   CatalogProcessor,
   CatalogProcessorEmit,
+  processingResult,
 } from '@backstage/plugin-catalog-node';
 import { LocationSpec } from '@backstage/plugin-catalog-common';
 import {
   Entity,
   getCompoundEntityRef,
+  parseEntityRef,
   RELATION_OWNED_BY,
+  RELATION_OWNER_OF,
 } from '@backstage/catalog-model';
-import { isFmeWorkspaceEntity  } from '@internal/fmeflow-common';
+import { isFMEWorkspaceEntity } from '@internal/fmeflow-common';
 
-export class FmeFlowEntitiesProcessor implements CatalogProcessor {
+export class FMEFlowEntitiesProcessor implements CatalogProcessor {
   getProcessorName(): string {
-    return 'FmeFlowEntitiesProcessor';
+    return 'FMEFlowEntitiesProcessor';
   }
 
   async validateEntityKind(entity: Entity): Promise<boolean> {
-    return (isFmeWorkspaceEntity(entity)
-    );
+    return isFMEWorkspaceEntity(entity);
   }
 
   async postProcessEntity(
@@ -25,26 +27,60 @@ export class FmeFlowEntitiesProcessor implements CatalogProcessor {
     _location: LocationSpec,
     emit: CatalogProcessorEmit,
   ): Promise<Entity> {
-    if (!isFmeWorkspaceEntity(entity)) {
+    if (!isFMEWorkspaceEntity(entity)) {
       return entity;
     }
 
-    const sourceRef = getCompoundEntityRef(entity);
+    const selfRef = getCompoundEntityRef(entity);
 
-    if (entity.spec?.owner) {
-      emit({
-        type: 'relation',
-        relation: {
-          type: RELATION_OWNED_BY,
-          source: sourceRef,
-          target: {
-            kind: 'Group',
-            namespace: 'default',
-            name: String(entity.spec.owner).split('/').pop() ?? 'data-team',
-          },
-        },
-      });
+    function doEmit(
+      targets: string | string[] | undefined,
+      context: { defaultKind?: string; defaultNamespace: string },
+      outgoingRelation: string,
+      incomingRelation: string,
+    ): void {
+      if (!targets) return;
+
+      for (const target of [targets].flat()) {
+        const targetRef = parseEntityRef(target, context);
+        console.log("targetRef", targetRef);
+
+        emit(
+          processingResult.relation({
+            source: selfRef,
+            type: outgoingRelation,
+            target: {
+              kind: targetRef.kind,
+              namespace: targetRef.namespace,
+              name: targetRef.name,
+            },
+          }),
+        );
+
+        emit(
+          processingResult.relation({
+            source: {
+              kind: targetRef.kind,
+              namespace: targetRef.namespace,
+              name: targetRef.name,
+            },
+            type: incomingRelation,
+            target: selfRef,
+          }),
+        );
+      }
     }
+
+    // Apply ownership relations
+    doEmit(
+      entity.spec.owner,
+      {
+        defaultKind: 'FMEWorkspace',
+        defaultNamespace: selfRef.namespace,
+      },
+      RELATION_OWNED_BY,
+      RELATION_OWNER_OF,
+    );
 
     return entity;
   }
