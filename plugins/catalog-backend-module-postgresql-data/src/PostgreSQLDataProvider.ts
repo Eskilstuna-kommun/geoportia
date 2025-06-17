@@ -2,7 +2,10 @@ import {
   EntityProvider,
   EntityProviderConnection,
 } from '@backstage/plugin-catalog-node';
-import { SchedulerServiceTaskRunner } from '@backstage/backend-plugin-api';
+import {
+  LoggerService,
+  SchedulerServiceTaskRunner,
+} from '@backstage/backend-plugin-api';
 import { extractSchemas } from 'extract-pg-schema';
 import {
   ANNOTATION_LOCATION,
@@ -16,6 +19,7 @@ export class PostgreSQLDataProvider implements EntityProvider {
   constructor(
     private uri: string,
     private taskRunner: SchedulerServiceTaskRunner,
+    private loggerService: LoggerService,
   ) {}
 
   getProviderName(): string {
@@ -33,7 +37,13 @@ export class PostgreSQLDataProvider implements EntityProvider {
     await this.run();
   }
 
-  async update (updateType: string, entityType: string, entityName: string, schemaName: string) {
+  async update(
+    updateType: string,
+    entityType: string,
+    entityName: string,
+    schemaName: string,
+    comment?: string,
+  ) {
     if (!this.connection) {
       throw new Error('Not initialized');
     }
@@ -44,6 +54,9 @@ export class PostgreSQLDataProvider implements EntityProvider {
     } else if (entityType.toLowerCase() === 'view') {
       entityType = 'View';
     } else {
+      this.loggerService.debug(
+        `Unsupported entity type: ${entityType}. Only 'table' and 'view' are supported.`,
+      );
       return;
     }
 
@@ -53,6 +66,7 @@ export class PostgreSQLDataProvider implements EntityProvider {
       metadata: {
         name: entityName,
         title: entityName.replace(schemaName + '.', ''),
+        description: comment || undefined,
         annotations: {
           [ANNOTATION_LOCATION]: this.uri,
           [ANNOTATION_ORIGIN_LOCATION]: this.uri,
@@ -60,8 +74,25 @@ export class PostgreSQLDataProvider implements EntityProvider {
       },
     };
 
-    // We can extend this later as we add more update types
     switch (updateType) {
+      case 'ALTER':
+        if (entityType.toLowerCase() === 'table') {
+          await this.connection.applyMutation({
+            type: 'delta',
+            added: [
+              {
+                entity,
+                locationKey: this.getProviderName(),
+              },
+            ],
+            removed: [],
+          });
+        } else {
+          // We can only delta-update tables at present. If the type is something else, we re-run the extraction instead.
+          await this.run();
+        }
+
+        break;
       case 'DROP':
         await this.connection.applyMutation({
           type: 'delta',
@@ -77,7 +108,8 @@ export class PostgreSQLDataProvider implements EntityProvider {
         break;
 
       default:
-        // For all other update types, we will re-run the extraction
+        // If we get a non-implemented update type, we re-run the extraction.
+        this.loggerService.warn('Unknown update type, re-running extraction!');
         await this.run();
     }
   }

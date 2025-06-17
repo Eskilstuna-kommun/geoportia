@@ -26,14 +26,14 @@ export const catalogModulePostgresqlData = createBackendModule({
         const postgresUri = rootConfig.getString(
           'catalog.providers.postgresql.uri',
         );
-        const provider = new PostgreSQLDataProvider(postgresUri, taskRunner);
+        const provider = new PostgreSQLDataProvider(postgresUri, taskRunner, logger);
         catalog.addEntityProvider(provider);
         catalog.addProcessor(new PostgreSQLEntitiesProcessor());
 
         // Performs a full refresh from the PostgreSQL database
-        const updateFunction = async (updateType: string, entityType: string, entityName: string, schemaName: string) => {
+        const updateFunction = async (updateType: string, entityType: string, entityName: string, schemaName: string, comment?: string) => {
           try {
-            await provider.update(updateType, entityType, entityName, schemaName);
+            await provider.update(updateType, entityType, entityName, schemaName, comment);
           } catch (error) {
             logger.error('Error running PostgreSQL data provider: ' + error);
           }
