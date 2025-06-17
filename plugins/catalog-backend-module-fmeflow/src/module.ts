@@ -3,10 +3,10 @@ import {
   createBackendModule,
 } from '@backstage/backend-plugin-api';
 import { catalogProcessingExtensionPoint } from '@backstage/plugin-catalog-node/alpha';
-import { FmeFlowEntityProvider } from './FmeFlowEntityProvider'; 
-import { FmeFlowEntitiesProcessor } from './FmeFlowEntitiesProcessor';
+import { FMEFlowEntityProvider } from './FMEFlowEntityProvider'; 
+import { FMEFlowEntitiesProcessor } from './FMEFlowEntitiesProcessor';
 
-export const catalogModuleFmeflow = createBackendModule({
+export const catalogModuleFMEflow = createBackendModule({
   pluginId: 'catalog',
   moduleId: 'fmeflow',
   register(reg) {
@@ -25,16 +25,18 @@ export const catalogModuleFmeflow = createBackendModule({
 
         const baseUrl = config.getString('catalog.providers.fmeflow.baseUrl');
         const token = config.getOptionalString('catalog.providers.fmeflow.token');
+        const repository = config.getOptionalString('catalog.providers.fmeflow.repository');
 
-        const provider = new FmeFlowEntityProvider({
+        const provider = new FMEFlowEntityProvider({
           logger,
           baseUrl,
           token,
           taskRunner,
+          repository: repository || 'default',
         });
 
         catalog.addEntityProvider(provider);
-        catalog.addProcessor(new FmeFlowEntitiesProcessor());
+        catalog.addProcessor(new FMEFlowEntitiesProcessor());
       },
     });
   },

@@ -7,31 +7,41 @@ import {
   ANNOTATION_LOCATION,
   ANNOTATION_ORIGIN_LOCATION,
 } from '@backstage/catalog-model';
-import { FmeWorkspaceEntity, isFmeWorkspaceEntity } from '@internal/fmeflow-common';
+import {
+  FMEWorkspaceEntity,
+  isFMEWorkspaceEntity,
+} from '@internal/fmeflow-common';
+import {
+  FMEFlowClient,
+  FMEFlowItem,
+} from '@internal/backstage-plugin-fmeflow-api-client-node';
 
-type FmeFlowEntityProviderOptions = {
-  logger:LoggerService;
+interface FMEFlowEntityProviderOptions {
+  logger: LoggerService;
   baseUrl: string;
+  repository: string;
   token?: string;
   taskRunner: SchedulerServiceTaskRunner;
-};
+}
 
-export class FmeFlowEntityProvider implements EntityProvider {
+export class FMEFlowEntityProvider implements EntityProvider {
   private connection?: EntityProviderConnection;
   private readonly logger: LoggerService;
-  private readonly baseUrl: string;
-  private readonly token?: string;
   private readonly taskRunner: SchedulerServiceTaskRunner;
+  private readonly client: FMEFlowClient;
 
-  constructor(options: FmeFlowEntityProviderOptions) {
-    this.baseUrl = options.baseUrl;
-    this.token = options.token;
-    this.taskRunner = options.taskRunner;
+  constructor(options: FMEFlowEntityProviderOptions) {
     this.logger = options.logger;
+    this.taskRunner = options.taskRunner;
+    this.client = new FMEFlowClient({
+      baseUrl: options.baseUrl,
+      repository: options.repository,
+      token: options.token,
+    });
   }
 
   getProviderName(): string {
-    return `fmeflow-provider-${this.baseUrl}`;
+    return `fmeflow-provider-${this.client['baseUrl']}`;
   }
 
   async connect(connection: EntityProviderConnection) {
@@ -47,53 +57,55 @@ export class FmeFlowEntityProvider implements EntityProvider {
 
   async run() {
     if (!this.connection) {
-      throw new Error('FmeFlowEntityProvider is not connected');
+      throw new Error('FMEFlowEntityProvider is not connected');
     }
-    let data: any[] = [];
+  
+    let data: FMEFlowItem[] = [];
     try {
-      data = await this.fetchFmeFlowData();
+      data = await this.client.fetchRepositoryItems();
     } catch (error) {
-      this.logger.warn('Failed to fetch from FME Flow:' + JSON.stringify(error));
+      this.logger.warn('Failed to fetch from FME Flow: ' + JSON.stringify(error));
       return;
     }
+  
+    const entities: FMEWorkspaceEntity[] = data
+      .map(item => {
+        const cleanName = item.name
+          ?.replace(/\.fmw$/, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9\-]/g, '');
 
-    const entities: FmeWorkspaceEntity[] = [];
+        if (!cleanName) return undefined;
 
-    for (const item of data) {
-      const cleanName = item.name
-        ?.replace(/\.fmw$/, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9\-]/g, '');
-
-      if (!cleanName) continue;
-
-      const entity: FmeWorkspaceEntity = {
-        apiVersion: 'geoportia.se/v1alpha1',
-        kind: 'FmeWorkspace',
-        metadata: {
-          name: cleanName,
-          title: item.title ?? cleanName,
-          description: item.description?.replace(/<\/?[^>]+>/g, '') ?? '',
-          annotations: {
-            [ANNOTATION_LOCATION]: `url:${this.baseUrl}`,
-            [ANNOTATION_ORIGIN_LOCATION]: `url:${this.baseUrl}`,
+        const entity: FMEWorkspaceEntity = {
+          apiVersion: 'geoportia.se/v1alpha1',
+          kind: 'FMEWorkspace',
+          metadata: {
+            name: cleanName,
+            title: item.title ?? cleanName,
+            description: item.description?.replace(/<\/?[^>]+>/g, '') ?? '',
+            annotations: {
+              [ANNOTATION_LOCATION]: `url:${this.client['baseUrl']}`,
+              [ANNOTATION_ORIGIN_LOCATION]: `url:${this.client['baseUrl']}`,
+            },
           },
-        },
-        spec: {
-          type: 'service',
-          lifecycle: 'production',
-          owner: 'user:default/data-team',
-        },
-      };
+          spec: {
+            type: item.type ?? 'fme-workspace',
+            lastUpdated: item.lastPublishDate,
+            lifecycle: 'production',
+            owner: 'data-team',
+          },
+        };
 
-      if (!isFmeWorkspaceEntity(entity)) {
-        this.logger.warn('Invalid FmeWorkspaceEntity generated: ' + JSON.stringify(entity));
-        continue;
-      }
+        if (!isFMEWorkspaceEntity(entity)) {
+          this.logger.warn('Invalid FMEWorkspaceEntity generated: ' + JSON.stringify(entity));
+          return undefined;
+        }
 
-      entities.push(entity);
-    }
-
+        return entity;
+      })
+      .filter((e): e is FMEWorkspaceEntity => e !== undefined);
+  
     await this.connection.applyMutation({
       type: 'full',
       entities: entities.map(entity => ({
@@ -102,27 +114,5 @@ export class FmeFlowEntityProvider implements EntityProvider {
       })),
     });
   }
-
-  private async fetchFmeFlowData(): Promise<any[]> {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
-    const url = `${this.baseUrl}/repositories/Samples/items?type=WORKSPACE`;
-
-    const res = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        Authorization: this.token ? `fmetoken token=${this.token}` : '',
-      },
-    });
-
-    if (!res.ok) {
-      const errorBody = await res.text();
-      throw new Error(
-        `FME Flow API call failed [${res.status} ${res.statusText}] — ${errorBody}`,
-      );
-    }
-
-    const json = await res.json();
-    return json.items || [];
-  }
+  
 }
