@@ -9,6 +9,7 @@ export class PostgresNotificationService {
     entityType: string,
     entityName: string,
     schemaName: string,
+    comment?: string,
   ) => void;
   private logger: LoggerService;
 
@@ -19,6 +20,7 @@ export class PostgresNotificationService {
       entityType: string,
       entityName: string,
       schemaName: string,
+      comment?: string,
     ) => void,
     logger: LoggerService,
   ) {
@@ -29,9 +31,11 @@ export class PostgresNotificationService {
 
   async start() {
     this.subscriber.notifications.on('schema_update', payload => {
+      this.logger.info(
+        `Received schema_update notification: ${JSON.stringify(payload)}`);
       try {
-        const { update, type, schema, identity } = payload;
-        this.update(update, type, identity, schema);
+        const { update, type, schema, identity, comment } = payload;
+        this.update(update, type, identity, schema, comment);
       } catch (error) {
         this.logger.error(
           'Error processing schema_update notification: ' +
