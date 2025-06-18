@@ -65,4 +65,5 @@ backend.add(
 );
 backend.add(import('@internal/backstage-plugin-geoportia-metadata-backend'));
 backend.add(geoportiaMetadataBackendModule);
+backend.add(import('@internal/backstage-plugin-catalog-backend-module-geoserver'));
 backend.start();

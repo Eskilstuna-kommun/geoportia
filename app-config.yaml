@@ -116,6 +116,13 @@ catalog:
   providers:
     postgresql:
       uri: "postgresql://postgres:postgres@localhost:15432/postgres"
+    geoserver:
+      uri: 
+        $env: GEOSERVER_BASE_URL
+      username: 
+        $env: GEOSERVER_USERNAME
+      password: 
+        $env: GEOSERVER_PASSWORD
 
 kubernetes:
   # see https://backstage.io/docs/features/kubernetes/configuration for kubernetes configuration options
