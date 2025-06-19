@@ -25,15 +25,31 @@ yarn dev
 Start psql client and create a new table in it.
 
 ```psql
-CREATE TABLE TestTable (id SERIAL PRIMARY KEY);
+CREATE TABLE TestTable (id SERIAL PRIMARY KEY, testfield INT);
 ```
 
-Reload check that the new table appears in the user interface on the Tables page. This may require navigating away from and back to the Tables page.
+Check that the new table appears in the user interface on the Tables page. This may require navigating away from and back to the Tables page.
+
+Rename the table.
+
+```psql
+ALTER TABLE TestTable RENAME TO TestTable2;
+```
+
+Check that the table now exists under the new name.
+
+Add a description to the table.
+
+```psql
+COMMENT ON TABLE TestTable2 IS 'This is my table.';
+```
+
+Check that the table now has the correct description.
 
 Drop the table again.
 
 ```psql
-DROP TABLE TestTable;
+DROP TABLE TestTable2;
 ```
 
 Check that the new table has disappeared from the user interface. This may require navigating away from and back to the Tables page.
