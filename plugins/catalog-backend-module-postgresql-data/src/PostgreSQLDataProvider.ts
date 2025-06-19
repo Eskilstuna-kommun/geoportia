@@ -77,6 +77,9 @@ export class PostgreSQLDataProvider implements EntityProvider {
     switch (updateType) {
       case 'ALTER':
         if (entityType.toLowerCase() === 'table') {
+          this.loggerService.debug(
+            `Entity ${entityName} of type ${entityType} was added or modified, updating catalog.`,
+          );
           await this.connection.applyMutation({
             type: 'delta',
             added: [
@@ -88,12 +91,18 @@ export class PostgreSQLDataProvider implements EntityProvider {
             removed: [],
           });
         } else {
+          this.loggerService.debug(
+            `Entity ${entityName} of type ${entityType} was added or modified, re-running extraction.`,
+          );
           // We can only delta-update tables at present. If the type is something else, we re-run the extraction instead.
           await this.run();
         }
 
         break;
       case 'DROP':
+        this.loggerService.debug(
+          `Entity ${entityName} of type ${entityType} was dropped, removing from catalog.`,
+        );
         await this.connection.applyMutation({
           type: 'delta',
           added: [],
@@ -104,6 +113,15 @@ export class PostgreSQLDataProvider implements EntityProvider {
             },
           ],
         });
+
+        break;
+
+      case 'FULL':
+        this.loggerService.debug(
+          'Request for full update received, re-running extraction.',
+        );
+        // A full update was requested. Re-run the extraction.
+        await this.run();
 
         break;
 
