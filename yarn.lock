@@ -20922,11 +20922,11 @@ __metadata:
 
 "geoserver-rest-client@https://github.com/sweco-se1g7y/geoserver-node-client.git":
   version: 1.4.7
-  resolution: "geoserver-rest-client@https://github.com/sweco-se1g7y/geoserver-node-client.git#commit=ae20945815649647ae05ec4b7793fae41437ff36"
+  resolution: "geoserver-rest-client@https://github.com/sweco-se1g7y/geoserver-node-client.git#commit=464dec3bb319127261d08ac6059aa6bd7a4df7a5"
   dependencies:
     "@babel/runtime": "npm:^7.23.1"
     node-fetch: "npm:^3.3.2"
-  checksum: 10c0/84c312823ca8d5677f4e972cc1a0bdae32854aa2e36ee71a32f791b0c41dc656480d8d78ce2c583d1ddf8d4a2ecb77ee29a64c1857a9ab9cb9ebb4a5524675c7
+  checksum: 10c0/ca7dd533cf279b00d6d5a85634082371468b48fa4683e1f99a32ec61ad14934b417f58549e1f05f49efe3e72eef284060e752c7fcd20f4fece2acd7b56c90d72
   languageName: node
   linkType: hard
 
