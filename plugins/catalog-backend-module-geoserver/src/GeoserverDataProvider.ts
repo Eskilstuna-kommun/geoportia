@@ -6,11 +6,13 @@ import {
   LoggerService,
   SchedulerServiceTaskRunner,
 } from '@backstage/backend-plugin-api';
+// @ts-ignore
 import { GeoServerRestClient } from 'geoserver-rest-client';
 import {
   ANNOTATION_LOCATION,
   ANNOTATION_ORIGIN_LOCATION,
   Entity,
+  stringifyEntityRef,
 } from '@backstage/catalog-model';
 
 export class GeoserverDataProvider implements EntityProvider {
@@ -51,7 +53,9 @@ export class GeoserverDataProvider implements EntityProvider {
     const workspaces = workspacesObject?.workspaces?.workspace;
 
     if (workspaces === undefined || workspaces.length === 0) {
-      this.logger.debug('No workspaces found in GeoServer.');
+      this.logger.info(
+        'No workspaces found in GeoServer. No Geoserver entities will be created.',
+      );
       return;
     }
 
@@ -73,20 +77,27 @@ export class GeoserverDataProvider implements EntityProvider {
           `Found data store: ${dataStore.name} at ${dataStore.href} for workspace ${workspace.name}`,
         );
 
-        const entity: Entity = {
+        const fullDataStoreObject = await grc.datastores.getDataStore(
+          workspace.name,
+          dataStore.name,
+        );
+
+        const dataStoreEntity: Entity = {
           apiVersion: 'geoportia.se/v1alpha1',
           kind: 'GeoserverStore',
           metadata: {
             name: dataStore.name,
-            description: undefined,
+            namespace: workspace.name,
+            description: fullDataStoreObject?.dataStore?.description,
             annotations: {
               [ANNOTATION_LOCATION]: `url:${this.uri}`,
               [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
             },
           },
+          spec: fullDataStoreObject?.dataStore || {},
         };
 
-        entities.push(entity);
+        entities.push(dataStoreEntity);
       }
 
       // Add coverage stores
@@ -99,19 +110,26 @@ export class GeoserverDataProvider implements EntityProvider {
           `Found coverage store: ${coverageStore.name} at ${coverageStore.href} for workspace ${workspace.name}`,
         );
 
-        const entity: Entity = {
+        const fullCoverageStoreObject = await grc.datastores.getCoverageStore(
+          workspace.name,
+          coverageStore.name,
+        );
+
+        const coverageStoreEntity: Entity = {
           apiVersion: 'geoportia.se/v1alpha1',
           kind: 'GeoserverStore',
           metadata: {
             name: coverageStore.name,
-            description: undefined,
+            namespace: workspace.name,
+            description: fullCoverageStoreObject?.coverageStore?.description,
             annotations: {
               [ANNOTATION_LOCATION]: `url:${this.uri}`,
               [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
             },
           },
+          spec: fullCoverageStoreObject?.coverageStore || {},
         };
-        entities.push(entity);
+        entities.push(coverageStoreEntity);
       }
 
       // Add WMS stores
@@ -125,19 +143,26 @@ export class GeoserverDataProvider implements EntityProvider {
           `Found WMS store: ${wmsStore.name} at ${wmsStore.href} for workspace ${workspace.name}`,
         );
 
-        const entity: Entity = {
+        const fullWmsStoreObject = await grc.datastores.getWmsStore(
+          workspace.name,
+          wmsStore.name,
+        );
+
+        const wmsStoreEntity: Entity = {
           apiVersion: 'geoportia.se/v1alpha1',
           kind: 'GeoserverStore',
           metadata: {
             name: wmsStore.name,
-            description: undefined,
+            namespace: workspace.name,
+            description: fullWmsStoreObject?.wmsStore?.description,
             annotations: {
               [ANNOTATION_LOCATION]: `url:${this.uri}`,
               [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
             },
           },
+          spec: fullWmsStoreObject?.wmsStore || {},
         };
-        entities.push(entity);
+        entities.push(wmsStoreEntity);
       }
 
       // Add WMT stores
@@ -151,21 +176,29 @@ export class GeoserverDataProvider implements EntityProvider {
           `Found WMT store: ${wmtStore.name} at ${wmtStore.href} for workspace ${workspace.name}`,
         );
 
-        const entity: Entity = {
+        const fullWmtStoreObject = await grc.datastores.getWmtsStore(
+          workspace.name,
+          wmtStore.name,
+        );
+
+        const wmtStoreEntity: Entity = {
           apiVersion: 'geoportia.se/v1alpha1',
           kind: 'GeoserverStore',
           metadata: {
             name: wmtStore.name,
-            description: undefined,
+            namespace: workspace.name,
+            description: fullWmtStoreObject?.wmtStore?.description,
             annotations: {
               [ANNOTATION_LOCATION]: `url:${this.uri}`,
               [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
             },
           },
+          spec: fullWmtStoreObject?.wmtStore || {},
         };
-        entities.push(entity);
+        entities.push(wmtStoreEntity);
       }
 
+      // Add layers
       const layersObject = await grc.layers.getLayers(workspace.name);
       const layers = layersObject?.layers?.layer;
       if (layers === undefined || layers.length === 0) {
@@ -177,10 +210,32 @@ export class GeoserverDataProvider implements EntityProvider {
           `Found layer: ${layer.name} at ${layer.href} for workspace ${workspace.name}`,
         );
 
-        const fullLayer = await grc.layers.get(workspace.name, layer.name);
+        const fullLayerObject = await grc.layers.get(
+          workspace.name,
+          layer.name,
+        );
 
-        if (fullLayer && fullLayer.layer && fullLayer.layer.resource) {
-          switch (fullLayer.layer.resource['@class']) {
+        const layerEntity: Entity = {
+          apiVersion: 'geoportia.se/v1alpha1',
+          kind: 'GeoserverLayer',
+          metadata: {
+            name: layer.name,
+            namespace: workspace.name,
+            description: undefined,
+            annotations: {
+              [ANNOTATION_LOCATION]: `url:${this.uri}`,
+              [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
+            },
+          },
+          spec: fullLayerObject?.layer ? fullLayerObject.layer : {},
+        };
+
+        if (
+          fullLayerObject &&
+          fullLayerObject.layer &&
+          fullLayerObject.layer.resource
+        ) {
+          switch (fullLayerObject.layer.resource['@class']) {
             case 'featureType':
               const dataStoresForLayerObject = await grc.layers.getDataStore(
                 workspace.name,
@@ -191,46 +246,60 @@ export class GeoserverDataProvider implements EntityProvider {
                 `Found data store: ${dataStoreForLayer.name} for layer ${layer.name}`,
               );
 
-              //ToDo: create a relation on the layer entity for the data store
+              if (layerEntity.spec !== undefined) {
+                layerEntity.spec.store = {
+                  type: 'partOf',
+                  targetRef: stringifyEntityRef({
+                    kind: 'GeoserverStore',
+                    namespace: workspace.name,
+                    name: dataStoreForLayer.name,
+                  }),
+                };
+              } else {
+                this.logger.warn(
+                  'Layer spec is undefined, cannot set store relation.',
+                );
+              }
 
               break;
             case 'coverage':
-              const coverageStoresForLayerObject = await grc.layers.getCoverageStore(
-                workspace.name,
-                layer.name,
-              );
-              const coverageStoreForLayer = coverageStoresForLayerObject?.coverageStore;
+              const coverageStoresForLayerObject =
+                await grc.layers.getCoverageStore(workspace.name, layer.name);
+              const coverageStoreForLayer =
+                coverageStoresForLayerObject?.coverageStore;
               this.logger.debug(
                 `Found coverage store: ${coverageStoreForLayer.name} for layer ${layer.name}`,
               );
 
-              //ToDo: create a relation on the layer entity for the data store
+              if (layerEntity.spec !== undefined) {
+                layerEntity.spec.store = {
+                  type: 'partOf',
+                  targetRef: stringifyEntityRef({
+                    kind: 'GeoserverStore',
+                    namespace: workspace.name,
+                    name: coverageStoreForLayer.name,
+                  }),
+                };
+              } else {
+                this.logger.warn(
+                  'Layer spec is undefined, cannot set store relation.',
+                );
+              }
 
               break;
             default:
               this.logger.warn(
-                `Unknown resource type for layer ${layer.name}: ${fullLayer.layer.resource['@class']}`,
+                `Unknown resource type for layer ${layer.name}: ${fullLayerObject.layer.resource['@class']}`,
               );
               break;
           }
-        }
-        else {
-          this.logger.warn("Layer lacks a resource and no store can therefore be found: " + layer.name);
+        } else {
+          this.logger.warn(
+            `Layer ${layer.name} lacks a resource and no store can therefore be found.`,
+          );
         }
 
-        const entity: Entity = {
-          apiVersion: 'geoportia.se/v1alpha1',
-          kind: 'GeoserverLayer',
-          metadata: {
-            name: layer.name,
-            description: undefined,
-            annotations: {
-              [ANNOTATION_LOCATION]: `url:${this.uri}`,
-              [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
-            },
-          },
-        };
-        entities.push(entity);
+        entities.push(layerEntity);
       }
     }
 

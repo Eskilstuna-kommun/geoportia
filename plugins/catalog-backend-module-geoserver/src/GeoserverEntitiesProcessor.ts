@@ -3,7 +3,11 @@ import {
   CatalogProcessorEmit,
 } from '@backstage/plugin-catalog-node';
 import { LocationSpec } from '@backstage/plugin-catalog-common';
-import { Entity, getCompoundEntityRef } from '@backstage/catalog-model';
+import {
+  Entity,
+  getCompoundEntityRef,
+  parseEntityRef,
+} from '@backstage/catalog-model';
 import { LoggerService } from '@backstage/backend-plugin-api';
 
 export class GeoserverEntitiesProcessor implements CatalogProcessor {
@@ -14,11 +18,15 @@ export class GeoserverEntitiesProcessor implements CatalogProcessor {
   }
 
   async validateEntityKind(entity: any): Promise<boolean> {
-    return (
-      entity.apiVersion === 'geoportia.se/v1alpha1' &&
-      (entity.kind === 'GeoserverLayer' || 
-        entity.kind === 'GeoserverStore')
-    );
+    if (entity.apiVersion !== 'geoportia.se/v1alpha1') {
+      return false;
+    }
+    if (entity.kind === 'GeoserverLayer') {
+      return true;
+    } else if (entity.kind === 'GeoserverStore') {
+      return true;
+    }
+    return false;
   }
 
   async postProcessEntity(
@@ -26,6 +34,37 @@ export class GeoserverEntitiesProcessor implements CatalogProcessor {
     _location: LocationSpec,
     emit: CatalogProcessorEmit,
   ) {
+    if (entity.kind === 'GeoserverLayer') {
+      const relation = entity.spec?.store;
+      if (
+        relation !== null &&
+        relation !== undefined &&
+        typeof relation === 'object' &&
+        'targetRef' in relation &&
+        typeof (relation as { targetRef?: unknown }).targetRef === 'string'
+      ) {
+        emit({
+          type: 'relation',
+          relation: {
+            type: 'partOf',
+            source: getCompoundEntityRef(entity),
+            target: parseEntityRef(relation.targetRef as string),
+          },
+        });
+        emit({
+          type: 'relation',
+          relation: {
+            type: 'hasPart',
+            source: parseEntityRef(relation.targetRef as string),
+            target: getCompoundEntityRef(entity),
+          },
+        });
+        this.logger.debug(
+          `Emitted relation between from ${entity.metadata.name} and ${relation.targetRef}.`,
+        );
+      }
+    }
+
     return entity;
   }
 }
