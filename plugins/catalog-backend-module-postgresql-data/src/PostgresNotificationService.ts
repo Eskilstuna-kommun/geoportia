@@ -31,7 +31,7 @@ export class PostgresNotificationService {
 
   async start() {
     this.subscriber.notifications.on('schema_update', payload => {
-      this.logger.info(
+      this.logger.debug(
         `Received schema_update notification: ${JSON.stringify(payload)}`);
       try {
         const { update, type, schema, identity, comment } = payload;
