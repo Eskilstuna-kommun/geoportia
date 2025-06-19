@@ -73,8 +73,20 @@ export class GeoserverDataProvider implements EntityProvider {
           `Found data store: ${dataStore.name} at ${dataStore.href} for workspace ${workspace.name}`,
         );
 
-        // ToDo: create an entity for the data store
-        // ToDo: add the data store entity to the entities array
+        const entity: Entity = {
+          apiVersion: 'geoportia.se/v1alpha1',
+          kind: 'GeoserverStore',
+          metadata: {
+            name: dataStore.name,
+            description: undefined,
+            annotations: {
+              [ANNOTATION_LOCATION]: `url:${this.uri}`,
+              [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
+            },
+          },
+        };
+
+        entities.push(entity);
       }
 
       // Add coverage stores
@@ -87,8 +99,19 @@ export class GeoserverDataProvider implements EntityProvider {
           `Found coverage store: ${coverageStore.name} at ${coverageStore.href} for workspace ${workspace.name}`,
         );
 
-        // ToDo: create an entity for the coveragestore
-        // ToDo: add the coverage store entity to the entities array
+        const entity: Entity = {
+          apiVersion: 'geoportia.se/v1alpha1',
+          kind: 'GeoserverStore',
+          metadata: {
+            name: coverageStore.name,
+            description: undefined,
+            annotations: {
+              [ANNOTATION_LOCATION]: `url:${this.uri}`,
+              [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
+            },
+          },
+        };
+        entities.push(entity);
       }
 
       // Add WMS stores
@@ -102,8 +125,19 @@ export class GeoserverDataProvider implements EntityProvider {
           `Found WMS store: ${wmsStore.name} at ${wmsStore.href} for workspace ${workspace.name}`,
         );
 
-        // ToDo: create an entity for the WMS store
-        // ToDo: add the WMS stpre entity to the entities array
+        const entity: Entity = {
+          apiVersion: 'geoportia.se/v1alpha1',
+          kind: 'GeoserverStore',
+          metadata: {
+            name: wmsStore.name,
+            description: undefined,
+            annotations: {
+              [ANNOTATION_LOCATION]: `url:${this.uri}`,
+              [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
+            },
+          },
+        };
+        entities.push(entity);
       }
 
       // Add WMT stores
@@ -117,8 +151,19 @@ export class GeoserverDataProvider implements EntityProvider {
           `Found WMT store: ${wmtStore.name} at ${wmtStore.href} for workspace ${workspace.name}`,
         );
 
-        // ToDo: create an entity for the WMT store
-        // ToDo: add the WMT stpre entity to the entities array
+        const entity: Entity = {
+          apiVersion: 'geoportia.se/v1alpha1',
+          kind: 'GeoserverStore',
+          metadata: {
+            name: wmtStore.name,
+            description: undefined,
+            annotations: {
+              [ANNOTATION_LOCATION]: `url:${this.uri}`,
+              [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
+            },
+          },
+        };
+        entities.push(entity);
       }
 
       const layersObject = await grc.layers.getLayers(workspace.name);
@@ -173,8 +218,19 @@ export class GeoserverDataProvider implements EntityProvider {
           this.logger.warn("Layer lacks a resource and no store can therefore be found: " + layer.name);
         }
 
-        // ToDo: create an entity for the layer
-        // ToDo: add the layer entity to the entities array
+        const entity: Entity = {
+          apiVersion: 'geoportia.se/v1alpha1',
+          kind: 'GeoserverLayer',
+          metadata: {
+            name: layer.name,
+            description: undefined,
+            annotations: {
+              [ANNOTATION_LOCATION]: `url:${this.uri}`,
+              [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
+            },
+          },
+        };
+        entities.push(entity);
       }
     }
 

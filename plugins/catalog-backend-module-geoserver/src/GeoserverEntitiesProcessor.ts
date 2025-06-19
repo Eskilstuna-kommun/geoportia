@@ -16,7 +16,8 @@ export class GeoserverEntitiesProcessor implements CatalogProcessor {
   async validateEntityKind(entity: any): Promise<boolean> {
     return (
       entity.apiVersion === 'geoportia.se/v1alpha1' &&
-      entity.kind === 'GeoserverLayer'
+      (entity.kind === 'GeoserverLayer' || 
+        entity.kind === 'GeoserverStore')
     );
   }
 
