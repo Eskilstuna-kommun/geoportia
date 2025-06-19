@@ -43,8 +43,6 @@ export class FMEFlowEntitiesProcessor implements CatalogProcessor {
 
       for (const target of [targets].flat()) {
         const targetRef = parseEntityRef(target, context);
-        console.log("targetRef", targetRef);
-
         emit(
           processingResult.relation({
             source: selfRef,
