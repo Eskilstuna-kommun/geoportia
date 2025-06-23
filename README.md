@@ -21,6 +21,9 @@ Create a `.env` file inside the `packages/backend` directory with the following 
 ```
 GITHUB_CLIENT_ID=your_github_client_id
 GITHUB_CLIENT_SECRET=your_github_client_secret
+GEOSERVER_BASE_URL=http://localhost:18080/geoserver/rest/
+GEOSERVER_USERNAME=admin
+GEOSERVER_PASSWORD=geoserver
 ```
  
 To generate GitHub OAuth credentials, follow the official Backstage documentation:  
