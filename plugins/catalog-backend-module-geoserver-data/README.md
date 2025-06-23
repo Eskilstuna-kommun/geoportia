@@ -1,4 +1,4 @@
-# @internal/backstage-plugin-catalog-backend-module-geoserver
+# @internal/backstage-plugin-catalog-backend-module-geoserver-data
 
 The geoserver backend module for the catalog plugin.
 

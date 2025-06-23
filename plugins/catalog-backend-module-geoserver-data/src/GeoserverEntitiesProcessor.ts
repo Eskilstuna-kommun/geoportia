@@ -9,6 +9,10 @@ import {
   parseEntityRef,
 } from '@backstage/catalog-model';
 import { LoggerService } from '@backstage/backend-plugin-api';
+import {
+  isGeoserverStoreEntity,
+  isGeoserverLayerEntity,
+} from '@internal/geoserver-data-common';
 
 export class GeoserverEntitiesProcessor implements CatalogProcessor {
   constructor(private logger: LoggerService) {}
@@ -21,9 +25,9 @@ export class GeoserverEntitiesProcessor implements CatalogProcessor {
     if (entity.apiVersion !== 'geoportia.se/v1alpha1') {
       return false;
     }
-    if (entity.kind === 'GeoserverLayer') {
+    if (isGeoserverStoreEntity(entity)) {
       return true;
-    } else if (entity.kind === 'GeoserverStore') {
+    } else if (isGeoserverLayerEntity(entity)) {
       return true;
     }
     return false;
