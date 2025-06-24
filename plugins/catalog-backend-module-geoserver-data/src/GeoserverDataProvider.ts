@@ -165,37 +165,37 @@ export class GeoserverDataProvider implements EntityProvider {
         entities.push(wmsStoreEntity);
       }
 
-      // Add WMT stores
-      const wmtStoresForWorkspaceObject = await grc.datastores.getWmtsStores(
+      // Add WMTS stores
+      const wmtsStoresForWorkspaceObject = await grc.datastores.getWmtsStores(
         workspace.name,
       );
-      const wmtStoresForWorkspace =
-        wmtStoresForWorkspaceObject?.wmtStores?.wmtStore;
-      for (const wmtStore of wmtStoresForWorkspace || []) {
+      const wmtsStoresForWorkspace =
+        wmtsStoresForWorkspaceObject?.wmtStores?.wmtStore;
+      for (const wmtsStore of wmtsStoresForWorkspace || []) {
         this.logger.debug(
-          `Found WMT store: ${wmtStore.name} at ${wmtStore.href} for workspace ${workspace.name}`,
+          `Found WMT store: ${wmtsStore.name} at ${wmtsStore.href} for workspace ${workspace.name}`,
         );
 
-        const fullWmtStoreObject = await grc.datastores.getWmtsStore(
+        const fullWmtsStoreObject = await grc.datastores.getWmtsStore(
           workspace.name,
-          wmtStore.name,
+          wmtsStore.name,
         );
 
-        const wmtStoreEntity: Entity = {
+        const wmtsStoreEntity: Entity = {
           apiVersion: 'geoportia.se/v1alpha1',
           kind: 'GeoserverStore',
           metadata: {
-            name: wmtStore.name,
+            name: wmtsStore.name,
             namespace: workspace.name,
-            description: fullWmtStoreObject?.wmtStore?.description,
+            description: fullWmtsStoreObject?.wmtsStore?.description,
             annotations: {
               [ANNOTATION_LOCATION]: `url:${this.uri}`,
               [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
             },
           },
-          spec: fullWmtStoreObject?.wmtStore || {},
+          spec: fullWmtsStoreObject?.wmtStore || {},
         };
-        entities.push(wmtStoreEntity);
+        entities.push(wmtsStoreEntity);
       }
 
       // Add layers
