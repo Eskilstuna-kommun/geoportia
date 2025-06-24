@@ -6874,6 +6874,7 @@ __metadata:
     "@backstage/backend-test-utils": "npm:^1.5.0"
     "@backstage/cli": "npm:^0.32.1"
     "@internal/geoserver-data-common": "link:../geoserver-data-common"
+    geoserver-rest-client: "https://github.com/sweco-se1g7y/geoserver-node-client.git"
   languageName: unknown
   linkType: soft
 
@@ -6890,6 +6891,7 @@ __metadata:
     "@internal/postgresql-data-common": "link:../postgresql-data-common"
     extract-pg-schema: "npm:^5.3.4"
     knex: "npm:^3.1.0"
+    pg-listen: "npm:^1.7.0"
   languageName: unknown
   linkType: soft
 
@@ -31075,9 +31077,7 @@ __metadata:
     "@backstage/repo-tools": "npm:^0.13.3"
     "@playwright/test": "npm:^1.32.3"
     "@useoptic/optic": "npm:^1.0.5"
-    geoserver-rest-client: "https://github.com/sweco-se1g7y/geoserver-node-client.git"
     node-gyp: "npm:^10.0.0"
-    pg-listen: "npm:^1.7.0"
     prettier: "npm:^2.3.2"
     typescript: "npm:~5.4.0"
   languageName: unknown

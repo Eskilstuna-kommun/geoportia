@@ -57,8 +57,6 @@
   "packageManager": "yarn@4.4.1",
   "dependencies": {
     "@backstage/repo-tools": "^0.13.3",
-    "@useoptic/optic": "^1.0.5",
-    "geoserver-rest-client": "https://github.com/sweco-se1g7y/geoserver-node-client.git",
-    "pg-listen": "^1.7.0"
+    "@useoptic/optic": "^1.0.5"
   }
 }
