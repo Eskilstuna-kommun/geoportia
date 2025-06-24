@@ -1,16 +1,15 @@
 import { Entity, KindValidator } from '@backstage/catalog-model';
-import { TableDetails, ViewDetails } from 'extract-pg-schema';
 import { JsonObject } from '@backstage/types';
 
 export interface GeoserverStoreEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
   kind: 'GeoserverStore';
-  spec: TableDetails & JsonObject;
+  spec: JsonObject;
 }
 export interface GeoserverLayerEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
   kind: 'GeoserverLayer';
-  spec: ViewDetails & JsonObject;
+  spec: JsonObject;
 }
 
 export const geoserverStoreEntityValidator: KindValidator = {
