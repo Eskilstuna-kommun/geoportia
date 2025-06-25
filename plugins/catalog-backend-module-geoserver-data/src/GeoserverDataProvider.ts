@@ -6,7 +6,6 @@ import {
   LoggerService,
   SchedulerServiceTaskRunner,
 } from '@backstage/backend-plugin-api';
-// @ts-ignore
 import { GeoServerRestClient } from 'geoserver-rest-client';
 import {
   ANNOTATION_LOCATION,
