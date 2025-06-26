@@ -3,7 +3,12 @@ import {
   CatalogProcessorEmit,
 } from '@backstage/plugin-catalog-node';
 import { LocationSpec } from '@backstage/plugin-catalog-common';
-import { Entity, getCompoundEntityRef } from '@backstage/catalog-model';
+import {
+  Entity,
+  getCompoundEntityRef,
+  RELATION_DEPENDS_ON,
+  RELATION_DEPENDENCY_OF,
+} from '@backstage/catalog-model';
 import {
   postgresqlTableEntityValidator,
   postgresqlViewEntityValidator,
@@ -63,7 +68,7 @@ export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
         emit({
           type: 'relation',
           relation: {
-            type: 'dependsOn',
+            type: RELATION_DEPENDS_ON,
             source: getCompoundEntityRef(entity),
             target: {
               kind: 'Table',
@@ -75,7 +80,7 @@ export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
         emit({
           type: 'relation',
           relation: {
-            type: 'dependencyOf',
+            type: RELATION_DEPENDENCY_OF,
             target: getCompoundEntityRef(entity),
             source: {
               kind: 'Table',

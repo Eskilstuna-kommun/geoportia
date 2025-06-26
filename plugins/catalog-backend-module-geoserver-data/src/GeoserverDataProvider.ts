@@ -10,6 +10,7 @@ import { GeoServerRestClient } from 'geoserver-rest-client';
 import {
   ANNOTATION_LOCATION,
   ANNOTATION_ORIGIN_LOCATION,
+  RELATION_PART_OF,
   Entity,
   stringifyEntityRef,
 } from '@backstage/catalog-model';
@@ -72,7 +73,7 @@ export class GeoserverDataProvider implements EntityProvider {
   ):void  {
     if (layer.spec !== undefined) {
       layer.spec.store = {
-        type: 'partOf',
+        type: RELATION_PART_OF,
         targetRef: stringifyEntityRef({
           kind: 'GeoserverStore',
           namespace: workspaceName,

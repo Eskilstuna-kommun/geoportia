@@ -7,6 +7,8 @@ import {
   Entity,
   getCompoundEntityRef,
   parseEntityRef,
+  RELATION_PART_OF,
+  RELATION_HAS_PART
 } from '@backstage/catalog-model';
 import { LoggerService } from '@backstage/backend-plugin-api';
 import {
@@ -50,7 +52,7 @@ export class GeoserverEntitiesProcessor implements CatalogProcessor {
         emit({
           type: 'relation',
           relation: {
-            type: 'partOf',
+            type: RELATION_PART_OF,
             source: getCompoundEntityRef(entity),
             target: parseEntityRef(relation.targetRef as string),
           },
@@ -58,7 +60,7 @@ export class GeoserverEntitiesProcessor implements CatalogProcessor {
         emit({
           type: 'relation',
           relation: {
-            type: 'hasPart',
+            type: RELATION_HAS_PART,
             source: parseEntityRef(relation.targetRef as string),
             target: getCompoundEntityRef(entity),
           },
