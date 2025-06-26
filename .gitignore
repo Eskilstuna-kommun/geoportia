@@ -59,3 +59,4 @@ e2e-test-report/
 /plugins/geoportia-metadata-common/src/schema/
 /plugins/geoportia-metadata/
 /.cache/
+/plugins/catalog-backend-module-arcgis-sde-data/src/arcpy/test/TestGDB.gdb
