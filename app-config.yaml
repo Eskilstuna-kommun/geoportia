@@ -30,19 +30,19 @@ backend:
   database:
     client: better-sqlite3
     connection:
-      directory: "database"
+      directory: 'database'
   # workingDirectory: /tmp # Use this to configure a working directory for the scaffolder, defaults to the OS temp-dir
 
 integrations:
 #  github:
 #    - host: github.com
-      # This is a Personal Access Token or PAT from GitHub. You can find out how to generate this token, and more information
-      # about setting up the GitHub integration here: https://backstage.io/docs/integrations/github/locations#configuration
+# This is a Personal Access Token or PAT from GitHub. You can find out how to generate this token, and more information
+# about setting up the GitHub integration here: https://backstage.io/docs/integrations/github/locations#configuration
 #      token: ${GITHUB_TOKEN}
-    ### Example for how to add your GitHub Enterprise instance using the API:
-    # - host: ghe.example.net
-    #   apiBaseUrl: https://ghe.example.net/api/v3
-    #   token: ${GHE_TOKEN}
+### Example for how to add your GitHub Enterprise instance using the API:
+# - host: ghe.example.net
+#   apiBaseUrl: https://ghe.example.net/api/v3
+#   token: ${GHE_TOKEN}
 
 proxy:
   ### Example for how to add a proxy endpoint for the frontend.
@@ -88,15 +88,15 @@ scaffolder:
   # see https://backstage.io/docs/features/software-templates/configuration for software template options
 
 catalog:
-#  import:
-#    entityFilename: catalog-info.yaml
-#    pullRequestBranchName: backstage-integration
+  #  import:
+  #    entityFilename: catalog-info.yaml
+  #    pullRequestBranchName: backstage-integration
   rules:
     - allow: [Component, System, API, Resource, Location, FMEWorkspace]
   locations:
     # Local example data, file locations are relative to the backend process, typically `packages/backend`
-#    - type: file
-#      target: ../../examples/entities.yaml
+    #    - type: file
+    #      target: ../../examples/entities.yaml
 
     # Local example organizational data
     - type: file
@@ -123,11 +123,11 @@ catalog:
       repository: ${FME_REPOSITORY_NAME}
 
     geoserver:
-      uri: 
+      uri:
         $env: GEOSERVER_BASE_URL
-      username: 
+      username:
         $env: GEOSERVER_USERNAME
-      password: 
+      password:
         $env: GEOSERVER_PASSWORD
 
 kubernetes:

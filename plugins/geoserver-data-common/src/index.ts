@@ -23,8 +23,12 @@ export const geoserverLayerEntityValidator: KindValidator = {
   },
 };
 
-export const isGeoserverStoreEntity = (data: Entity): data is GeoserverStoreEntity =>
+export const isGeoserverStoreEntity = (
+  data: Entity,
+): data is GeoserverStoreEntity =>
   data.apiVersion === 'geoportia.se/v1alpha1' && data.kind === 'GeoserverStore';
 
-export const isGeoserverLayerEntity = (data: Entity): data is GeoserverLayerEntity =>
+export const isGeoserverLayerEntity = (
+  data: Entity,
+): data is GeoserverLayerEntity =>
   data.apiVersion === 'geoportia.se/v1alpha1' && data.kind === 'GeoserverLayer';

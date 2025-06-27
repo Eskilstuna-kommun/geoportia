@@ -8,7 +8,7 @@ import {
   getCompoundEntityRef,
   parseEntityRef,
   RELATION_PART_OF,
-  RELATION_HAS_PART
+  RELATION_HAS_PART,
 } from '@backstage/catalog-model';
 import { LoggerService } from '@backstage/backend-plugin-api';
 import {

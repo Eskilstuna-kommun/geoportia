@@ -70,7 +70,7 @@ export class GeoserverDataProvider implements EntityProvider {
     layer: Entity,
     workspaceName: string,
     storeName: string,
-  ):void  {
+  ): void {
     if (layer.spec !== undefined) {
       layer.spec.store = {
         type: RELATION_PART_OF,
@@ -83,7 +83,7 @@ export class GeoserverDataProvider implements EntityProvider {
     } else {
       this.logger.warn('Layer spec is undefined, cannot set store relation.');
     }
-  };
+  }
 
   async run() {
     if (!this.connection) {
