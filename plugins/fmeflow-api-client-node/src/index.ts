@@ -14,6 +14,11 @@ export interface FMEFlowItem {
   type?: string;
 }
 
+export interface CompletedWorkspaceJob {
+  id: number;
+  workspace:string
+}
+
 export interface FMEFlowFeatureType {
   name: string;
 }
@@ -56,5 +61,47 @@ export class FMEFlowClient {
 
     const json = await res.json();
     return json.items ?? [];
+  }
+
+  async fetchCompletedJobs(): Promise<CompletedWorkspaceJob[]> {
+    const url = `${this.baseUrl}/transformations/jobs/completed?completedState=success&limit=100&offset=0&repository=${this.repository}`;
+
+    const res = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        ...(this.token && { Authorization: `fmetoken token=${this.token}` }),
+      },
+    });
+
+    if (!res.ok) {
+      const errorBody = await res.text();
+      throw new Error(
+        `FME Flow API call failed [${res.status} ${res.statusText}] — ${errorBody}`,
+      );
+    }
+
+    const json = await res.json();
+    return json.items ?? [];
+  }
+
+  async fetchLogsForJob(id: number): Promise<any> {
+    const url = `${this.baseUrl}/transformations/jobs/id/${id}/log`;
+  
+    const res = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        ...(this.token && { Authorization: `fmetoken token=${this.token}` }),
+      },
+    });
+  
+    if (!res.ok) {
+      const errorBody = await res.text();
+      throw new Error(
+        `FME Flow API call failed [${res.status} ${res.statusText}] — ${errorBody}`,
+      );
+    }
+  
+    const json = await res.json();
+    return json;
   }
 }
