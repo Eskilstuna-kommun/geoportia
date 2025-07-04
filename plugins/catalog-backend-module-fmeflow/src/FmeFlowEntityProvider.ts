@@ -6,15 +6,19 @@ import { LoggerService, SchedulerServiceTaskRunner } from '@backstage/backend-pl
 import {
   ANNOTATION_LOCATION,
   ANNOTATION_ORIGIN_LOCATION,
+  Entity,
 } from '@backstage/catalog-model';
 import {
+  DatabaseRelation,
+  extractDatabaseRelationsFromLogEntries,
   FMEWorkspaceEntity,
-  isFMEWorkspaceEntity,
 } from '@internal/fmeflow-common';
 import {
+  CompletedWorkspaceJob,
   FMEFlowClient,
   FMEFlowItem,
 } from '@internal/backstage-plugin-fmeflow-api-client-node';
+
 
 interface FMEFlowEntityProviderOptions {
   logger: LoggerService;
@@ -60,6 +64,30 @@ export class FMEFlowEntityProvider implements EntityProvider {
       throw new Error('FMEFlowEntityProvider is not connected');
     }
   
+    const jobLogsMap = new Map<string, DatabaseRelation>();
+  
+    // 1. Fetch completed jobs
+    let completedJobs: CompletedWorkspaceJob[] = [];
+    try {
+      completedJobs = await this.client.fetchCompletedJobs();
+    } catch (error) {
+      this.logger.warn('Failed to get completed jobs: ' + JSON.stringify(error));
+      return;
+    }
+  
+    // 2. Extract DB relations from logs
+    for (const job of completedJobs) {
+      if (!job.workspace) continue;
+      try {
+        const logData = await this.client.fetchLogsForJob(job.id);
+        const relations = extractDatabaseRelationsFromLogEntries(logData.items);
+        jobLogsMap.set(job.workspace, relations);
+      } catch (err) {
+        this.logger.warn(`Failed to fetch/parse logs for job ${job.id}: ${err}`);
+      }
+    }
+  
+    // 3. Fetch repository workspaces
     let data: FMEFlowItem[] = [];
     try {
       data = await this.client.fetchRepositoryItems();
@@ -68,44 +96,86 @@ export class FMEFlowEntityProvider implements EntityProvider {
       return;
     }
   
-    const entities: FMEWorkspaceEntity[] = data
-      .map(item => {
-        const cleanName = item.name
-          ?.replace(/\.fmw$/, '')
-          .toLowerCase()
-          .replace(/[^a-z0-9\-]/g, '');
+    // 4. Build ALL entities
+    const entities: Entity[] = data.flatMap(item => {
+      if (!item.name) return [];
+  
+      const name = item.name.toLowerCase().replace(/[^a-z0-9\-]/g, '');
+      const dbRelations = jobLogsMap.get(item.name);
+  
+      const workspaceEntity: FMEWorkspaceEntity = {
+        apiVersion: 'geoportia.se/v1alpha1',
+        kind: 'FMEWorkspace',
+        metadata: {
+          name,
+          namespace: 'default',
+          title: item.title || item.name,
+          description: item.description?.replace(/<\/?[^>]+>/g, '') ?? '',
+          annotations: {
+            [ANNOTATION_LOCATION]: `url:${this.client['baseUrl']}`,
+            [ANNOTATION_ORIGIN_LOCATION]: `url:${this.client['baseUrl']}`,
+            ...(dbRelations?.database && { 'fmeflow/database': dbRelations.database }),
+            ...(dbRelations?.dataset && { 'fmeflow/dataset': dbRelations.dataset }),
+          },
+        },
+        spec: {
+          type: item.type ?? 'fme-workspace',
+          lastUpdated: item.lastPublishDate,
+          ...(dbRelations?.tables?.length && { tables: dbRelations.tables }),
+        },
+      };
+  
+      const cleanDbName = dbRelations?.database
+        ?.toLowerCase()
+        .replace(/[`]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9\-]/g, '');
 
-        if (!cleanName) return undefined;
-
-        const entity: FMEWorkspaceEntity = {
+    const dbEntity: Entity | undefined = cleanDbName
+      ? {
           apiVersion: 'geoportia.se/v1alpha1',
-          kind: 'FMEWorkspace',
+          kind: 'Resource',
           metadata: {
-            name: cleanName,
-            title: item.title ?? cleanName,
-            description: item.description?.replace(/<\/?[^>]+>/g, '') ?? '',
+            name: cleanDbName,
+            title: dbRelations?.database,
+            namespace: 'default',
             annotations: {
               [ANNOTATION_LOCATION]: `url:${this.client['baseUrl']}`,
               [ANNOTATION_ORIGIN_LOCATION]: `url:${this.client['baseUrl']}`,
             },
           },
           spec: {
-            type: item.type ?? 'fme-workspace',
-            lastUpdated: item.lastPublishDate,
-            lifecycle: 'production',
-            owner: 'data-team',
+            type: 'database',
           },
-        };
-
-        if (!isFMEWorkspaceEntity(entity)) {
-          this.logger.warn('Invalid FMEWorkspaceEntity generated: ' + JSON.stringify(entity));
-          return undefined;
         }
-
-        return entity;
-      })
-      .filter((e): e is FMEWorkspaceEntity => e !== undefined);
+      : undefined;
+        
+      const tableEntities: Entity[] =
+        dbRelations?.tables?.map(t => ({
+          apiVersion: 'geoportia.se/v1alpha1',
+          kind: 'Table',
+          metadata: {
+            name: `${t.schema}.${t.table}`.toLowerCase(),
+            namespace: 'default',
+            title: t.table,
+            annotations: {
+              [ANNOTATION_LOCATION]: `url:${this.client['baseUrl']}`,
+              [ANNOTATION_ORIGIN_LOCATION]: `url:${this.client['baseUrl']}`,
+            },
+          },
+          spec: {
+            schema: t.schema,
+            lifecycle: 'production',
+          },
+        })) ?? [];
   
+      return [
+        workspaceEntity,
+        ...(dbEntity ? [dbEntity] : []),
+        ...tableEntities,
+      ];
+    });
+
     await this.connection.applyMutation({
       type: 'full',
       entities: entities.map(entity => ({
@@ -114,5 +184,4 @@ export class FMEFlowEntityProvider implements EntityProvider {
       })),
     });
   }
-  
 }
