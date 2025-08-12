@@ -122,6 +122,13 @@ catalog:
       token: ${FMEFLOW_TOKEN}
       repository: ${FME_REPOSITORY_NAME}
 
+    geoserver:
+      uri:
+        $env: GEOSERVER_BASE_URL
+      username:
+        $env: GEOSERVER_USERNAME
+      password:
+        $env: GEOSERVER_PASSWORD
 
 kubernetes:
   # see https://backstage.io/docs/features/kubernetes/configuration for kubernetes configuration options
