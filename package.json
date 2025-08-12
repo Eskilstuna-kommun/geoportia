@@ -11,6 +11,7 @@
     "start-backend": "yarn workspace backend start",
     "build:backend": "yarn workspace backend build",
     "build:all": "backstage-cli repo build --all",
+    "build:geoserver-rest-client": "npm run --prefix ./node_modules/geoserver-rest-client build:babel",
     "build-image": "yarn workspace backend build-image",
     "tsc": "tsc",
     "tsc:full": "tsc --skipLibCheck false --incremental false",
@@ -24,7 +25,8 @@
     "prettier:check": "prettier --check .",
     "new": "backstage-cli new --scope internal",
     "docs:_base": "docker run --rm -it -v $(pwd):$(pwd) -w $(pwd) ghcr.io/astral-sh/uv:python3.13-alpine uvx --with-requirements docs/requirements.txt mkdocs",
-    "docs:dev": "npm run docs:_base serve"
+    "docs:dev": "npm run docs:_base serve",
+    "install": "yarn build:geoserver-rest-client"
   },
   "workspaces": {
     "packages": [
@@ -56,6 +58,10 @@
   },
   "packageManager": "yarn@4.4.1",
   "dependencies": {
+    "@babel/cli": "^7.23.0",
+    "@babel/core": "^7.23.0",
+    "@babel/plugin-transform-runtime": "^7.22.15",
+    "@babel/preset-env": "^7.22.20",
     "@backstage/repo-tools": "^0.13.3",
     "@useoptic/optic": "^1.0.5",
     "pg-listen": "^1.7.0"
