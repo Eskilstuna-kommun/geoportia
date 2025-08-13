@@ -1,4 +1,9 @@
+import { FMELogEntry } from '@internal/fmeflow-common/src/extractDatabaseRelations';
 import fetch from 'node-fetch';
+
+export interface FMELogData {
+  items: FMELogEntry[];
+}
 
 export interface FMEFlowClientOptions {
   baseUrl: string;
@@ -16,19 +21,11 @@ export interface FMEFlowItem {
 
 export interface CompletedWorkspaceJob {
   id: number;
-  workspace:string
+  workspace: string;
 }
 
 export interface FMEFlowFeatureType {
   name: string;
-}
-
-export interface FMEFlowDataset {
-  format: string;
-  name: string;
-  location: string;
-  source: boolean;
-  featuretypes: FMEFlowFeatureType[];
 }
 
 export class FMEFlowClient {
@@ -42,14 +39,21 @@ export class FMEFlowClient {
     this.token = options.token;
   }
 
+  private _fetchHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+    };
+    if (this.token) {
+      headers['Authorization'] = `fmetoken token=${this.token}`;
+    }
+    return headers;
+  }
+
   async fetchRepositoryItems(): Promise<FMEFlowItem[]> {
     const url = `${this.baseUrl}/repositories/${this.repository}/items?type=WORKSPACE`;
 
     const res = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        ...(this.token && { Authorization: `fmetoken token=${this.token}` }),
-      },
+      headers: this._fetchHeaders(),
     });
 
     if (!res.ok) {
@@ -67,10 +71,7 @@ export class FMEFlowClient {
     const url = `${this.baseUrl}/transformations/jobs/completed?completedState=success&limit=100&offset=0&repository=${this.repository}`;
 
     const res = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        ...(this.token && { Authorization: `fmetoken token=${this.token}` }),
-      },
+      headers: this._fetchHeaders(),
     });
 
     if (!res.ok) {
@@ -84,23 +85,20 @@ export class FMEFlowClient {
     return json.items ?? [];
   }
 
-  async fetchLogsForJob(id: number): Promise<any> {
+  async fetchLogsForJob(id: number): Promise<FMELogData> {
     const url = `${this.baseUrl}/transformations/jobs/id/${id}/log`;
-  
+
     const res = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        ...(this.token && { Authorization: `fmetoken token=${this.token}` }),
-      },
+      headers: this._fetchHeaders(),
     });
-  
+
     if (!res.ok) {
       const errorBody = await res.text();
       throw new Error(
         `FME Flow API call failed [${res.status} ${res.statusText}] — ${errorBody}`,
       );
     }
-  
+
     const json = await res.json();
     return json;
   }
