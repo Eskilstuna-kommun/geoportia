@@ -14,6 +14,11 @@ Follow these steps to set up and run the plugin within your Backstage applicatio
 ```bash
 yarn install
 ```
+
 ### 2. Set up environment variables
 
-Add repository name as a variable in the .env file: FME_REPOSITORY_NAME=XXXXXX
+Add this three variables in the .env file:
+
+FMEFLOW_BASE_URL=XXXXX
+FMEFLOW_TOKEN=XXXXX
+FME_REPOSITORY_NAME=XXXXX
