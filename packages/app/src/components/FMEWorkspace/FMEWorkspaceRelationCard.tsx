@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEntity, EntityRefLink } from '@backstage/plugin-catalog-react';
 import { InfoCard, Table } from '@backstage/core-components';
+import { RELATION_DEPENDS_ON } from '@backstage/catalog-model';
 
 type TableRelation = {
   database: string;
@@ -12,12 +13,17 @@ export const FMEWorkspaceDatabaseRelationsCard = () => {
   const { entity } = useEntity();
   const relations = entity?.relations ?? [];
 
-  const databaseRef = relations.find(
-    r => r.type === 'dependsOn' && r.targetRef.startsWith('resource:')
-  )?.targetRef.split('/')[1];
+  const databaseRef = relations
+    .find(
+      r =>
+        r.type === RELATION_DEPENDS_ON && r.targetRef.startsWith('resource:'),
+    )
+    ?.targetRef.split('/')[1];
 
   const tables: TableRelation[] = relations
-    .filter(r => r.type === 'dependsOn' && r.targetRef.startsWith('table:'))
+    .filter(
+      r => r.type === RELATION_DEPENDS_ON && r.targetRef.startsWith('table:'),
+    )
     .map(r => {
       const [, ref] = r.targetRef.split('/');
       const [schema, table] = ref.split('.');
@@ -39,7 +45,12 @@ export const FMEWorkspaceDatabaseRelationsCard = () => {
   return (
     <InfoCard title="Database Relations">
       <Table
-         options={{ paging: false, search: false, toolbar: false, showTitle: false }}
+        options={{
+          paging: false,
+          search: false,
+          toolbar: false,
+          showTitle: false,
+        }}
         columns={[
           {
             title: 'Database',

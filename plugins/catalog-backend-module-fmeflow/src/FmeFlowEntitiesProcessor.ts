@@ -7,10 +7,11 @@ import { LocationSpec } from '@backstage/plugin-catalog-common';
 import {
   Entity,
   getCompoundEntityRef,
-  isResourceEntity,
   parseEntityRef,
+  RELATION_DEPENDENCY_OF,
+  RELATION_DEPENDS_ON,
 } from '@backstage/catalog-model';
-import { isFMEWorkspaceEntity, isTableEntity } from '@internal/fmeflow-common';
+import { isFMEWorkspaceEntity } from '@internal/fmeflow-common';
 
 export class FMEFlowEntitiesProcessor implements CatalogProcessor {
   getProcessorName(): string {
@@ -18,11 +19,7 @@ export class FMEFlowEntitiesProcessor implements CatalogProcessor {
   }
 
   async validateEntityKind(entity: Entity): Promise<boolean> {
-    return (
-      isFMEWorkspaceEntity(entity) ||
-      isResourceEntity(entity) ||
-      isTableEntity(entity)
-    );
+    return isFMEWorkspaceEntity(entity);
   }
 
   async postProcessEntity(
@@ -75,20 +72,21 @@ export class FMEFlowEntitiesProcessor implements CatalogProcessor {
 
     // 1. Table dependency relations
     const seenTables = new Set<string>();
-    if (Array.isArray(entity.spec.tables)) {
-      for (const { schema, table } of entity.spec.tables as Array<{ schema: string; table: string }>) {
-        if (!schema || !table) continue;
-        const raw = `${schema}.${table}`.toLowerCase().replace(/[^a-z0-9_.-]/g, '');
-        if (seenTables.has(raw)) continue;
-        seenTables.add(raw);
 
-        doEmit(
-          `Table:${raw}`,
-          { defaultNamespace: selfRef.namespace },
-          'dependsOn',
-          'dependencyOf',
-        );
-      }
+    for (const { schema, table } of entity.spec.tables ?? []) {
+      if (!schema || !table) continue;
+      const raw = `${schema}.${table}`
+        .toLowerCase()
+        .replace(/[^a-z0-9_.-]/g, '');
+      if (seenTables.has(raw)) continue;
+      seenTables.add(raw);
+
+      doEmit(
+        `Table:${raw}`,
+        { defaultNamespace: selfRef.namespace },
+        RELATION_DEPENDS_ON,
+        RELATION_DEPENDENCY_OF,
+      );
     }
 
     // 2. Database relation (Resource)
@@ -103,8 +101,8 @@ export class FMEFlowEntitiesProcessor implements CatalogProcessor {
       doEmit(
         `Resource:${clean}`,
         { defaultNamespace: selfRef.namespace },
-        'dependsOn',
-        'dependencyOf',
+        RELATION_DEPENDS_ON,
+        RELATION_DEPENDENCY_OF,
       );
     }
 
