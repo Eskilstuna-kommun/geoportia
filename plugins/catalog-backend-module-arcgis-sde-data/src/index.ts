@@ -5,4 +5,4 @@
  * @packageDocumentation
  */
 
-export { catalogModuleArcgisSdeData as default } from './module';
+export { catalogModuleArcGISData as default } from './module';
