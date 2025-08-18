@@ -7999,6 +7999,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@internal/backstage-plugin-arcgis-sde-data-common@workspace:plugins/arcgis-sde-data-common":
+  version: 0.0.0-use.local
+  resolution: "@internal/backstage-plugin-arcgis-sde-data-common@workspace:plugins/arcgis-sde-data-common"
+  dependencies:
+    "@backstage/cli": "npm:^0.32.1"
+  languageName: unknown
+  linkType: soft
+
 "@internal/backstage-plugin-catalog-backend-module-arcgis-sde-data@workspace:^, @internal/backstage-plugin-catalog-backend-module-arcgis-sde-data@workspace:plugins/catalog-backend-module-arcgis-sde-data":
   version: 0.0.0-use.local
   resolution: "@internal/backstage-plugin-catalog-backend-module-arcgis-sde-data@workspace:plugins/catalog-backend-module-arcgis-sde-data"
