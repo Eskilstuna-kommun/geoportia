@@ -147,7 +147,7 @@ def get_domain_values():
                 domain_values.append({"code": val, "description": desc})
 
             arcpy.management.ClearWorkspaceCache()
-            return
+            break
 
         success = True
     except Exception as ex:
@@ -533,6 +533,40 @@ def getFeatureClasses ():
         success = False
     finally:
         return jsonify(success = success, message = return_message, featureClasses = featureClasses)
+
+@app.post("/domains")
+def getDomains ():
+    data = request.json
+    formatedDomains = []
+
+    expected_fields = {
+        "gdbPath": "GDB-sökväg saknas",
+    }
+
+    for expected_field in expected_fields:
+        if not data.get(expected_field):
+            return jsonify(success = False, message = expected_fields[expected_field], domains = formatedDomains)
+    
+    success = False
+    return_message = ""
+
+    try:
+        gdb_path = data.get("gdbPath")
+
+        workspace = gdb_path 
+        arcpy.env.workspace = workspace
+    
+        domains = arcpy.da.ListDomains(workspace)
+        for domain in domains:
+            formatedDomains.append({ "name": domain.name, "domainType": domain.domainType, "fieldType": domain.type })
+
+        success = True
+    except Exception as ex:
+        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+        return_message = template.format(type(ex).__name__, ex.args)
+        success = False
+    finally:
+        return jsonify(success = success, message = return_message, domains = formatedDomains)
 
 if __name__ == "__main__":
     serve(app, host="127.0.0.1", port=8045, threads=512)

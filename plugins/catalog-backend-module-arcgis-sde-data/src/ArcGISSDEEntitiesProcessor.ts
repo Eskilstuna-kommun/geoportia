@@ -21,6 +21,11 @@ interface Field {
   type: string;
 }
 
+interface DomainValue {
+  code: number;
+  description: string;
+}
+
 export class ArcGISSDEEntitiesProcessor implements CatalogProcessor {
   getProcessorName(): string {
     return 'ArcGISSDEEntitiesProcessor';
@@ -33,6 +38,10 @@ export class ArcGISSDEEntitiesProcessor implements CatalogProcessor {
     if (entity.kind === 'ArcGISFeatureClassField') {
       return true;
     } else if (entity.kind === 'ArcGISFeatureClass') {
+      return true;
+    } else if (entity.kind === 'ArcGISDomain') {
+      return true; 
+    } else if (entity.kind === 'ArcGISDomainValue') {
       return true;
     }
     return false;
@@ -75,6 +84,40 @@ export class ArcGISSDEEntitiesProcessor implements CatalogProcessor {
               kind: 'ArcGISFeatureClassField',
               namespace: field.domain !== '' ? field.domain : 'default',
               name: field.name,
+            },
+          },
+        });
+      }
+    } else if (entity.kind === 'ArcGISDomain') {
+      if (!entity.spec || !entity.spec.values) {
+        throw new Error("ArcGISDomain entity must have 'spec.values' defined");
+      }
+
+      // @ts-ignore
+      const domainValues: DomainValue[] = entity.spec.values;
+
+      for (const domainValue of domainValues) {
+        emit({
+          type: 'relation',
+          relation: {
+            type: RELATION_DEPENDENCY_OF,
+            source: getCompoundEntityRef(entity),
+            target: {
+              kind: 'ArcGISDomainValue',
+              namespace: 'default',
+              name: `${entity.metadata.name}.${domainValue.code.toString()}`,
+            },
+          },
+        });
+        emit({
+          type: 'relation',
+          relation: {
+            type: RELATION_DEPENDS_ON,
+            target: getCompoundEntityRef(entity),
+            source: {
+              kind: 'ArcGISDomainValue',
+              namespace: 'default',
+              name: `${entity.metadata.name}.${domainValue.code.toString()}`,
             },
           },
         });
