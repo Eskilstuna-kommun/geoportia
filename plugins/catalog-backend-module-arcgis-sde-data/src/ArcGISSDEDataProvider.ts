@@ -43,23 +43,15 @@ export class ArcGISSDEDataProvider implements EntityProvider {
       throw new Error('Not initialized');
     }
 
-    // this.loggerService.info(`Running ArcGISSDEDataProvider for ${this.uri}`);
-
     const entities: Entity[] = [];
 
     try {
       const featureClasses = await this.arcGISSDEClient.fetchFeatureClasses();
 
       for (const featureClass of featureClasses) {
-        // this.loggerService.info(`Processing feature class: ${featureClass}`);
-
         const fields = await this.arcGISSDEClient.fetchFields(featureClass);
 
         for (const field of fields) {
-          // this.loggerService.info(
-          //   `Field: ${field.name}, Type: ${field.type}, Alias: ${field.aliasName}`,
-          // );
-
           const ArcGISField: Entity = {
             apiVersion: 'geoportia.se/v1alpha1',
             kind: 'ArcGISFeatureClassField',
@@ -96,6 +88,47 @@ export class ArcGISSDEDataProvider implements EntityProvider {
           spec: { fields: fields } as any,
         };
         entities.push(ArcGISFeatureClassEntity);
+      }
+
+      const domains = await this.arcGISSDEClient.fetchDomains();
+
+      for (const domain of domains) {
+        const domainValues = await this.arcGISSDEClient.fetchDomainValues(domain.name);
+
+        for (const domainValue of domainValues) {
+          const ArcGISDomainValueEntity: Entity = {
+            apiVersion: 'geoportia.se/v1alpha1',
+            kind: 'ArcGISDomainValue',
+            metadata: {
+              name: `${domain.name}.${domainValue.code.toString()}`,
+              title: `${domain.name}.${domainValue.code.toString()}`,
+              description: domainValue.description,
+              annotations: {
+                [ANNOTATION_LOCATION]: `url:${this.uri}`,
+                [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
+              },
+            },
+            spec: domainValue as any,
+          };
+
+          entities.push(ArcGISDomainValueEntity);
+        }
+
+        const ArcGISDomainEntity: Entity = {
+          apiVersion: 'geoportia.se/v1alpha1',
+          kind: 'ArcGISDomain',
+          metadata: {
+            name: domain.name,
+            title: domain.name,
+            description: undefined,
+            annotations: {
+              [ANNOTATION_LOCATION]: `url:${this.uri}`,
+              [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
+            },
+          },
+          spec: { values: domainValues } as any,
+        };
+        entities.push(ArcGISDomainEntity);
       }
     } catch (error) {
       this.loggerService.warn('Failed to fetch ArcGIS entities: ' + error);
