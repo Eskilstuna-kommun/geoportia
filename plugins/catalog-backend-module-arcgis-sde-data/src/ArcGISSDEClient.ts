@@ -1,4 +1,9 @@
 import axios from 'axios';
+import {
+  ArcGISDomain,
+  ArcGISDomainValue,
+  ArcGISFeatureClassField,
+} from '@internal/backstage-plugin-arcgis-sde-data-common';
 
 interface FeatureClassPostResponse {
   featureClasses: string[];
@@ -7,44 +12,22 @@ interface FeatureClassPostResponse {
 }
 
 interface DomainsPostResponse {
-  domains: Domain[];
+  domains: ArcGISDomain[];
   message: string;
   success: boolean;
 }
 
 interface FieldsPostResponse {
-  columns: Field[];
+  columns: ArcGISFeatureClassField[];
   message: string;
   success: boolean;
 }
 
 interface DomainValuesPostresponse {
-  domain_parents: Domain[];
-  domain_values: DomainValue[];
+  domain_parents: ArcGISDomain[];
+  domain_values: ArcGISDomainValue[];
   message: string;
   success: boolean;
-}
-
-interface Field {
-    aliasName: string;
-    domain: string;
-    fieldPrecision: number;
-    fieldScale: number;
-    isNullable: boolean;
-    length: number;
-    name: string;
-    type: string;
-}
-
-interface Domain {
-    domainType: string;
-    fieldType: string;
-    name: string;
-}
-
-interface DomainValue {
-  code: number;
-  description: string;
 }
 
 export class ArcGISSDEClient {
@@ -82,7 +65,7 @@ export class ArcGISSDEClient {
   };
 
   // Fetch fields for a specific feature class from the ArcGIS SDE database
-  fetchFields = async (featureClass: string): Promise<Field[]> => {
+  fetchFields = async (featureClass: string): Promise<ArcGISFeatureClassField[]> => {
     const requestBody = {
       featureClass: featureClass,
       dataset: 'root',
@@ -109,7 +92,7 @@ export class ArcGISSDEClient {
   };
 
   // Fetch domains from the ArcGIS SDE database
-  fetchDomains = async (): Promise<Domain[]> => {
+  fetchDomains = async (): Promise<ArcGISDomain[]> => {
     const requestBody = {
       gdbPath: this.gdbPath,
     };
@@ -134,7 +117,7 @@ export class ArcGISSDEClient {
   };
 
   // Fetch domain values for a specific domain from the ArcGIS SDE database
-  fetchDomainValues = async (domain: string): Promise<DomainValue[]> => {
+  fetchDomainValues = async (domain: string): Promise<ArcGISDomainValue[]> => {
     const requestBody = {
       gdbPath: this.gdbPath,
       domain: domain,
