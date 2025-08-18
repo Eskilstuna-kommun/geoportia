@@ -9,6 +9,12 @@ import {
   RELATION_DEPENDS_ON,
 } from '@backstage/catalog-model';
 import { LocationSpec } from '@backstage/plugin-catalog-common';
+import {
+  arcGISSDEDomainEntityValidator,
+  arcGISSDEDomainValueEntityValidator,
+  arcGISSDEFeatureClassEntityValidator,
+  arcGISSDEFeatureClassFieldEntityValidator
+} from '@internal/backstage-plugin-arcgis-sde-data-common';
 
 interface Field {
   aliasName: string;
@@ -32,19 +38,12 @@ export class ArcGISSDEEntitiesProcessor implements CatalogProcessor {
   }
 
   async validateEntityKind(entity: Entity) {
-    if (entity.apiVersion !== 'geoportia.se/v1alpha1') {
-      return false;
-    }
-    if (entity.kind === 'ArcGISFeatureClassField') {
-      return true;
-    } else if (entity.kind === 'ArcGISFeatureClass') {
-      return true;
-    } else if (entity.kind === 'ArcGISDomain') {
-      return true; 
-    } else if (entity.kind === 'ArcGISDomainValue') {
-      return true;
-    }
-    return false;
+    return (
+      arcGISSDEDomainEntityValidator.check(entity) ||
+      arcGISSDEDomainValueEntityValidator.check(entity) ||
+      arcGISSDEFeatureClassEntityValidator.check(entity) ||
+      arcGISSDEFeatureClassFieldEntityValidator.check(entity)
+    );
   }
 
   async postProcessEntity(
