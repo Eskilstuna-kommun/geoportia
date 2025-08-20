@@ -32,17 +32,17 @@ interface DomainValuesPostresponse {
 
 export class ArcGISSDEClient {
   private endpoint: string;
-  private gdbPath: string;
 
-  constructor(endpoint: string, gdbPath: string) {
+  constructor(endpoint: string) {
     this.endpoint = endpoint;
-    this.gdbPath = gdbPath;
   }
 
   // Fetch feature classes from the ArcGIS SDE database
   fetchFeatureClasses = async (): Promise<string[]> => {
     const requestBody = {
-      gdbPath: this.gdbPath,
+      database: 'somedatabase',
+      adminUser: 'someadmin',
+      adminPassword: 'somepassword'
     };
 
     try {
@@ -67,9 +67,11 @@ export class ArcGISSDEClient {
   // Fetch fields for a specific feature class from the ArcGIS SDE database
   fetchFields = async (featureClass: string): Promise<ArcGISFeatureClassField[]> => {
     const requestBody = {
-      featureClass: featureClass,
       dataset: 'root',
-      gdbPath: this.gdbPath,
+      featureClass: featureClass,
+      database: 'somedatabase',
+      adminUser: 'someadmin',
+      adminPassword: 'somepassword',
     };
 
     try {
@@ -94,7 +96,9 @@ export class ArcGISSDEClient {
   // Fetch domains from the ArcGIS SDE database
   fetchDomains = async (): Promise<ArcGISDomain[]> => {
     const requestBody = {
-      gdbPath: this.gdbPath,
+      database: 'somedatabase',
+      adminUser: 'someadmin',
+      adminPassword: 'somepassword',
     };
 
     try {
@@ -119,8 +123,10 @@ export class ArcGISSDEClient {
   // Fetch domain values for a specific domain from the ArcGIS SDE database
   fetchDomainValues = async (domain: string): Promise<ArcGISDomainValue[]> => {
     const requestBody = {
-      gdbPath: this.gdbPath,
       domain: domain,
+      database: 'somedatabase',
+      adminUser: 'someadmin',
+      adminPassword: 'somepassword',
     };
 
     try {
