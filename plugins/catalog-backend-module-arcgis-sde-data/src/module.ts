@@ -26,13 +26,9 @@ export const catalogModuleArcGISData = createBackendModule({
         const arcGISUri = rootConfig.getString(
           'catalog.providers.arcgissde.uri',
         );
-        const arcGISGDBPath = rootConfig.getString(
-          'catalog.providers.arcgissde.gdbpath',
-        );
 
         const arcGISSDEClient = new ArcGISSDEClient(
           arcGISUri,
-          arcGISGDBPath,
         );
 
         const provider = new ArcGISSDEDataProvider(
