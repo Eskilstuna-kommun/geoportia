@@ -119,7 +119,6 @@ catalog:
     
     arcgissde:
       uri: "http://127.0.0.1:8045"
-      gdbpath: "./plugins/catalog-backend-module-arcgis-sde-data/src/arcpy/test/TestGDB.gdb"
 
     fmeflow:
       baseUrl: ${FMEFLOW_BASE_URL}

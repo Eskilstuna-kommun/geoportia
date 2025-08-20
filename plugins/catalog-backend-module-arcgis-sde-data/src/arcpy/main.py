@@ -3,8 +3,8 @@ from flask import Flask
 from flask import request
 from flask import jsonify
 from waitress import serve
-# import glob
-# import os
+import glob
+import os
 import logging
 
 logging.basicConfig(filename='log_geoportia_utv.log', format='%(levelname)s %(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
@@ -12,24 +12,24 @@ logging.basicConfig(filename='log_geoportia_utv.log', format='%(levelname)s %(as
 app = Flask(__name__)
 
 # Folder with connection files
-# sde_connection_file_dir = r"D:/arcpy_write_api/connectionfiles/"
-# create_connection_file_dir = sde_connection_file_dir + "create/"
+sde_connection_file_dir = r"D:/arcpy_write_api/connectionfiles/"
+create_connection_file_dir = sde_connection_file_dir + "create/"
 
 logging.info("anslutning klar!")
 
 
-# def connection_file_exists(database):
-#     return database + ".sde" in list(map(os.path.basename, glob.glob(sde_connection_file_dir + "*.sde")))
+def connection_file_exists(database):
+    return database + ".sde" in list(map(os.path.basename, glob.glob(sde_connection_file_dir + "*.sde")))
 
-# def create_connection_file(database, user, password):
-#     connection_file = database + "." + user + "@kartbas.sde"
-#     arcpy.management.CreateDatabaseConnection(create_connection_file_dir, connection_file, "SQL_SERVER", "kartbas", account_authentication="DATABASE_AUTH", username=user, password=password, database=database, version_type="TRANSACTIONAL")
-#     return create_connection_file_dir + connection_file
+def create_connection_file(database, user, password):
+    connection_file = database + "." + user + "@kartbas.sde"
+    arcpy.management.CreateDatabaseConnection(create_connection_file_dir, connection_file, "SQL_SERVER", "kartbas", account_authentication="DATABASE_AUTH", username=user, password=password, database=database, version_type="TRANSACTIONAL")
+    return create_connection_file_dir + connection_file
 
-# def delete_connection_file(database, user):
-#     connection_file = database + "." + user + "@kartbas.sde"
-#     arcpy.management.Delete(create_connection_file_dir + connection_file)
-#     arcpy.management.Delete(create_connection_file_dir + database.lower() + "." + user.lower() + "@kartbas")
+def delete_connection_file(database, user):
+    connection_file = database + "." + user + "@kartbas.sde"
+    arcpy.management.Delete(create_connection_file_dir + connection_file)
+    arcpy.management.Delete(create_connection_file_dir + database.lower() + "." + user.lower() + "@kartbas")
 
 
 @app.post("/sdedatabase")
@@ -39,18 +39,14 @@ def get_feature_class_fields():
     # Returning array
     columns = []
 
-    # expected_fields = {
-    #     "database": "Databas saknas",
-    #     "dataset": "Dataset saknas",
-    #     "featureClass": "FeatureClass saknas",
-    #     "adminUser": "Admin-användarnamn saknas",
-    #     "adminPassword": "Admin-lösenord saknas",
-    # }
     expected_fields = {
-        "gdbPath": "GDB-sökväg saknas",
+        "database": "Databas saknas",
         "dataset": "Dataset saknas",
         "featureClass": "FeatureClass saknas",
+        "adminUser": "Admin-användarnamn saknas",
+        "adminPassword": "Admin-lösenord saknas",
     }
+
     for expected_field in expected_fields:
         if not data.get(expected_field):
             return jsonify(success = False, message = expected_fields[expected_field], columns = columns)
@@ -59,15 +55,14 @@ def get_feature_class_fields():
     success = False
     return_message = ""
     try:
-        #database = data.get("database")
+        database = data.get("database")
         dataset = data.get("dataset")
         feature_class = data.get("featureClass")
-        gdb_path = data.get("gdbPath")
-        #database_user = data.get("adminUser")
-        #password = data.get("adminPassword")
+        database_user = data.get("adminUser")
+        password = data.get("adminPassword")
 
-        # connection_file_name = create_connection_file(database, database_user, password)
-        arcpy.env.workspace = gdb_path # connection_file_name
+        connection_file_name = create_connection_file(database, database_user, password)
+        arcpy.env.workspace = connection_file_name
         arcpy.management.ClearWorkspaceCache()
         datasets = [""] if dataset == "root" else arcpy.ListDatasets("*" + dataset, "Feature")
 
@@ -95,7 +90,7 @@ def get_feature_class_fields():
         return_message = template.format(type(ex).__name__, ex.args)
         success = False
     finally:
-        #delete_connection_file(database, database_user)
+        delete_connection_file(database, database_user)
         return jsonify(success = success, message = return_message, columns = columns)
 
 
@@ -106,16 +101,13 @@ def get_domain_values():
     domain_values = []
     domain_parents = []
 
-    # expected_fields = {
-    #     "database": "Databas saknas",
-    #     "domain": "Domän saknas",
-    #     "adminUser": "Admin-användarnamn saknas",
-    #     "adminPassword": "Admin-lösenord saknas",
-    # }
     expected_fields = {
-        "gdbPath": "GDB-sökväg saknas",
+        "database": "Databas saknas",
         "domain": "Domän saknas",
+        "adminUser": "Admin-användarnamn saknas",
+        "adminPassword": "Admin-lösenord saknas",
     }
+
     for expected_field in expected_fields:
         if not data.get(expected_field):
             return jsonify(success = False, message = expected_fields[expected_field], domain_values = domain_values)
@@ -123,14 +115,13 @@ def get_domain_values():
     success = False
     return_message = ""
     try:
-        # database = data.get("database")
+        database = data.get("database")
         domain = data.get("domain")
-        gdb_path = data.get("gdbPath")
-        # database_user = data.get("adminUser")
-        # password = data.get("adminPassword")
+        database_user = data.get("adminUser")
+        password = data.get("adminPassword")
 
-        #create_connection_file(database, database_user, password)
-        workspace = gdb_path #create_connection_file_dir + database + "." + database_user + "@kartbas.sde"
+        create_connection_file(database, database_user, password)
+        workspace = create_connection_file_dir + database + "." + database_user + "@kartbas.sde"
         arcpy.env.workspace = workspace
 
         # Return the first matching domain
@@ -155,7 +146,7 @@ def get_domain_values():
         return_message = template.format(type(ex).__name__, ex.args)
         success = False
     finally:
-        #delete_connection_file(database, database_user)
+        delete_connection_file(database, database_user)
         return jsonify(success = success, message = return_message, domain_values = domain_values, domain_parents = domain_parents)
 
 # @app.post("/createEnterpriseData")
@@ -509,7 +500,9 @@ def getFeatureClasses ():
     featureClasses = []
 
     expected_fields = {
-        "gdbPath": "GDB-sökväg saknas",
+        "database": "Databas saknas",
+        "adminUser": "Admin-användarnamn saknas",
+        "adminPassword": "Admin-lösenord saknas",
     }
 
     for expected_field in expected_fields:
@@ -520,11 +513,13 @@ def getFeatureClasses ():
     return_message = ""
 
     try:
-        gdb_path = data.get("gdbPath")
+        database = data.get("database")
+        database_user = data.get("adminUser")
+        password = data.get("adminPassword")
 
-        workspace = gdb_path 
-        arcpy.env.workspace = workspace
-
+        connection_file_name = create_connection_file(database, database_user, password)
+        arcpy.env.workspace = connection_file_name
+        arcpy.management.ClearWorkspaceCache()
         featureClasses = arcpy.ListFeatureClasses()
         success = True
     except Exception as ex:
@@ -532,6 +527,7 @@ def getFeatureClasses ():
         return_message = template.format(type(ex).__name__, ex.args)
         success = False
     finally:
+        delete_connection_file(database, database_user)
         return jsonify(success = success, message = return_message, featureClasses = featureClasses)
 
 @app.post("/domains")
@@ -540,7 +536,9 @@ def getDomains ():
     formatedDomains = []
 
     expected_fields = {
-        "gdbPath": "GDB-sökväg saknas",
+        "database": "Databas saknas",
+        "adminUser": "Admin-användarnamn saknas",
+        "adminPassword": "Admin-lösenord saknas",
     }
 
     for expected_field in expected_fields:
@@ -551,9 +549,12 @@ def getDomains ():
     return_message = ""
 
     try:
-        gdb_path = data.get("gdbPath")
+        database = data.get("database")
+        database_user = data.get("adminUser")
+        password = data.get("adminPassword")
 
-        workspace = gdb_path 
+        create_connection_file(database, database_user, password)
+        workspace = create_connection_file_dir + database + "." + database_user + "@kartbas.sde"
         arcpy.env.workspace = workspace
     
         domains = arcpy.da.ListDomains(workspace)
@@ -566,6 +567,7 @@ def getDomains ():
         return_message = template.format(type(ex).__name__, ex.args)
         success = False
     finally:
+        delete_connection_file(database, database_user)
         return jsonify(success = success, message = return_message, domains = formatedDomains)
 
 if __name__ == "__main__":
