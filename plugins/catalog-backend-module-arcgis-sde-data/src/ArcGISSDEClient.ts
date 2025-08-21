@@ -42,7 +42,7 @@ export class ArcGISSDEClient {
     const requestBody = {
       database: 'somedatabase',
       adminUser: 'someadmin',
-      adminPassword: 'somepassword'
+      adminPassword: 'somepassword',
     };
 
     try {
@@ -65,7 +65,9 @@ export class ArcGISSDEClient {
   };
 
   // Fetch fields for a specific feature class from the ArcGIS SDE database
-  fetchFields = async (featureClass: string): Promise<ArcGISFeatureClassField[]> => {
+  fetchFields = async (
+    featureClass: string,
+  ): Promise<ArcGISFeatureClassField[]> => {
     const requestBody = {
       dataset: 'root',
       featureClass: featureClass,
