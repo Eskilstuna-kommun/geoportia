@@ -13,7 +13,7 @@ import {
   arcGISSDEDomainEntityValidator,
   arcGISSDEDomainValueEntityValidator,
   arcGISSDEFeatureClassEntityValidator,
-  arcGISSDEFeatureClassFieldEntityValidator
+  arcGISSDEFeatureClassFieldEntityValidator,
 } from '@internal/backstage-plugin-arcgis-sde-data-common';
 
 interface Field {

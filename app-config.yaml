@@ -118,7 +118,8 @@ catalog:
       uri: "postgresql://postgres:postgres@localhost:15432/postgres"
     
     arcgissde:
-      uri: "http://127.0.0.1:8045"
+      uri: 
+        $env: ARCPY_URI
 
     fmeflow:
       baseUrl: ${FMEFLOW_BASE_URL}

@@ -93,7 +93,9 @@ export class ArcGISSDEDataProvider implements EntityProvider {
       const domains = await this.arcGISSDEClient.fetchDomains();
 
       for (const domain of domains) {
-        const domainValues = await this.arcGISSDEClient.fetchDomainValues(domain.name);
+        const domainValues = await this.arcGISSDEClient.fetchDomainValues(
+          domain.name,
+        );
 
         for (const domainValue of domainValues) {
           const ArcGISDomainValueEntity: Entity = {

@@ -24,12 +24,25 @@ GITHUB_CLIENT_SECRET=your_github_client_secret
 GEOSERVER_BASE_URL=http://localhost:18080/geoserver/rest/
 GEOSERVER_USERNAME=admin
 GEOSERVER_PASSWORD=geoserver
+ARCPY_URI=http://127.0.0.1:8045
 ```
  
 To generate GitHub OAuth credentials, follow the official Backstage documentation:  
 https://backstage.io/docs/auth/github/provider/
  
-### 3. Start the app
+### 3. Start the Docker containers
+
+```bash
+docker compose -f 'docker-compose.yml' up -d --build 
+```
+
+### 4. Start the arcpy dummy script
+
+```bash
+Start-Process python ".\plugins\catalog-backend-module-arcgis-sde-data\src\arcpy\test.py" -NoNewWindow
+```
+
+### 5. Start the app
  
 ```bash
 yarn dev
