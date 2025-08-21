@@ -43,3 +43,4 @@ nav:
   - Development:
       - development/index.md
       - development/geoserver.md
+      - development/arcpy.md
