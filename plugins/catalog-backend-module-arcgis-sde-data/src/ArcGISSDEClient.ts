@@ -23,7 +23,7 @@ interface FieldsPostResponse {
   success: boolean;
 }
 
-interface DomainValuesPostresponse {
+interface DomainValuesPostResponse {
   domain_parents: ArcGISDomain[];
   domain_values: ArcGISDomainValue[];
   message: string;
@@ -132,7 +132,7 @@ export class ArcGISSDEClient {
     };
 
     try {
-      const response = await axios.post<DomainValuesPostresponse>(
+      const response = await axios.post<DomainValuesPostResponse>(
         `${this.endpoint}/domain`,
         requestBody,
       );
