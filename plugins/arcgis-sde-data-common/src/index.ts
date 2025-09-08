@@ -31,6 +31,23 @@ export interface ArcGISDomainValues {
   values: ArcGISDomainValue[];
 }
 
+export interface Field {
+  aliasName: string;
+  domain: string;
+  fieldPrecision: number;
+  fieldScale: number;
+  isNullable: boolean;
+  length: number;
+  name: string;
+  type: string;
+}
+
+export interface DomainValue {
+  code: number;
+  description: string;
+}
+
+
 export interface ArcGISSDEDomainEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
   kind: 'ArcGISDomain';
