@@ -14,23 +14,9 @@ import {
   arcGISSDEDomainValueEntityValidator,
   arcGISSDEFeatureClassEntityValidator,
   arcGISSDEFeatureClassFieldEntityValidator,
+  Field,
+  DomainValue
 } from '@internal/backstage-plugin-arcgis-sde-data-common';
-
-interface Field {
-  aliasName: string;
-  domain: string;
-  fieldPrecision: number;
-  fieldScale: number;
-  isNullable: boolean;
-  length: number;
-  name: string;
-  type: string;
-}
-
-interface DomainValue {
-  code: number;
-  description: string;
-}
 
 export class ArcGISSDEEntitiesProcessor implements CatalogProcessor {
   getProcessorName(): string {
