@@ -13,23 +13,23 @@ app = Flask(__name__)
 
 # Folder with connection files
 sde_connection_file_dir = r"D:/arcpy_write_api/connectionfiles/"
-create_connection_file_dir = sde_connection_file_dir + "create/"
+create_connection_file_dir = f"{sde_connection_file_dir}create/"
 
 logging.info("anslutning klar!")
 
 
 def connection_file_exists(database):
-    return database + ".sde" in list(map(os.path.basename, glob.glob(sde_connection_file_dir + "*.sde")))
+    return f"{database}.sde" in list(map(os.path.basename, glob.glob(f"{sde_connection_file_dir}*.sde")))
 
 def create_connection_file(database, user, password):
-    connection_file = database + "." + user + "@kartbas.sde"
+    connection_file = f"{database}.{user}@kartbas.sde"
     arcpy.management.CreateDatabaseConnection(create_connection_file_dir, connection_file, "SQL_SERVER", "kartbas", account_authentication="DATABASE_AUTH", username=user, password=password, database=database, version_type="TRANSACTIONAL")
     return create_connection_file_dir + connection_file
 
 def delete_connection_file(database, user):
-    connection_file = database + "." + user + "@kartbas.sde"
-    arcpy.management.Delete(create_connection_file_dir + connection_file)
-    arcpy.management.Delete(create_connection_file_dir + database.lower() + "." + user.lower() + "@kartbas")
+    connection_file = f"{database}.{user}@kartbas.sde"
+    arcpy.management.Delete(f"{create_connection_file_dir}{connection_file}")
+    arcpy.management.Delete(f"{create_connection_file_dir}{database.lower()}.{user.lower()}@kartbas")
 
 
 @app.post("/sdedatabase")
@@ -64,7 +64,7 @@ def get_feature_class_fields():
         connection_file_name = create_connection_file(database, database_user, password)
         arcpy.env.workspace = connection_file_name
         arcpy.management.ClearWorkspaceCache()
-        datasets = [""] if dataset == "root" else arcpy.ListDatasets("*" + dataset, "Feature")
+        datasets = [""] if dataset == "root" else arcpy.ListDatasets(f"*{dataset}", "Feature")
 
         for ds in datasets:
             feature_classes = arcpy.ListFeatureClasses(feature_dataset=ds)
@@ -121,7 +121,7 @@ def get_domain_values():
         password = data.get("adminPassword")
 
         create_connection_file(database, database_user, password)
-        workspace = create_connection_file_dir + database + "." + database_user + "@kartbas.sde"
+        workspace = f"{create_connection_file_dir}{database}.{database_user}@kartbas.sde"
         arcpy.env.workspace = workspace
 
         # Return the first matching domain
@@ -209,7 +209,7 @@ def getDomains ():
         password = data.get("adminPassword")
 
         create_connection_file(database, database_user, password)
-        workspace = create_connection_file_dir + database + "." + database_user + "@kartbas.sde"
+        workspace = f"{create_connection_file_dir}{database}.{database_user}@kartbas.sde"
         arcpy.env.workspace = workspace
     
         domains = arcpy.da.ListDomains(workspace)
