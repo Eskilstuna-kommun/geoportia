@@ -1,3 +1,4 @@
+from typing import Any
 from flask import Flask
 from flask import request
 from flask import jsonify
@@ -6,18 +7,21 @@ import logging
 
 logging.basicConfig(filename='log_geoportia_utv.log', format='%(levelname)s %(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
 
-app = Flask(__name__)
+app:Flask = Flask(__name__)
 
 logging.info("anslutning klar!")
 
 @app.post("/sdedatabase")
 def get_feature_class_fields():
-    data = request.json
+    data:Any|None = request.json
 
     # Returning array
-    columns = []
+    columns:list[dict[str, Any]] = []
 
-    expected_fields = {
+    if data == None:
+        return jsonify(succcess=False, message="Inga data skickades", columns = columns)
+
+    expected_fields: dict[str, str] = {
         "database": "Databas saknas",
         "dataset": "Dataset saknas",
         "featureClass": "FeatureClass saknas",
@@ -36,12 +40,15 @@ def get_feature_class_fields():
 
 @app.post("/domain")
 def get_domain_values():
-    data = request.json
+    data:Any|None = request.json
 
-    domain_values = []
-    domain_parents = []
+    domain_values:list[dict[str,Any]] = []
+    domain_parents:list[dict[str,str]] = []
 
-    expected_fields = {
+    if data == None:
+        return jsonify(succcess=False, message="Inga data skickades", domain_values = domain_values)
+
+    expected_fields:dict[str,str] = {
         "database": "Databas saknas",
         "domain": "Domän saknas",
         "adminUser": "Admin-användarnamn saknas",
@@ -59,10 +66,13 @@ def get_domain_values():
 
 @app.post("/featureclasses")
 def getFeatureClasses ():
-    data = request.json
-    featureClasses = []
+    data:Any|None = request.json
+    featureClasses:list[str] = []
 
-    expected_fields = {
+    if data == None:
+        return jsonify(succcess=False, message="Inga data skickades", featureClasses = featureClasses)
+
+    expected_fields:dict[str,str] = {
         "database": "Databas saknas",
         "adminUser": "Admin-användarnamn saknas",
         "adminPassword": "Admin-lösenord saknas",
@@ -78,10 +88,13 @@ def getFeatureClasses ():
 
 @app.post("/domains")
 def getDomains ():
-    data = request.json
-    formatedDomains = []
+    data:Any|None = request.json
+    formatedDomains:list[dict[str,str]] = []
 
-    expected_fields = {
+    if data == None:
+        return jsonify(succcess=False, message="Inga data skickades", domains=formatedDomains)
+
+    expected_fields:dict[str,str] = {
         "database": "Databas saknas",
         "adminUser": "Admin-användarnamn saknas",
         "adminPassword": "Admin-lösenord saknas",
