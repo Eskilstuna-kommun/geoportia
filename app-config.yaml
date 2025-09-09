@@ -118,7 +118,7 @@ catalog:
       uri: "postgresql://postgres:postgres@localhost:15432/postgres"
     
     arcgissde:
-      uri: 
+      proxyUri: 
         $env: ARCPY_URI
 
     fmeflow:
