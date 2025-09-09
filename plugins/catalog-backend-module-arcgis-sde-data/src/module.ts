@@ -24,7 +24,7 @@ export const catalogModuleArcGISData = createBackendModule({
           timeout: { minutes: 5 },
         });
         const arcGISUri = rootConfig.getString(
-          'catalog.providers.arcgissde.uri',
+          'catalog.providers.arcgissde.proxyUri',
         );
 
         const arcGISSDEClient = new ArcGISSDEClient(arcGISUri);
