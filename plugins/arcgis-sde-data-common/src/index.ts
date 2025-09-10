@@ -1,4 +1,4 @@
-import { Entity, KindValidator } from '@backstage/catalog-model';
+import { CompoundEntityRef, Entity, KindValidator } from '@backstage/catalog-model';
 import { JsonObject } from '@backstage/types';
 
 export interface ArcGISFeatureClassField {
@@ -50,26 +50,38 @@ export interface DomainValue {
 
 export interface ArcGISSDEDomainEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
-  kind: 'ArcGISDomain';
-  spec: JsonObject & ArcGISDomainValues;
+  kind: 'Table';
+  spec: {
+    dialect: 'arcgis';
+    dependencyOf: CompoundEntityRef[];
+  } & JsonObject;
 }
 
 export interface ArcGISSDEDomainValueEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
-  kind: 'ArcGISDomainValue';
-  spec: JsonObject & ArcGISDomainValue;
+  kind: 'Field';
+  spec: {
+    dialect: 'arcgis';
+    dependencyOf: CompoundEntityRef[];
+  } & JsonObject;
 }
 
 export interface ArcGISSDEFeatureClassEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
-  kind: 'ArcGISFeatureClass';
-  spec: JsonObject & ArcGISFeatureClassFields;
+  kind: 'Table';
+  spec: {
+    dialect: 'arcgis';
+    dependencyOf: CompoundEntityRef[];
+  } & JsonObject;
 }
 
 export interface ArcGISSDEFeatureClassFieldEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
-  kind: 'ArcGISFeatureClassField';
-  spec: JsonObject & ArcGISFeatureClassField;
+  kind: 'Field';
+  spec: {
+    dialect: 'arcgis';
+    dependencyOf: CompoundEntityRef[];
+  } & JsonObject;
 }
 
 export const arcGISSDEDomainEntityValidator: KindValidator = {
@@ -96,26 +108,20 @@ export const arcGISSDEFeatureClassFieldEntityValidator: KindValidator = {
   },
 };
 
-export const isArcGISSDEDomainEntity = (
-  data: Entity,
-): data is ArcGISSDEDomainEntity =>
-  data.apiVersion === 'geoportia.se/v1alpha1' &&
-  data.kind === 'ArcGISSDEDomainEntity';
+export const isArcGISSDEDomainEntity = (data: Entity): data is ArcGISSDEDomainEntity =>
+  data.apiVersion === 'geoportia.se/v1alpha1';
 
 export const isArcGISSDEDomainValueEntity = (
   data: Entity,
 ): data is ArcGISSDEDomainValueEntity =>
-  data.apiVersion === 'geoportia.se/v1alpha1' &&
-  data.kind === 'ArcGISSDEDomainValueEntity';
+  data.apiVersion === 'geoportia.se/v1alpha1';
 
 export const isArcGISSDEFeatureClassEntity = (
   data: Entity,
 ): data is ArcGISSDEFeatureClassEntity =>
-  data.apiVersion === 'geoportia.se/v1alpha1' &&
-  data.kind === 'ArcGISSDEFeatureClassEntity';
+  data.apiVersion === 'geoportia.se/v1alpha1';
 
 export const isArcGISSDEFeatureClassFieldEntity = (
   data: Entity,
 ): data is ArcGISSDEFeatureClassFieldEntity =>
-  data.apiVersion === 'geoportia.se/v1alpha1' &&
-  data.kind === 'ArcGISSDEFeatureClassFieldEntity';
+  data.apiVersion === 'geoportia.se/v1alpha1';
