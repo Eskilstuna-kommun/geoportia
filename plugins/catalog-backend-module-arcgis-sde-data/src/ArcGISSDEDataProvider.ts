@@ -10,8 +10,10 @@ import { ArcGISSDEClient } from './ArcGISSDEClient';
 import {
   ANNOTATION_LOCATION,
   ANNOTATION_ORIGIN_LOCATION,
+  CompoundEntityRef,
   Entity,
 } from '@backstage/catalog-model';
+import { ArcGISDomainValue, ArcGISFeatureClassField, ArcGISSDEDomainEntity, ArcGISSDEDomainValueEntity, ArcGISSDEFeatureClassEntity, ArcGISSDEFeatureClassFieldEntity } from '../../arcgis-sde-data-common/src';
 
 export class ArcGISSDEDataProvider implements EntityProvider {
   private connection?: EntityProviderConnection;
@@ -25,6 +27,27 @@ export class ArcGISSDEDataProvider implements EntityProvider {
 
   getProviderName(): string {
     return `arcGIS-SDE-data-${this.uri}`;
+  }
+
+  featureClassFieldToDependency(
+    field: ArcGISFeatureClassField,
+  ): CompoundEntityRef {
+    return {
+      kind: 'Field',
+      namespace: field.domain !== '' ? field.domain : 'default',
+      name: field.name,
+    };
+  }
+
+  domainValueToDependency(
+    value: ArcGISDomainValue,
+    domain: string,
+  ): CompoundEntityRef {
+    return {
+      kind: 'Field',
+      namespace: 'default',
+      name: `${domain}.${value.code.toString()}`,
+    };
   }
 
   async connect(connection: EntityProviderConnection) {
@@ -52,9 +75,9 @@ export class ArcGISSDEDataProvider implements EntityProvider {
         const fields = await this.arcGISSDEClient.fetchFields(featureClass);
 
         for (const field of fields) {
-          const ArcGISField: Entity = {
+          const ArcGISField: ArcGISSDEFeatureClassFieldEntity = {
             apiVersion: 'geoportia.se/v1alpha1',
-            kind: 'ArcGISFeatureClassField',
+            kind: 'Field',
             metadata: {
               name:
                 field.domain !== ''
@@ -67,15 +90,17 @@ export class ArcGISSDEDataProvider implements EntityProvider {
                 [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
               },
             },
-            spec: field as any,
+            spec: { 
+              dialect: 'arcgis',
+              dependencyOf: [] } as any,
           };
 
           entities.push(ArcGISField);
         }
 
-        const ArcGISFeatureClassEntity: Entity = {
+        const ArcGISFeatureClassEntity: ArcGISSDEFeatureClassEntity = {
           apiVersion: 'geoportia.se/v1alpha1',
-          kind: 'ArcGISFeatureClass',
+          kind: 'Table',
           metadata: {
             name: featureClass,
             title: featureClass,
@@ -85,7 +110,10 @@ export class ArcGISSDEDataProvider implements EntityProvider {
               [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
             },
           },
-          spec: { fields: fields } as any,
+          spec: {
+            dialect: 'arcgis',
+            dependencyOf: fields.map(this.featureClassFieldToDependency),
+          } as any,
         };
         entities.push(ArcGISFeatureClassEntity);
       }
@@ -98,9 +126,9 @@ export class ArcGISSDEDataProvider implements EntityProvider {
         );
 
         for (const domainValue of domainValues) {
-          const ArcGISDomainValueEntity: Entity = {
+          const ArcGISDomainValueEntity: ArcGISSDEDomainValueEntity = {
             apiVersion: 'geoportia.se/v1alpha1',
-            kind: 'ArcGISDomainValue',
+            kind: 'Field',
             metadata: {
               name: `${domain.name}.${domainValue.code.toString()}`,
               title: `${domain.name}.${domainValue.code.toString()}`,
@@ -110,15 +138,17 @@ export class ArcGISSDEDataProvider implements EntityProvider {
                 [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
               },
             },
-            spec: domainValue as any,
+            spec: { 
+              dialect: 'arcgis', 
+              dependencyOf: [] } as any,
           };
 
           entities.push(ArcGISDomainValueEntity);
         }
 
-        const ArcGISDomainEntity: Entity = {
+        const ArcGISDomainEntity: ArcGISSDEDomainEntity = {
           apiVersion: 'geoportia.se/v1alpha1',
-          kind: 'ArcGISDomain',
+          kind: 'Table',
           metadata: {
             name: domain.name,
             title: domain.name,
@@ -128,13 +158,20 @@ export class ArcGISSDEDataProvider implements EntityProvider {
               [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
             },
           },
-          spec: { values: domainValues } as any,
+          spec: {
+            dialect: 'arcgis',
+            dependencyOf: domainValues.map(domainValue => {
+              return this.domainValueToDependency(domainValue, domain.name);
+            }),
+          } as any,
         };
         entities.push(ArcGISDomainEntity);
       }
     } catch (error) {
       this.loggerService.warn('Failed to fetch ArcGIS entities: ' + error);
     }
+
+    console.log("Emitting entities: ", entities.map(e => e.metadata.name).join(", "));
 
     await this.connection.applyMutation({
       type: 'full',
