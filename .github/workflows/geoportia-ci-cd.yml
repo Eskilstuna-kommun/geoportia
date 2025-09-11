@@ -1,0 +1,52 @@
+name: GeoPortia Dev CI/CD
+
+on:
+  pull_request:
+    branches: ['**']
+    paths-ignore:
+      - 'docs/**'
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality-gate:
+    name: Lint • Prettier • Typecheck
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      NODE_VERSION: '20.x'
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2.13.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: https://registry.npmjs.org/
+
+      - name: yarn install (cached)
+        uses: backstage/actions/yarn-install@v0.6.17
+        with:
+          cache-prefix: ${{ runner.os }}-v${{ env.NODE_VERSION }}
+
+      # Lint ALL packages (no --since), fail on warnings
+      - name: ESLint
+        run: yarn backstage-cli repo lint --max-warnings 0
+
+      - name: Prettier (check only)
+        run: yarn prettier:check
+
+      - name: TypeScript type-check
+        run: yarn tsc
