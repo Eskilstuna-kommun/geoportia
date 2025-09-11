@@ -23,6 +23,7 @@ export function extractDatabaseRelationsFromLogEntries(
   for (const entry of entries) {
     const line = entry.message;
 
+    // POSTGIS patterns (existing)
     // Match any line mentioning FeatureReader and POSTGIS and dataset
     if (/FeatureReader.*dataset/i.test(line)) {
       const match = line.match(/dataset\s+['`]?(.*?)['`]?(?:'|$)/i);
@@ -59,6 +60,74 @@ export function extractDatabaseRelationsFromLogEntries(
         if (!seenTables.has(key)) {
           seenTables.add(key);
           result.tables.push({ schema: m[1], table: m[2] });
+        }
+      }
+    }
+
+    // ArcGIS SDE patterns
+    // Match connection to server and dataset
+    if (/Connection made to server/i.test(line)) {
+      const serverMatch = line.match(/server\s+'([^']+)'/i);
+      const datasetMatch = line.match(/dataset\s+'([^']+)'/i);
+
+      if (serverMatch && !result.database) {
+        result.database = serverMatch[1].trim();
+      }
+      if (datasetMatch && !result.dataset) {
+        result.dataset = datasetMatch[1].trim();
+      }
+    }
+
+    // Match Geodatabase Writer with WHERE clause
+    if (/Geodatabase Writer.*WHERE clause/i.test(line)) {
+      const match = line.match(
+        /([A-Za-z_]\w*)\.([A-Za-z_]\w*)\.([A-Za-z_]\w*)/,
+      );
+      if (match) {
+        const key = `${match[2]}.${match[3]}`;
+        if (!seenTables.has(key)) {
+          seenTables.add(key);
+          result.tables.push({ schema: match[2], table: match[3] });
+        }
+      }
+    }
+
+    // Match Esri Geodatabase Writer truncating feature type
+    if (/Esri Geodatabase Writer.*Truncating feature type/i.test(line)) {
+      const match = line.match(/`([A-Za-z_]\w*)\.([A-Za-z_]\w*)/);
+      if (match) {
+        const key = `${match[1]}.${match[2]}`;
+        if (!seenTables.has(key)) {
+          seenTables.add(key);
+          result.tables.push({ schema: match[1], table: match[2] });
+        }
+      }
+    }
+
+    // Match GEODATABASE_SDE reader with Reading feature type
+    if (/GEODATABASE_SDE.*Reading feature type/i.test(line)) {
+      const match = line.match(/'([A-Za-z_]\w*)\.([^/]+)\/([^']+)'/);
+      if (match) {
+        const key = `${match[1]}.${match[3]}`;
+        if (!seenTables.has(key)) {
+          seenTables.add(key);
+          result.tables.push({ schema: match[1], table: match[3] });
+        }
+      }
+    }
+
+    // Generic pattern for schema.table in quotes or backticks
+    // This catches other ArcGIS SDE patterns that might have schema.table format
+    if (/Geodatabase|GEODATABASE_SDE|Esri/i.test(line)) {
+      // Match patterns like 'schema.table' or `schema.table`
+      const matches = [
+        ...line.matchAll(/['`]([A-Za-z_]\w*)\.([A-Za-z_]\w*)['`]/g),
+      ];
+      for (const match of matches) {
+        const key = `${match[1]}.${match[2]}`;
+        if (!seenTables.has(key)) {
+          seenTables.add(key);
+          result.tables.push({ schema: match[1], table: match[2] });
         }
       }
     }
