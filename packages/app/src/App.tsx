@@ -41,7 +41,6 @@ import { githubAuthApiRef } from '@backstage/core-plugin-api';
 import { UnifiedThemeProvider } from '@backstage/theme';
 import { eskilstunaTheme } from './theme/eskilstuna';
 import WbSunny from '@material-ui/icons/WbSunny';
-import { CustomTablePage } from './components/table/CustomTableIndex';
 
 const app = createApp({
   apis,
@@ -94,10 +93,13 @@ const app = createApp({
 const routes = (
   <FlatRoutes>
     <Route path="/" element={<Navigate to="catalog" />} />
-    <Route path="/catalog" element={<CatalogIndexPage />} />
-    <Route path="/tables" element={<CatalogIndexPage />}>
-      <CustomTablePage />
-    </Route>
+    <Route path="/catalog" element={<CatalogIndexPage key="catalog" />} />
+    <Route path="/tables" element={<CatalogIndexPage key="table" initialKind='table'/>}/>
+    <Route path="/views" element={<CatalogIndexPage key="view" initialKind='view'/>}/>
+    <Route path="/geoserverlayer" element={<CatalogIndexPage key="geoserverlayer" initialKind='geoserverlayer'/>}/>
+    <Route path="/geoserverstore" element={<CatalogIndexPage key="geoserverstore" initialKind='geoserverstore'/>}/>
+    <Route path="/fmeworkspace" element={<CatalogIndexPage key="fmeworkspace" initialKind='fmeworkspace'/>}/>
+    <Route path="/field" element={<CatalogIndexPage key="field" initialKind='field'/>}/>
     <Route
       path="/catalog/:namespace/:kind/:name"
       element={<CatalogEntityPage />}
