@@ -20,6 +20,8 @@ import {
   SidebarSpace,
   useSidebarOpenState,
   Link,
+  SidebarSubmenuItem,
+  SidebarSubmenu,
 } from '@backstage/core-components';
 import MenuIcon from '@material-ui/icons/Menu';
 import TableIcon from '@material-ui/icons/TableChart';
@@ -71,7 +73,21 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
           pluralTitle="My Groups"
           icon={GroupIcon}
         />
-        <SidebarItem icon={TableIcon} to="tables" text="Tables" />
+
+        <SidebarItem icon={TableIcon} to="table" text="Databases">
+          <SidebarSubmenu title="Databases">
+            <SidebarItem icon={TableIcon} to="tables" text="Tables" />
+            <SidebarItem icon={TableIcon} to="views" text="Views" />
+            <SidebarItem icon={TableIcon} to="field" text="Fields" />
+          </SidebarSubmenu>
+        </SidebarItem>
+        <SidebarItem icon={TableIcon} to="geoserverlayer" text="Geoserver">
+          <SidebarSubmenu title="Geoserver">
+            <SidebarSubmenuItem icon={TableIcon} to="geoserverlayer" title="Geoserver Layers" />
+            <SidebarSubmenuItem icon={TableIcon} to="geoserverstore" title="Geoserver Stores" />
+          </SidebarSubmenu>
+        </SidebarItem>
+        <SidebarItem icon={TableIcon} to="fmeworkspace" text="FME" />
         <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
         {/* End global nav */}
         <SidebarDivider />

@@ -42,6 +42,11 @@ import { UnifiedThemeProvider } from '@backstage/theme';
 import { eskilstunaTheme } from './theme/eskilstuna';
 import WbSunny from '@material-ui/icons/WbSunny';
 import { CustomTablePage } from './components/table/CustomTableIndex';
+import { CustomViewPage } from './components/view/CustomViewIndex';
+import { CustomGeoserverLayerPage } from './components/geoserver/CustomGeoserverLayerIndex';
+import { CustomGeoserverStorePage } from './components/geoserver/CustomGeoserverStoreIndex';
+import { CustomFMEWorkspacePage } from './components/fme/CustomFMEWorkspaceIndex';
+import { CustomFieldPage } from './components/field/CustomFieldIndex';
 
 const app = createApp({
   apis,
@@ -97,6 +102,21 @@ const routes = (
     <Route path="/catalog" element={<CatalogIndexPage />} />
     <Route path="/tables" element={<CatalogIndexPage />}>
       <CustomTablePage />
+    </Route>
+    <Route path="/views" element={<CatalogIndexPage />}>
+      <CustomViewPage />
+    </Route>
+    <Route path="/geoserverlayer" element={<CatalogIndexPage />}>
+      <CustomGeoserverLayerPage />
+    </Route>
+    <Route path="/geoserverstore" element={<CatalogIndexPage />}>
+      <CustomGeoserverStorePage />
+    </Route>
+    <Route path="/fmeworkspace" element={<CatalogIndexPage />}>
+      <CustomFMEWorkspacePage />
+    </Route>
+    <Route path="/field" element={<CatalogIndexPage />}>
+      <CustomFieldPage />
     </Route>
     <Route
       path="/catalog/:namespace/:kind/:name"
