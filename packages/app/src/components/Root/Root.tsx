@@ -83,8 +83,16 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
         </SidebarItem>
         <SidebarItem icon={TableIcon} to="geoserverlayer" text="Geoserver">
           <SidebarSubmenu title="Geoserver">
-            <SidebarSubmenuItem icon={TableIcon} to="geoserverlayer" title="Geoserver Layers" />
-            <SidebarSubmenuItem icon={TableIcon} to="geoserverstore" title="Geoserver Stores" />
+            <SidebarSubmenuItem
+              icon={TableIcon}
+              to="geoserverlayer"
+              title="Geoserver Layers"
+            />
+            <SidebarSubmenuItem
+              icon={TableIcon}
+              to="geoserverstore"
+              title="Geoserver Stores"
+            />
           </SidebarSubmenu>
         </SidebarItem>
         <SidebarItem icon={TableIcon} to="fmeworkspace" text="FME" />
