@@ -26,8 +26,16 @@ export const catalogModuleArcGISData = createBackendModule({
         const arcGISUri = rootConfig.getString(
           'catalog.providers.arcgissde.proxyUri',
         );
-
-        const arcGISSDEClient = new ArcGISSDEClient(arcGISUri);
+        const arcGISSDEDatabase = rootConfig.getString(
+          'catalog.providers.arcgissde.database',
+        );
+        const arcGISSDEAdminUser = rootConfig.getString(
+          'catalog.providers.arcgissde.adminUser',
+        );
+        const arcGISSDEAdminPassword = rootConfig.getString(
+          'catalog.providers.arcgissde.adminPassword',
+        );
+        const arcGISSDEClient = new ArcGISSDEClient(arcGISUri, arcGISSDEAdminUser, arcGISSDEAdminPassword, arcGISSDEDatabase);
 
         const provider = new ArcGISSDEDataProvider(
           arcGISUri,
