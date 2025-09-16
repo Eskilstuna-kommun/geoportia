@@ -24,7 +24,7 @@ def get_feature_class_fields():
     # Returning array
     columns: list[dict[str, Any]] = []
 
-    if data == None:
+    if data is None:
         return jsonify(succcess=False, message="Inga data skickades", columns=columns)
 
     expected_fields: dict[str, str] = {
@@ -134,7 +134,7 @@ def get_domain_values():
     domain_values: list[dict[str, Any]] = []
     domain_parents: list[dict[str, str]] = []
 
-    if data == None:
+    if data is None:
         return jsonify(
             succcess=False, message="Inga data skickades", domain_values=domain_values
         )
@@ -177,7 +177,7 @@ def getFeatureClasses():
     data: Any | None = request.json
     featureClasses: list[str] = []
 
-    if data == None:
+    if data is None:
         return jsonify(
             succcess=False, message="Inga data skickades", featureClasses=featureClasses
         )
@@ -206,7 +206,7 @@ def getDomains():
     data: Any | None = request.json
     formatedDomains: list[dict[str, str]] = []
 
-    if data == None:
+    if data is None:
         return jsonify(
             succcess=False, message="Inga data skickades", domains=formatedDomains
         )
