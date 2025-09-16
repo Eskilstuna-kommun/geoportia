@@ -120,6 +120,12 @@ catalog:
     arcgissde:
       proxyUri: 
         $env: ARCPY_URI
+      adminUser:
+        $env: ARCPY_ADMIN_USER
+      adminPassword:
+        $env: ARCPY_ADMIN_PASSWORD
+      database:
+        $env: ARCPY_DATABASE
 
     fmeflow:
       baseUrl: ${FMEFLOW_BASE_URL}
