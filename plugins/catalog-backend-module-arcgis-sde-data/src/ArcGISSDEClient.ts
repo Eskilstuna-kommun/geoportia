@@ -32,17 +32,23 @@ interface DomainValuesPostResponse {
 
 export class ArcGISSDEClient {
   private endpoint: string;
+  private adminUser: string;
+  private adminPassword: string
+  private database: string
 
-  constructor(endpoint: string) {
+  constructor(endpoint: string, adminUser: string, adminPassword: string, database: string) {
     this.endpoint = endpoint;
+    this.adminUser = adminUser;
+    this.adminPassword = adminPassword;
+    this.database = database;
   }
 
   // Fetch feature classes from the ArcGIS SDE database
   fetchFeatureClasses = async (): Promise<string[]> => {
     const requestBody = {
-      database: 'somedatabase',
-      adminUser: 'someadmin',
-      adminPassword: 'somepassword',
+      database: this.database,
+      adminUser: this.adminUser,
+      adminPassword: this.adminPassword,
     };
 
     try {
@@ -71,9 +77,9 @@ export class ArcGISSDEClient {
     const requestBody = {
       dataset: 'root',
       featureClass: featureClass,
-      database: 'somedatabase',
-      adminUser: 'someadmin',
-      adminPassword: 'somepassword',
+      database: this.database,
+      adminUser: this.adminUser,
+      adminPassword: this.adminPassword,
     };
 
     try {
@@ -98,9 +104,9 @@ export class ArcGISSDEClient {
   // Fetch domains from the ArcGIS SDE database
   fetchDomains = async (): Promise<ArcGISDomain[]> => {
     const requestBody = {
-      database: 'somedatabase',
-      adminUser: 'someadmin',
-      adminPassword: 'somepassword',
+      database: this.database,
+      adminUser: this.adminUser,
+      adminPassword: this.adminPassword,
     };
 
     try {
@@ -126,9 +132,9 @@ export class ArcGISSDEClient {
   fetchDomainValues = async (domain: string): Promise<ArcGISDomainValue[]> => {
     const requestBody = {
       domain: domain,
-      database: 'somedatabase',
-      adminUser: 'someadmin',
-      adminPassword: 'somepassword',
+      database: this.database,
+      adminUser: this.adminUser,
+      adminPassword: this.adminPassword,
     };
 
     try {
