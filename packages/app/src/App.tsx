@@ -41,6 +41,7 @@ import { githubAuthApiRef } from '@backstage/core-plugin-api';
 import { UnifiedThemeProvider } from '@backstage/theme';
 import { eskilstunaTheme } from './theme/eskilstuna';
 import WbSunny from '@material-ui/icons/WbSunny';
+import { CustomIndexPage } from './components/custompage/CustomIndexPage';
 
 const app = createApp({
   apis,
@@ -94,36 +95,33 @@ const routes = (
   <FlatRoutes>
     <Route path="/" element={<Navigate to="catalog" />} />
     <Route path="/catalog" element={<CatalogIndexPage key="catalog" />} />
-    <Route
-      path="/tables"
-      element={<CatalogIndexPage key="table" initialKind="table" />}
-    />
-    <Route
-      path="/views"
-      element={<CatalogIndexPage key="view" initialKind="view" />}
-    />
+    <Route path="/tables" element={<CatalogIndexPage  />}>
+      <CustomIndexPage key="table" kind="table" />
+    </Route>
+    <Route path="/views" element={<CatalogIndexPage />}>
+      <CustomIndexPage key="view" kind="view" />
+    </Route>
     <Route
       path="/geoserverlayer"
-      element={
-        <CatalogIndexPage key="geoserverlayer" initialKind="geoserverlayer" />
-      }
-    />
+      element={<CatalogIndexPage  />}
+    >
+      <CustomIndexPage key="geoserverlayer" kind="geoserverlayer" />
+    </Route>
     <Route
       path="/geoserverstore"
-      element={
-        <CatalogIndexPage key="geoserverstore" initialKind="geoserverstore" />
-      }
-    />
+      element={<CatalogIndexPage  />}
+    >
+      <CustomIndexPage key="geoserverstore" kind="geoserverstore" />
+    </Route>
     <Route
       path="/fmeworkspace"
-      element={
-        <CatalogIndexPage key="fmeworkspace" initialKind="fmeworkspace" />
-      }
-    />
-    <Route
-      path="/field"
-      element={<CatalogIndexPage key="field" initialKind="field" />}
-    />
+      element={<CatalogIndexPage  />}
+    >
+      <CustomIndexPage key="fmeworkspace" kind="fmeworkspace" />
+    </Route>
+    <Route path="/field" element={<CatalogIndexPage />}>
+      <CustomIndexPage key="field" kind="field" />
+    </Route>
     <Route
       path="/catalog/:namespace/:kind/:name"
       element={<CatalogEntityPage />}
