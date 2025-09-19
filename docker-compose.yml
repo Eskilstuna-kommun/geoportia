@@ -16,5 +16,11 @@ services:
       - 18080:8080
     volumes:
       - geoserver_data:/opt/geoserver_data
+  arcsde-proxy:
+    build: ./plugins/catalog-backend-module-arcgis-sde-data/src/sde-python-proxy/
+    ports:
+      - 8045:8045
+    volumes:
+      - ./plugins/catalog-backend-module-arcgis-sde-data/src/sde-python-proxy/:/app
 volumes:
   geoserver_data:
