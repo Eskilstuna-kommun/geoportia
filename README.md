@@ -39,15 +39,7 @@ https://backstage.io/docs/auth/github/provider/
 docker compose -f 'docker-compose.yml' up -d --build 
 ```
 
-### 4. Start the arcpy dummy script
-
-In a separate terminal, run:
-
-```bash
-python .\plugins\catalog-backend-module-arcgis-sde-data\src\sde-python-proxy\test.py
-```
-
-### 5. Start the app
+### 4. Start the app
  
 ```bash
 yarn dev
