@@ -15,10 +15,13 @@ import {
   EntityKindPicker,
 } from '@backstage/plugin-catalog-react';
 import React, { useState } from 'react';
+import { useGeoportiaOpenStyles } from '../../theme/geoportiaopen';
 
 export const CustomIndexPage = ({ kind }: { kind: string }) => {
   const orgName =
     useApi(configApiRef).getOptionalString('organization.name') ?? 'Backstage';
+
+  const geoportiaOpenStyles = useGeoportiaOpenStyles();
 
   const columnOptions = [
     { key: 'Name', label: 'Name' },
@@ -65,37 +68,34 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
           <SupportButton>All your software catalog entities</SupportButton>
         </ContentHeader>
 
-        <div
-          className="column-menu"
-        >
-          <button onClick={() => setDropdownVisible(!dropdownVisible)}>
-            Columns
-          </button>
-          {dropdownVisible && (
-            <div className="column-menu-dropdown"
-            style={{
-                display: "grid",
-                position: "absolute",
-                backgroundColor: "#f9f9f9",
-                zIndex: 1,
-            }}>
-              {columnOptions.map(option => (
-                <label key={option.key}>
-                  <input
-                    type="checkbox"
-                    checked={selectedColumns[option.key]}
-                    onChange={() => handleColumnToggle(option.key)}
-                  />
-                  {option.label}
-                </label>
-              ))}
-            </div>
-          )}
+        <div className={geoportiaOpenStyles.columnMenu}>
+          <div className={geoportiaOpenStyles.columnMenuDropdownContainer}>
+            <button
+              className={geoportiaOpenStyles.columnMenuButton}
+              onClick={() => setDropdownVisible(!dropdownVisible)}
+            >
+              Columns
+            </button>
+            {dropdownVisible && (
+              <div className={geoportiaOpenStyles.columnMenuDropdown}>
+                {columnOptions.map(option => (
+                  <label key={option.key} className={geoportiaOpenStyles.columnMenuLabel}>
+                    <input
+                      className={geoportiaOpenStyles.columnMenuCheckbox}
+                      type="checkbox"
+                      checked={selectedColumns[option.key]}
+                      onChange={() => handleColumnToggle(option.key)}
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-
         <EntityListProvider pagination>
           <CatalogFilterLayout>
-            <div className="catalog-filter-container" hidden={true}>
+            <div className={geoportiaOpenStyles.catalogFilterContainer} hidden={true}>
               <CatalogFilterLayout.Filters>
                 <EntityKindPicker initialFilter={kind} />
               </CatalogFilterLayout.Filters>
