@@ -82,7 +82,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
       for (const featureClass of featureClasses) {
         const featureClassParts = featureClass.split('.');
 
-        if (featureClassParts.length < 1 || featureClassParts.length > 2 ) {
+        if (featureClassParts.length > 2 ) {
           this.loggerService.warn(
             `Unexpected feature class name format: ${featureClass}. Skipping.`,
           );
@@ -201,11 +201,6 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     } catch (error) {
       this.loggerService.warn('Failed to fetch ArcGIS entities: ' + error);
     }
-
-    console.log(
-      'Emitting entities: ',
-      entities.map(e => e.metadata.name).join(', '),
-    );
 
     await this.connection.applyMutation({
       type: 'full',
