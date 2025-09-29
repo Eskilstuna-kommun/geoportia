@@ -13,7 +13,14 @@ import {
   CompoundEntityRef,
   Entity,
 } from '@backstage/catalog-model';
-import { ArcGISDomainValue, ArcGISFeatureClassField, ArcGISSDEDomainEntity, ArcGISSDEDomainValueEntity, ArcGISSDEFeatureClassEntity, ArcGISSDEFeatureClassFieldEntity } from '../../arcgis-sde-data-common/src';
+import {
+  ArcGISDomainValue,
+  ArcGISFeatureClassField,
+  ArcGISSDEDomainEntity,
+  ArcGISSDEDomainValueEntity,
+  ArcGISSDEFeatureClassEntity,
+  ArcGISSDEFeatureClassFieldEntity,
+} from '../../arcgis-sde-data-common/src';
 
 export class ArcGISSDEDataProvider implements EntityProvider {
   private connection?: EntityProviderConnection;
@@ -69,10 +76,30 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     const entities: Entity[] = [];
 
     try {
-      const featureClasses = await this.arcGISSDEClient.fetchFeatureClasses();
+      const featureClasses =
+        (await this.arcGISSDEClient.fetchFeatureClasses()) ?? [];
 
       for (const featureClass of featureClasses) {
-        const fields = await this.arcGISSDEClient.fetchFields(featureClass);
+        const featureClassParts = featureClass.split('.');
+
+        if (featureClassParts.length < 1 || featureClassParts.length > 2 ) {
+          this.loggerService.warn(
+            `Unexpected feature class name format: ${featureClass}. Skipping.`,
+          );
+          continue;
+        }
+
+        // If there are two parts in the feature class name, the first is the namespace (schema), the second is the feature class name proper
+        const namespace = featureClassParts.length === 2 ? featureClassParts[0] : '';
+        const featureClassName =
+          featureClassParts.length === 2
+            ? featureClassParts[1]
+            : featureClassParts[0];        
+
+        this.loggerService.info("Processing feature class: " + featureClassName + " in namespace: " + namespace);
+
+        const fields =
+          (await this.arcGISSDEClient.fetchFields(featureClassName)) ?? [];
 
         for (const field of fields) {
           const ArcGISField: ArcGISSDEFeatureClassFieldEntity = {
@@ -90,9 +117,10 @@ export class ArcGISSDEDataProvider implements EntityProvider {
                 [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
               },
             },
-            spec: { 
+            spec: {
               dialect: 'arcgis',
-              dependencyOf: [] } as any,
+              dependencyOf: [],
+            } as any,
           };
 
           entities.push(ArcGISField);
@@ -102,8 +130,11 @@ export class ArcGISSDEDataProvider implements EntityProvider {
           apiVersion: 'geoportia.se/v1alpha1',
           kind: 'Table',
           metadata: {
-            name: featureClass,
-            title: featureClass,
+            name:
+              namespace !== ''
+                ? `${namespace}.${featureClassName}`
+                : featureClassName,
+            title: featureClassName,
             description: undefined,
             annotations: {
               [ANNOTATION_LOCATION]: `url:${this.uri}`,
@@ -118,12 +149,11 @@ export class ArcGISSDEDataProvider implements EntityProvider {
         entities.push(ArcGISFeatureClassEntity);
       }
 
-      const domains = await this.arcGISSDEClient.fetchDomains();
+      const domains = (await this.arcGISSDEClient.fetchDomains()) ?? [];
 
       for (const domain of domains) {
-        const domainValues = await this.arcGISSDEClient.fetchDomainValues(
-          domain.name,
-        );
+        const domainValues =
+          (await this.arcGISSDEClient.fetchDomainValues(domain.name)) ?? [];
 
         for (const domainValue of domainValues) {
           const ArcGISDomainValueEntity: ArcGISSDEDomainValueEntity = {
@@ -138,9 +168,10 @@ export class ArcGISSDEDataProvider implements EntityProvider {
                 [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
               },
             },
-            spec: { 
-              dialect: 'arcgis', 
-              dependencyOf: [] } as any,
+            spec: {
+              dialect: 'arcgis',
+              dependencyOf: [],
+            } as any,
           };
 
           entities.push(ArcGISDomainValueEntity);
@@ -171,7 +202,10 @@ export class ArcGISSDEDataProvider implements EntityProvider {
       this.loggerService.warn('Failed to fetch ArcGIS entities: ' + error);
     }
 
-    console.log("Emitting entities: ", entities.map(e => e.metadata.name).join(", "));
+    console.log(
+      'Emitting entities: ',
+      entities.map(e => e.metadata.name).join(', '),
+    );
 
     await this.connection.applyMutation({
       type: 'full',
