@@ -283,6 +283,39 @@ export class GeoserverDataProvider implements EntityProvider {
               );
 
               break;
+
+            case 'wmsLayer':
+              const wmsStoresForLayerObject =
+                await grc.layers.getWMSStore(workspace.name, layer.name);
+              const wmsStoreForLayer = wmsStoresForLayerObject?.wmsStore;
+              this.logger.debug(
+                `Found WMS store: ${wmsStoreForLayer.name} for layer ${layer.name}`,
+              );
+
+              this.addStoreToLayer(
+                layerEntity,
+                workspace.name,
+                wmsStoreForLayer.name,
+              );
+
+              break;
+
+            case 'wmtsLayer':
+              const wmtsStoresForLayerObject =
+                await grc.layers.getWMTSStore(workspace.name, layer.name);
+              const wmtsStoreForLayer = wmtsStoresForLayerObject?.wmtsStore;
+              this.logger.debug(
+                `Found WMTS store: ${wmtsStoreForLayer.name} for layer ${layer.name}`,
+              );
+              
+              this.addStoreToLayer(
+                layerEntity,
+                workspace.name,
+                wmtsStoreForLayer.name,
+              );
+
+              break;
+
             default:
               this.logger.warn(
                 `Unknown resource type for layer ${layer.name}: ${fullLayerObject.layer.resource['@class']}`,
