@@ -22257,12 +22257,12 @@ __metadata:
   linkType: hard
 
 "geoserver-rest-client@https://github.com/sweco-se1g7y/geoserver-node-client.git#typescript":
-  version: 1.4.8
-  resolution: "geoserver-rest-client@https://github.com/sweco-se1g7y/geoserver-node-client.git#commit=cbe98efc1ffe60eab6deda1e60db9ad9130658af"
+  version: 1.5.1
+  resolution: "geoserver-rest-client@https://github.com/sweco-se1g7y/geoserver-node-client.git#commit=c5c6e962d0177d0c61ff6dfe997da514e1610018"
   dependencies:
     "@babel/runtime": "npm:^7.27.6"
     node-fetch: "npm:^3.3.2"
-  checksum: 10c0/cc94f7865c43079121aad0af3c8a2e3289bc692be13a701cb9e2b90d557125bc64b83956b2027e3c1268889c57a8b4c99c1d8c1bb290fb7cdc6e72907b195af4
+  checksum: 10c0/e0efec6c51213369052294a2a2e1792ae7fd9fe9cfb6a88783b5d2388c44457a7fa9338cead10d056c0821dcf1e2026e36e2264dad9d54dee618c4e9a0f0d5da
   languageName: node
   linkType: hard
 
@@ -32411,6 +32411,7 @@ __metadata:
     "@mui/icons-material": "npm:^7.3.7"
     "@playwright/test": "npm:^1.32.3"
     "@useoptic/optic": "npm:^1.0.5"
+    geoserver-rest-client: "https://github.com/sweco-se1g7y/geoserver-node-client.git#typescript"
     node-gyp: "npm:^10.0.0"
     pg-listen: "npm:^1.7.0"
     prettier: "npm:^2.3.2"
