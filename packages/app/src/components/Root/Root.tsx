@@ -253,6 +253,15 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
           ]}
         />
 
+        <ExpandableItem
+          icon={GeoserverIcon}
+          text="ArcGIS SDE"
+          items={[
+            { to: 'domain', text: 'Domains' },
+            { to: 'value', text: 'Values' },
+          ]}
+        />
+
         <SidebarItem icon={FmeIcon} to="fmeworkspace" text="FME" />
         <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
         <SidebarDivider />

@@ -120,6 +120,16 @@ const routes = (
       element={<CustomIndexPage key="field" kind="field" />}
     ></Route>
     <Route
+      path="/arcgisdomain"
+      element={
+        <CatalogIndexPage key="arcgisdomain" initialKind="arcgisdomain" />
+      }
+    />
+    <Route
+      path="/arcgisvalue"
+      element={<CatalogIndexPage key="arcgisvalue" initialKind="arcgisvalue" />}
+    />
+    <Route
       path="/catalog/:namespace/:kind/:name"
       element={<CatalogEntityPage />}
     >
