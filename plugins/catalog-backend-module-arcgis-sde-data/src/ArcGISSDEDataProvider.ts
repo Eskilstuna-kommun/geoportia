@@ -98,8 +98,15 @@ export class ArcGISSDEDataProvider implements EntityProvider {
 
         this.loggerService.info("Processing feature class: " + featureClassName + " in namespace: " + namespace);
 
-        const fields =
-          (await this.arcGISSDEClient.fetchFields(featureClassName)) ?? [];
+        let fields
+        try {
+          fields = await this.arcGISSDEClient.fetchFields(featureClassName);
+        } catch (error) {
+          this.loggerService.warn(
+            `Failed to fetch fields for feature class ${featureClassName}: ${error}. Skipping.`,
+          );
+          continue;
+        }
 
         for (const field of fields) {
           const ArcGISField: ArcGISSDEFeatureClassFieldEntity = {
