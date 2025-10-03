@@ -51,7 +51,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     domain: string,
   ): CompoundEntityRef {
     return {
-      kind: 'Field',
+      kind: 'ArcGISValue',
       namespace: 'default',
       name: `${domain}.${value.code.toString()}`,
     };
@@ -165,7 +165,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
         for (const domainValue of domainValues) {
           const ArcGISDomainValueEntity: ArcGISSDEDomainValueEntity = {
             apiVersion: 'geoportia.se/v1alpha1',
-            kind: 'Field',
+            kind: 'ArcGISValue',
             metadata: {
               name: `${domain.name}.${domainValue.code.toString()}`,
               title: `${domain.name}.${domainValue.code.toString()}`,
@@ -186,7 +186,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
 
         const ArcGISDomainEntity: ArcGISSDEDomainEntity = {
           apiVersion: 'geoportia.se/v1alpha1',
-          kind: 'Table',
+          kind: 'ArcGISDomain',
           metadata: {
             name: domain.name,
             title: domain.name,
