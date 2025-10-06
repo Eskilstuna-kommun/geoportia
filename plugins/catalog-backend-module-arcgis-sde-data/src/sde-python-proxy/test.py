@@ -172,14 +172,16 @@ def get_domain_values():
     )
 
 
-@app.post("/featureclasses")
+@app.post("/datasets")
 def getFeatureClasses():
     data: Any | None = request.json
-    featureClasses: list[str] = []
+    dataSetsWithFeatureClasses: list[dict[str, Any]] = []
 
     if data is None:
         return jsonify(
-            succcess=False, message="Inga data skickades", featureClasses=featureClasses
+            succcess=False,
+            message="Inga data skickades",
+            datasets=dataSetsWithFeatureClasses,
         )
 
     expected_fields: dict[str, str] = {
@@ -193,12 +195,17 @@ def getFeatureClasses():
             return jsonify(
                 success=False,
                 message=expected_fields[expected_field],
-                featureClasses=featureClasses,
+                datasets=dataSetsWithFeatureClasses,
             )
 
-    featureClasses = ["LandParcels"]
+    dataSetsWithFeatureClasses = [
+        {
+            "name": "root",
+            "featureClasses": ["LandParcels"],
+        }
+    ]
 
-    return jsonify(success=True, message="", featureClasses=featureClasses)
+    return jsonify(success=True, message="", datasets=dataSetsWithFeatureClasses)
 
 
 @app.post("/domains")

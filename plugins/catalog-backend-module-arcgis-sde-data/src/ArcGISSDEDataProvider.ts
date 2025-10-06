@@ -76,48 +76,81 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     const entities: Entity[] = [];
 
     try {
-      const featureClasses =
-        (await this.arcGISSDEClient.fetchFeatureClasses()) ?? [];
+      const dataSets = (await this.arcGISSDEClient.fetchDataSets()) ?? [];
 
-      for (const featureClass of featureClasses) {
-        const featureClassParts = featureClass.split('.');
+      for (const dataSet of dataSets ?? []) {
+        for (const dataSetFeatureClass of dataSet.featureClasses ?? []) {
+          const featureClassParts = dataSetFeatureClass.split('.');
 
-        if (featureClassParts.length > 2 ) {
-          this.loggerService.warn(
-            `Unexpected feature class name format: ${featureClass}. Skipping.`,
+          if (featureClassParts.length > 2) {
+            this.loggerService.warn(
+              `Unexpected feature class name format: ${dataSet}. Skipping.`,
+            );
+            continue;
+          }
+
+          // If there are two parts in the feature class name, the first is the namespace (schema), the second is the feature class name proper
+          const namespace =
+            featureClassParts.length === 2 ? featureClassParts[0] : '';
+          const featureClassName =
+            featureClassParts.length === 2
+              ? featureClassParts[1]
+              : featureClassParts[0];
+
+          this.loggerService.info(
+            'Processing feature class: ' +
+              featureClassName +
+              ' in namespace: ' +
+              namespace,
           );
-          continue;
-        }
 
-        // If there are two parts in the feature class name, the first is the namespace (schema), the second is the feature class name proper
-        const namespace = featureClassParts.length === 2 ? featureClassParts[0] : '';
-        const featureClassName =
-          featureClassParts.length === 2
-            ? featureClassParts[1]
-            : featureClassParts[0];        
+          let fields;
+          try {
+            fields = await this.arcGISSDEClient.fetchFields(
+              dataSet.name,
+              featureClassName,
+            );
+          } catch (error) {
+            this.loggerService.warn(
+              `Failed to fetch fields for feature class ${featureClassName}: ${error}. Skipping.`,
+            );
+            continue;
+          }
 
-        this.loggerService.info("Processing feature class: " + featureClassName + " in namespace: " + namespace);
+          for (const field of fields ?? []) {
+            const ArcGISField: ArcGISSDEFeatureClassFieldEntity = {
+              apiVersion: 'geoportia.se/v1alpha1',
+              kind: 'Field',
+              metadata: {
+                name:
+                  field.domain !== ''
+                    ? `${field.domain}.${field.name}`
+                    : field.name,
+                title: field.name,
+                description: undefined,
+                annotations: {
+                  [ANNOTATION_LOCATION]: `url:${this.uri}`,
+                  [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
+                },
+              },
+              spec: {
+                dialect: 'arcgis',
+                dependencyOf: [],
+              } as any,
+            };
 
-        let fields
-        try {
-          fields = await this.arcGISSDEClient.fetchFields(featureClassName);
-        } catch (error) {
-          this.loggerService.warn(
-            `Failed to fetch fields for feature class ${featureClassName}: ${error}. Skipping.`,
-          );
-          continue;
-        }
+            entities.push(ArcGISField);
+          }
 
-        for (const field of fields) {
-          const ArcGISField: ArcGISSDEFeatureClassFieldEntity = {
+          const ArcGISFeatureClassEntity: ArcGISSDEFeatureClassEntity = {
             apiVersion: 'geoportia.se/v1alpha1',
-            kind: 'Field',
+            kind: 'Table',
             metadata: {
               name:
-                field.domain !== ''
-                  ? `${field.domain}.${field.name}`
-                  : field.name,
-              title: field.name,
+                namespace !== ''
+                  ? `${namespace}.${featureClassName}`
+                  : featureClassName,
+              title: featureClassName,
               description: undefined,
               annotations: {
                 [ANNOTATION_LOCATION]: `url:${this.uri}`,
@@ -126,34 +159,11 @@ export class ArcGISSDEDataProvider implements EntityProvider {
             },
             spec: {
               dialect: 'arcgis',
-              dependencyOf: [],
+              dependencyOf: fields.map(this.featureClassFieldToDependency),
             } as any,
           };
-
-          entities.push(ArcGISField);
+          entities.push(ArcGISFeatureClassEntity);
         }
-
-        const ArcGISFeatureClassEntity: ArcGISSDEFeatureClassEntity = {
-          apiVersion: 'geoportia.se/v1alpha1',
-          kind: 'Table',
-          metadata: {
-            name:
-              namespace !== ''
-                ? `${namespace}.${featureClassName}`
-                : featureClassName,
-            title: featureClassName,
-            description: undefined,
-            annotations: {
-              [ANNOTATION_LOCATION]: `url:${this.uri}`,
-              [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
-            },
-          },
-          spec: {
-            dialect: 'arcgis',
-            dependencyOf: fields.map(this.featureClassFieldToDependency),
-          } as any,
-        };
-        entities.push(ArcGISFeatureClassEntity);
       }
 
       const domains = (await this.arcGISSDEClient.fetchDomains()) ?? [];
