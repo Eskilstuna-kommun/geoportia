@@ -5,8 +5,13 @@ import {
   ArcGISFeatureClassField,
 } from '@internal/backstage-plugin-arcgis-sde-data-common';
 
-interface FeatureClassPostResponse {
+interface DataSet {
+  name: string;
   featureClasses: string[];
+}
+
+interface DataSetPostResponse {
+  datasets: DataSet[];
   message: string;
   success: boolean;
 }
@@ -33,10 +38,15 @@ interface DomainValuesPostResponse {
 export class ArcGISSDEClient {
   private endpoint: string;
   private adminUser: string;
-  private adminPassword: string
-  private database: string
+  private adminPassword: string;
+  private database: string;
 
-  constructor(endpoint: string, adminUser: string, adminPassword: string, database: string) {
+  constructor(
+    endpoint: string,
+    adminUser: string,
+    adminPassword: string,
+    database: string,
+  ) {
     this.endpoint = endpoint;
     this.adminUser = adminUser;
     this.adminPassword = adminPassword;
@@ -44,7 +54,7 @@ export class ArcGISSDEClient {
   }
 
   // Fetch feature classes from the ArcGIS SDE database
-  fetchFeatureClasses = async (): Promise<string[]> => {
+  fetchDataSets = async (): Promise<DataSet[]> => {
     const requestBody = {
       database: this.database,
       adminUser: this.adminUser,
@@ -52,12 +62,12 @@ export class ArcGISSDEClient {
     };
 
     try {
-      const response = await axios.post<FeatureClassPostResponse>(
-        `${this.endpoint}/featureclasses`,
+      const response = await axios.post<DataSetPostResponse>(
+        `${this.endpoint}/datasets`,
         requestBody,
       );
       if (response.data.success) {
-        return response.data.featureClasses;
+        return response.data.datasets;
       } else {
         throw new Error(
           'Request for ArcGIS feature classes was not successful: ' +
@@ -72,10 +82,11 @@ export class ArcGISSDEClient {
 
   // Fetch fields for a specific feature class from the ArcGIS SDE database
   fetchFields = async (
+    dataSet: string,
     featureClass: string,
   ): Promise<ArcGISFeatureClassField[]> => {
     const requestBody = {
-      dataset: 'root',
+      dataset: dataSet,
       featureClass: featureClass,
       database: this.database,
       adminUser: this.adminUser,

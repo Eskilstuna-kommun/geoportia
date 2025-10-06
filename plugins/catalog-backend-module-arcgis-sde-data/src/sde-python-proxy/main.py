@@ -209,14 +209,16 @@ def get_domain_values():
         )
 
 
-@app.post("/featureclasses")
+@app.post("/datasets")
 def getFeatureClasses():
     data = request.json
-    featureClasses = []
+    dataSetsWithFeatureClasses: list[dict[str, Any]] = []
 
     if data is None:
         return jsonify(
-            succcess=False, message="Inga data skickades", featureClasses=featureClasses
+            succcess=False,
+            message="Inga data skickades",
+            datasets=dataSetsWithFeatureClasses,
         )
 
     expected_fields = {
@@ -230,7 +232,7 @@ def getFeatureClasses():
             return jsonify(
                 success=False,
                 message=expected_fields[expected_field],
-                featureClasses=featureClasses,
+                datasets=dataSetsWithFeatureClasses,
             )
 
     success = False
@@ -244,7 +246,17 @@ def getFeatureClasses():
         connection_file_name = create_connection_file(database, database_user, password)
         arcpy.env.workspace = connection_file_name
         arcpy.management.ClearWorkspaceCache()
-        featureClasses = arcpy.ListFeatureClasses()
+
+        dataSets = arcpy.ListDatasets("*", "Feature")
+
+        for dataSet in dataSets:
+            dataSetsWithFeatureClasses = dataSetsWithFeatureClasses + [
+                {
+                    "name": dataSet,
+                    "featureClasses": arcpy.ListFeatureClasses(feature_dataset=dataSet),
+                }
+            ]
+
         success = True
     except Exception as ex:
         template = "An exception of type {0} occurred. Arguments:\n{1!r}"
@@ -253,7 +265,7 @@ def getFeatureClasses():
     finally:
         delete_connection_file(database, database_user)
         return jsonify(
-            success=success, message=return_message, featureClasses=featureClasses
+            success=success, message=return_message, datasets=dataSetsWithFeatureClasses
         )
 
 
