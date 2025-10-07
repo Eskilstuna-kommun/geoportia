@@ -57,6 +57,22 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     };
   }
 
+  // Breaks out a full name into name and namespace parts.
+  // Namespace is everything before the last dot, name is everything after.
+  // If there is no dot, namespace is empty and name is the full name.
+  breakOutName (fullName: string): { name: string; namespace: string } {
+    const lastDotInNameIndex = fullName.lastIndexOf('.');
+    const name =
+      lastDotInNameIndex === -1
+        ? fullName
+        : fullName.substring(lastDotInNameIndex + 1);
+    const namespace =
+      lastDotInNameIndex === -1
+        ? ''
+        : fullName.substring(0, lastDotInNameIndex);
+    return { name, namespace };
+  }
+
   async connect(connection: EntityProviderConnection) {
     this.connection = connection;
     await this.taskRunner.run({
@@ -79,23 +95,10 @@ export class ArcGISSDEDataProvider implements EntityProvider {
       const dataSets = (await this.arcGISSDEClient.fetchDataSets()) ?? [];
 
       for (const dataSet of dataSets ?? []) {
+        const {name: dataSetName} = this.breakOutName(dataSet.name);
+
         for (const dataSetFeatureClass of dataSet.featureClasses ?? []) {
-          const featureClassParts = dataSetFeatureClass.split('.');
-
-          if (featureClassParts.length > 2) {
-            this.loggerService.warn(
-              `Unexpected feature class name format: ${dataSet}. Skipping.`,
-            );
-            continue;
-          }
-
-          // If there are two parts in the feature class name, the first is the namespace (schema), the second is the feature class name proper
-          const namespace =
-            featureClassParts.length === 2 ? featureClassParts[0] : '';
-          const featureClassName =
-            featureClassParts.length === 2
-              ? featureClassParts[1]
-              : featureClassParts[0];
+          const {name: featureClassName, namespace} = this.breakOutName(dataSetFeatureClass);
 
           this.loggerService.info(
             'Processing feature class: ' +
@@ -107,7 +110,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
           let fields;
           try {
             fields = await this.arcGISSDEClient.fetchFields(
-              dataSet.name,
+              dataSetName,
               featureClassName,
             );
           } catch (error) {
@@ -169,8 +172,9 @@ export class ArcGISSDEDataProvider implements EntityProvider {
       const domains = (await this.arcGISSDEClient.fetchDomains()) ?? [];
 
       for (const domain of domains) {
+        const {name: domainName} = this.breakOutName(domain.name);
         const domainValues =
-          (await this.arcGISSDEClient.fetchDomainValues(domain.name)) ?? [];
+          (await this.arcGISSDEClient.fetchDomainValues(domainName)) ?? [];
 
         for (const domainValue of domainValues) {
           const ArcGISDomainValueEntity: ArcGISSDEDomainValueEntity = {
