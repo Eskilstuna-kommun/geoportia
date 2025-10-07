@@ -45,7 +45,6 @@ export class GeoserverDataProvider implements EntityProvider {
   // Creates a new Geoserver data store entity
   private createStoreEntity(
     name: string,
-    workspace: string,
     description: string,
     spec: any,
   ): Entity {
@@ -53,8 +52,8 @@ export class GeoserverDataProvider implements EntityProvider {
       apiVersion: 'geoportia.se/v1alpha1',
       kind: 'GeoserverStore',
       metadata: {
-        name,
-        namespace: workspace,
+        name: `${name}`,
+        namespace: 'default',
         description,
         annotations: {
           [ANNOTATION_LOCATION]: `url:${this.uri}`,
@@ -68,7 +67,6 @@ export class GeoserverDataProvider implements EntityProvider {
   // Creates a custom property on a layer entity's spec object, to be read by the entity processor
   private addStoreToLayer(
     layer: Entity,
-    workspaceName: string,
     storeName: string,
   ): void {
     if (layer.spec !== undefined) {
@@ -76,8 +74,8 @@ export class GeoserverDataProvider implements EntityProvider {
         type: RELATION_PART_OF,
         targetRef: stringifyEntityRef({
           kind: 'GeoserverStore',
-          namespace: workspaceName,
-          name: storeName,
+          namespace: 'default',
+          name: `${storeName}`,
         }),
       };
     } else {
@@ -130,7 +128,6 @@ export class GeoserverDataProvider implements EntityProvider {
               entities.push(
                 this.createStoreEntity(
                   dataStore.name,
-                  workspace.name,
                   fullDataStoreObject?.dataStore?.description,
                   fullDataStoreObject?.dataStore || {},
                 ),
@@ -168,7 +165,6 @@ export class GeoserverDataProvider implements EntityProvider {
               entities.push(
                 this.createStoreEntity(
                   coverageStore.name,
-                  workspace.name,
                   fullCoverageStoreObject?.coverageStore?.description,
                   fullCoverageStoreObject?.coverageStore || {},
                 ),
@@ -206,7 +202,6 @@ export class GeoserverDataProvider implements EntityProvider {
               entities.push(
                 this.createStoreEntity(
                   wmsStore.name,
-                  workspace.name,
                   fullWmsStoreObject?.wmsStore?.description,
                   fullWmsStoreObject?.wmsStore || {},
                 ),
@@ -243,7 +238,6 @@ export class GeoserverDataProvider implements EntityProvider {
               entities.push(
                 this.createStoreEntity(
                   wmtsStore.name,
-                  workspace.name,
                   fullWmtsStoreObject?.wmtsStore?.description,
                   fullWmtsStoreObject?.wmtStore || {},
                 ),
@@ -286,8 +280,8 @@ export class GeoserverDataProvider implements EntityProvider {
                 apiVersion: 'geoportia.se/v1alpha1',
                 kind: 'GeoserverLayer',
                 metadata: {
-                  name: layer.name,
-                  namespace: workspace.name,
+                  name: `${layer.name}`,
+                  namespace: 'default',
                   description: undefined,
                   annotations: {
                     [ANNOTATION_LOCATION]: `url:${this.uri}`,
@@ -318,7 +312,6 @@ export class GeoserverDataProvider implements EntityProvider {
 
                       this.addStoreToLayer(
                         layerEntity,
-                        workspace.name,
                         dataStoreForLayer.name,
                       );
                     } catch (error) {
@@ -343,7 +336,6 @@ export class GeoserverDataProvider implements EntityProvider {
 
                       this.addStoreToLayer(
                         layerEntity,
-                        workspace.name,
                         coverageStoreForLayer.name,
                       );
                     } catch (error) {
@@ -369,7 +361,6 @@ export class GeoserverDataProvider implements EntityProvider {
 
                       this.addStoreToLayer(
                         layerEntity,
-                        workspace.name,
                         wmsStoreForLayer.name,
                       );
                     } catch (error) {
@@ -395,7 +386,6 @@ export class GeoserverDataProvider implements EntityProvider {
 
                       this.addStoreToLayer(
                         layerEntity,
-                        workspace.name,
                         wmtsStoreForLayer.name,
                       );
                     } catch (error) {
@@ -429,7 +419,6 @@ export class GeoserverDataProvider implements EntityProvider {
           this.logger.warn(
             `Error fetching layers for workspace ${workspace.name}: ${error}`,
           );
-          continue;
         }
       }
 
