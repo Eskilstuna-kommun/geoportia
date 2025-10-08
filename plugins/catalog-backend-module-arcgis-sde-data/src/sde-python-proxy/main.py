@@ -249,6 +249,14 @@ def getFeatureClasses():
 
         dataSets = arcpy.ListDatasets("*", "Feature")
 
+        # Add the feature classes that belong to no data set
+        dataSetsWithFeatureClasses = dataSetsWithFeatureClasses + [
+            {
+                "name": "root",
+                "featureClasses": arcpy.ListFeatureClasses(),
+            }
+        ]
+
         for dataSet in dataSets:
             dataSetsWithFeatureClasses = dataSetsWithFeatureClasses + [
                 {
