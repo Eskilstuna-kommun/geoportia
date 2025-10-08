@@ -1,15 +1,25 @@
-import { Entity, KindValidator } from '@backstage/catalog-model';
+import {
+  CompoundEntityRef,
+  Entity,
+  KindValidator,
+} from '@backstage/catalog-model';
 import { JsonObject } from '@backstage/types';
 
 export interface GeoserverStoreEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
   kind: 'GeoserverStore';
-  spec: JsonObject;
+  spec: {
+    dialect: 'geoserver';
+    dependencyOf: CompoundEntityRef[];
+  } & JsonObject;
 }
 export interface GeoserverLayerEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
   kind: 'GeoserverLayer';
-  spec: JsonObject;
+  spec: {
+    dialect: 'geoserver';
+    dependencyOf: CompoundEntityRef[];
+  } & JsonObject;
 }
 
 export const geoserverStoreEntityValidator: KindValidator = {
@@ -26,9 +36,13 @@ export const geoserverLayerEntityValidator: KindValidator = {
 export const isGeoserverStoreEntity = (
   data: Entity,
 ): data is GeoserverStoreEntity =>
-  data.apiVersion === 'geoportia.se/v1alpha1' && data.kind === 'GeoserverStore';
+  data.apiVersion === 'geoportia.se/v1alpha1' &&
+  data.spec?.dialect === 'geoserver ' &&
+  data.kind === 'GeoserverStore';
 
 export const isGeoserverLayerEntity = (
   data: Entity,
 ): data is GeoserverLayerEntity =>
-  data.apiVersion === 'geoportia.se/v1alpha1' && data.kind === 'GeoserverLayer';
+  data.apiVersion === 'geoportia.se/v1alpha1' &&
+  data.spec?.dialect === 'geoserver ' &&
+  data.kind === 'GeoserverLayer';
