@@ -34,10 +34,10 @@ export class GeoserverEntitiesProcessor implements CatalogProcessor {
     _location: LocationSpec,
     emit: CatalogProcessorEmit,
   ) {
-    if (entity.spec?.dialect === 'geoserver') {
+    if (entity.kind === 'GeoserverStore') {
       if (!entity.spec || !entity.spec.dependencyOf) {
         throw new Error(
-          "Geoserver entities must have 'spec.dependencyOf' defined",
+          "GeoserverStore entities must have 'spec.dependencyOf' defined",
         );
       }
 

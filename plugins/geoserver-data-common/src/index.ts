@@ -9,7 +9,6 @@ export interface GeoserverStoreEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
   kind: 'GeoserverStore';
   spec: {
-    dialect: 'geoserver';
     dependencyOf: CompoundEntityRef[];
   } & JsonObject;
 }
@@ -17,7 +16,6 @@ export interface GeoserverLayerEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
   kind: 'GeoserverLayer';
   spec: {
-    dialect: 'geoserver';
     dependencyOf: CompoundEntityRef[];
   } & JsonObject;
 }
@@ -37,12 +35,10 @@ export const isGeoserverStoreEntity = (
   data: Entity,
 ): data is GeoserverStoreEntity =>
   data.apiVersion === 'geoportia.se/v1alpha1' &&
-  data.spec?.dialect === 'geoserver ' &&
   data.kind === 'GeoserverStore';
 
 export const isGeoserverLayerEntity = (
   data: Entity,
 ): data is GeoserverLayerEntity =>
   data.apiVersion === 'geoportia.se/v1alpha1' &&
-  data.spec?.dialect === 'geoserver ' &&
   data.kind === 'GeoserverLayer';
