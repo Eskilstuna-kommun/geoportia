@@ -266,7 +266,6 @@ export class GeoserverDataProvider implements EntityProvider {
                 },
               },
               spec: {
-                dialect: 'geoserver',
                 dependencyOf: [],
               },
             });
@@ -465,7 +464,6 @@ export class GeoserverDataProvider implements EntityProvider {
               },
             },
             spec: {
-              dialect: 'geoserver',
               dependencyOf: geoserverStore.dependencies,
             },
           });
