@@ -39,18 +39,21 @@ export class GeoserverDataProvider implements EntityProvider {
   // Converts a string to a valid Backstage entity name
   convertNameToBackstageCompliant(name: string): string {
     return (
-      name.substring(0, 58).replace(/[^a-zA-Z0-9._-]/g, '_') +
+      `${name}`.substring(0, 58).replace(/[^a-zA-Z0-9._-]/g, '_') +
       '-' +
-      CryptoJS.MD5(name).toString().substring(0, 4)
+      CryptoJS.MD5(`${name}`).toString().substring(0, 4)
     );
   }
 
   // Converts a string to a valid Backstage namespace name
   convertNamespaceToBackstageCompliant(name: string): string {
     return (
-      name.toLowerCase().replace(/[^a-z0-9-]/g, '').substring(0, 58) +
+      `${name}`
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, '')
+        .substring(0, 58) +
       '-' +
-      CryptoJS.MD5(name).toString().substring(0, 4)
+      CryptoJS.MD5(`${name}`).toString().substring(0, 4)
     );
   }
 
@@ -112,7 +115,7 @@ export class GeoserverDataProvider implements EntityProvider {
               );
 
               geoserverStoresInWorkspace.push({
-                name: this.convertNameToBackstageCompliant(`${dataStore.name}`),
+                name: this.convertNameToBackstageCompliant(dataStore.name),
                 description: fullDataStoreObject?.dataStore?.description ?? '',
                 dependencies: [],
               });
@@ -148,7 +151,7 @@ export class GeoserverDataProvider implements EntityProvider {
 
               geoserverStoresInWorkspace.push({
                 name: this.convertNameToBackstageCompliant(
-                  `${coverageStore.name}`,
+                  coverageStore.name,
                 ),
                 description:
                   fullCoverageStoreObject?.covarageStore?.description ?? '',
@@ -185,7 +188,7 @@ export class GeoserverDataProvider implements EntityProvider {
               );
 
               geoserverStoresInWorkspace.push({
-                name: this.convertNameToBackstageCompliant(`${wmsStore.name}`),
+                name: this.convertNameToBackstageCompliant(wmsStore.name),
                 description: fullWmsStoreObject?.wmsStore?.description ?? '',
                 dependencies: [],
               });
@@ -219,7 +222,7 @@ export class GeoserverDataProvider implements EntityProvider {
               );
 
               geoserverStoresInWorkspace.push({
-                name: this.convertNameToBackstageCompliant(`${wmtsStore.name}`),
+                name: this.convertNameToBackstageCompliant(wmtsStore.name),
                 description: fullWmtsStoreObject?.wmtsStore?.description ?? '',
                 dependencies: [],
               });
