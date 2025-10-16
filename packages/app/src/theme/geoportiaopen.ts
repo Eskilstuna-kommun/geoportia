@@ -23,16 +23,9 @@ export const useGeoportiaOpenStyles = makeStyles(theme => ({
     width: '100%',
     padding: 5,
     borderRadius: 5,
+    border: `1px solid ${theme.palette.divider}`,
   },
   columnMenuDropdown: {
-    display: 'grid',
-    border: `1px solid ${theme.palette.divider}`,
-    position: 'relative',
     padding: 5,
-    borderRadius: 5,
-  },
-  columnMenuLabel: {
-  },
-  columnMenuCheckbox: {
   }
 }));
