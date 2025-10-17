@@ -238,7 +238,7 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
           icon={DatabaseIcon}
           text="Databashantering"
           items={[
-            { to: 'tables', text: 'Tables' },
+            { to: 'table', text: 'Tables' },
             { to: 'views', text: 'Views' },
             { to: 'field', text: 'Fields' },
           ]}
