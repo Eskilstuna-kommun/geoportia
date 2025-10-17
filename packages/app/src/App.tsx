@@ -95,7 +95,7 @@ const routes = (
   <FlatRoutes>
     <Route path="/" element={<Navigate to="catalog" />} />
     <Route path="/catalog" element={<CatalogIndexPage key="catalog" />} />
-    <Route path="/tables" element={<CatalogIndexPage  />}>
+    <Route path="/table" element={<CatalogIndexPage  />}>
       <CustomIndexPage key="table" kind="table" />
     </Route>
     <Route path="/views" element={<CatalogIndexPage />}>
