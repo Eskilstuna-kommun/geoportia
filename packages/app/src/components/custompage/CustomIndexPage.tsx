@@ -20,7 +20,16 @@ import { useGeoportiaOpenStyles } from '../../theme/geoportiaopen';
 import Box from '@mui/material/Box';
 import Menu from '@mui/material/Menu';
 import Tooltip from '@mui/material/Tooltip';
-import { Button, Checkbox, FormControlLabel, FormGroup } from '@material-ui/core';
+import {
+  Button,
+  Checkbox,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  InputLabel,
+  MenuItem,
+  Select,
+} from '@material-ui/core';
 
 export const CustomIndexPage = ({ kind }: { kind: string }) => {
   const orgName =
@@ -28,24 +37,53 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
 
   const geoportiaOpenStyles = useGeoportiaOpenStyles();
 
-    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const columnMenuOpen = Boolean(anchorEl);
-    const handleColumnButtonClick = (event: React.MouseEvent<HTMLElement>) => {
-      setAnchorEl(event.currentTarget);
-    };
-    const handleColumnMenuClose = () => {
-      setAnchorEl(null);
-    };
+  const [columnOptionAnchorEl, setColumnOptionAnchorEl] =
+    React.useState<null | HTMLElement>(null);
+  const columnMenuOpen = Boolean(columnOptionAnchorEl);
+  const handleColumnButtonClick = (event: React.MouseEvent<HTMLElement>) => {
+    setColumnOptionAnchorEl(event.currentTarget);
+  };
+  const handleColumnMenuClose = () => {
+    setColumnOptionAnchorEl(null);
+  };
+
+  const [filterAnchorEl, setFilterAnchorEl] =
+    React.useState<null | HTMLElement>(null);
+  const filterMenuOpen = Boolean(filterAnchorEl);
+  const handleFilterButtonClick = (event: React.MouseEvent<HTMLElement>) => {
+    setFilterAnchorEl(event.currentTarget);
+  };
+  const handleFilterMenuClose = () => {
+    setFilterAnchorEl(null);
+  };
 
   const columnOptions = [
-    { key: 'Name', label: 'Name' },
-    { key: 'System', label: 'System' },
-    { key: 'Owner', label: 'Owner' },
-    { key: 'Type', label: 'Type' },
-    { key: 'Lifecycle', label: 'Lifecycle' },
-    { key: 'Description', label: 'Description' },
-    { key: 'Tags', label: 'Tags' },
+    { key: 'Name', label: 'Name', binary: false },
+    { key: 'System', label: 'System', binary: false },
+    { key: 'Owner', label: 'Owner', binary: true },
+    { key: 'Type', label: 'Type', binary: false },
+    { key: 'Lifecycle', label: 'Lifecycle', binary: false },
+    { key: 'Description', label: 'Description', binary: true },
+    { key: 'Tags', label: 'Tags', binary: false },
   ];
+
+  const [filteredColumns, setFilteredColumns] = useState<
+    Record<string, string>
+  >(
+    columnOptions
+      .filter(option => option.binary === true)
+      .reduce((columns, option) => {
+        columns[option.key] = 'none';
+        return columns;
+      }, {} as Record<string, string>),
+  );
+
+  const handleFilterChange = (column: string, value: string) => {
+    setFilteredColumns(prevColumns => ({
+      ...prevColumns,
+      [column]: value,
+    }));
+  };
 
   // Initially all columns are selected to be shown
   const [selectedColumns, setSelectedColumns] = useState<
@@ -65,6 +103,12 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
     }));
   };
 
+  const filterOptions = [
+    { label: 'Do not filter', value: 'none' },
+    { label: 'Filter on true', value: 'true' },
+    { label: 'Filter on false', value: 'false' },
+  ];
+
   // Restricts the column shown to the ones selected in the column menu
   const getColumns: CatalogTableColumnsFunc = entityListContext => {
     if (entityListContext.filters.kind?.value === kind) {
@@ -82,54 +126,138 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
         <ContentHeader title="">
           <SupportButton>All your software catalog entities</SupportButton>
         </ContentHeader>
-        <div className={geoportiaOpenStyles.columnMenu}>
-          <div className={geoportiaOpenStyles.columnMenuDropdownContainer}>
-            <React.Fragment>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  textAlign: 'center',
-                }}
-              >
-                <Tooltip title="Select columns to display">
-                  <Button
-                    className={geoportiaOpenStyles.columnMenuButton}
-                    onClick={handleColumnButtonClick}
-                    size="small"
-                    aria-controls={columnMenuOpen ? 'account-menu' : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={columnMenuOpen ? 'true' : undefined}
+        <div className={geoportiaOpenStyles.catalogFilterContainer}>
+          <div className={geoportiaOpenStyles.catalogMenuContainer}>
+            <div className={geoportiaOpenStyles.filterMenu}>
+              <div className={geoportiaOpenStyles.filterMenuDropdownContainer}>
+                <React.Fragment>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      textAlign: 'center',
+                    }}
                   >
-                    Columns
-                  </Button>
-                </Tooltip>
-              </Box>
-              <Menu
-                anchorEl={anchorEl}
-                id="account-menu"
-                open={columnMenuOpen}
-                onClose={handleColumnMenuClose}
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-              >
-                <FormGroup className={geoportiaOpenStyles.columnMenuDropdown}>
-                  {columnOptions.map(option => (
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          onChange={() => handleColumnToggle(option.key)}
-                          checked={selectedColumns[option.key as string]}
+                    <Tooltip title="Select filters to apply">
+                      <Button
+                        className={geoportiaOpenStyles.filterMenuButton}
+                        onClick={handleFilterButtonClick}
+                        size="small"
+                        aria-controls={
+                          filterMenuOpen ? 'account-menu' : undefined
+                        }
+                        aria-haspopup="true"
+                        aria-expanded={filterMenuOpen ? 'true' : undefined}
+                      >
+                        Filter
+                      </Button>
+                    </Tooltip>
+                  </Box>
+                  <Menu
+                    anchorEl={filterAnchorEl}
+                    id="filter-menu"
+                    open={filterMenuOpen}
+                    onClose={handleFilterMenuClose}
+                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                  >
+                    {columnOptions
+                      .filter(option => option.binary)
+                      .map(columnOption => (
+                        <FormControl
+                          className={geoportiaOpenStyles.filterMenuDropdownForm}
+                        >
+                          <InputLabel
+                            className={
+                              geoportiaOpenStyles.filterMenuDropdownLabel
+                            }
+                            id={`filtermenu-dropdown-label-${columnOption.key}`}
+                          >
+                            {columnOption.label}
+                          </InputLabel>
+                          <Select
+                            labelId="filtermenu-dropdown-select-label"
+                            id="filtermenu-dropdown-select"
+                            value={filteredColumns[columnOption.key]}
+                            label={columnOption.label}
+                            onChange={e =>
+                              handleFilterChange(
+                                columnOption.key,
+                                e.target.value as string,
+                              )
+                            }
+                          >
+                            {filterOptions.map(option => (
+                              <MenuItem
+                                key={`${option.label}_${option.value}`}
+                                value={option.value}
+                              >
+                                {option.label}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      ))}
+                  </Menu>
+                </React.Fragment>
+              </div>
+            </div>
+
+            <div className={geoportiaOpenStyles.columnMenu}>
+              <div className={geoportiaOpenStyles.columnMenuDropdownContainer}>
+                <React.Fragment>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <Tooltip title="Select columns to display">
+                      <Button
+                        className={geoportiaOpenStyles.columnMenuButton}
+                        onClick={handleColumnButtonClick}
+                        size="small"
+                        aria-controls={
+                          columnMenuOpen ? 'account-menu' : undefined
+                        }
+                        aria-haspopup="true"
+                        aria-expanded={columnMenuOpen ? 'true' : undefined}
+                      >
+                        Columns
+                      </Button>
+                    </Tooltip>
+                  </Box>
+                  <Menu
+                    anchorEl={columnOptionAnchorEl}
+                    id="column-menu"
+                    open={columnMenuOpen}
+                    onClose={handleColumnMenuClose}
+                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                  >
+                    <FormGroup
+                      className={geoportiaOpenStyles.columnMenuDropdown}
+                    >
+                      {columnOptions.map(option => (
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              onChange={() => handleColumnToggle(option.key)}
+                              checked={selectedColumns[option.key as string]}
+                            />
+                          }
+                          label={option.label}
                         />
-                      }
-                      label={option.label}
-                    />
-                  ))}
-                </FormGroup>
-              </Menu>
-            </React.Fragment>
+                      ))}
+                    </FormGroup>
+                  </Menu>
+                </React.Fragment>
+              </div>
+            </div>
           </div>
         </div>
+
         <EntityListProvider pagination>
           <CatalogFilterLayout>
             <div
