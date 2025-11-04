@@ -148,6 +148,8 @@ export class PostgreSQLDataProvider implements EntityProvider {
             metadata: {
               name: `${schemaName}.${table.name}`,
               title: table.name,
+              evenName: table.name.length % 2 === 0 ? 'true' : 'false',
+              longName: table.name.length > 5 ? 'true' : 'false',
               description: table.comment || undefined,
               annotations: {
                 [ANNOTATION_LOCATION]: this.uri,

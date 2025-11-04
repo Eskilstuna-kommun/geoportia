@@ -3,11 +3,14 @@ import {
   Content,
   ContentHeader,
   SupportButton,
+  TableColumn,
+  OverflowTooltip,
 } from '@backstage/core-components';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
 import {
   CatalogTable,
   CatalogTableColumnsFunc,
+  CatalogTableRow,
 } from '@backstage/plugin-catalog';
 import {
   EntityListProvider,
@@ -30,6 +33,7 @@ import {
   MenuItem,
   Select,
 } from '@material-ui/core';
+import { EntityBooleanValuePicker } from './EntityBooleanValuePicker';
 
 export const CustomIndexPage = ({ kind }: { kind: string }) => {
   const orgName =
@@ -60,11 +64,13 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
   const columnOptions = [
     { key: 'Name', label: 'Name', binary: false },
     { key: 'System', label: 'System', binary: false },
-    { key: 'Owner', label: 'Owner', binary: true },
+    { key: 'Owner', label: 'Owner', binary: false },
     { key: 'Type', label: 'Type', binary: false },
     { key: 'Lifecycle', label: 'Lifecycle', binary: false },
-    { key: 'Description', label: 'Description', binary: true },
+    { key: 'Description', label: 'Description', binary: false },
     { key: 'Tags', label: 'Tags', binary: false },
+    { key: 'evenName', label: 'Even', binary: true },
+    { key: 'longName', label: 'Long', binary: true },
   ];
 
   const [filteredColumns, setFilteredColumns] = useState<
@@ -109,12 +115,40 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
     { label: 'Filter on false', value: 'false' },
   ];
 
+  // Adds a column that shows if the entity name has an even number of characters; for demo purposes
+  const createEntityNameIsEvenColumn = (): TableColumn<CatalogTableRow> => ({
+    title: 'Even',
+    render: ({ entity }) => (
+      <OverflowTooltip
+        // @ts-ignore
+        text={entity.metadata.evenName}
+        placement="bottom-start"
+      />
+    ),
+  });
+
+  // Adds a column that shows if the entity name is longer than 5 letters; for demo purposes
+  const createEntityNameIsLongColumn = (): TableColumn<CatalogTableRow> => ({
+    title: 'Long',
+    render: ({ entity }) => (
+      <OverflowTooltip
+        // @ts-ignore
+        text={entity.metadata.longName}
+        placement="bottom-start"
+      />
+    ),
+  });
+
   // Restricts the column shown to the ones selected in the column menu
   const getColumns: CatalogTableColumnsFunc = entityListContext => {
     if (entityListContext.filters.kind?.value === kind) {
-      return CatalogTable.defaultColumnsFunc(entityListContext).filter(
-        column => selectedColumns[column.title as string],
-      );
+      return [
+        ...CatalogTable.defaultColumnsFunc(entityListContext).filter(
+          column => selectedColumns[column.title as string],
+        ),
+        createEntityNameIsEvenColumn(),
+        createEntityNameIsLongColumn(),
+      ];
     }
 
     return CatalogTable.defaultColumnsFunc(entityListContext);
@@ -155,6 +189,7 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
                   </Box>
                   <Menu
                     anchorEl={filterAnchorEl}
+                    className={geoportiaOpenStyles.filterMenuDropdown}
                     id="filter-menu"
                     open={filterMenuOpen}
                     onClose={handleFilterMenuClose}
@@ -163,7 +198,7 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
                   >
                     {columnOptions
                       .filter(option => option.binary)
-                      .map(columnOption => (
+                      .map(filterOption => (
                         <FormControl
                           className={geoportiaOpenStyles.filterMenuDropdownForm}
                         >
@@ -171,18 +206,18 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
                             className={
                               geoportiaOpenStyles.filterMenuDropdownLabel
                             }
-                            id={`filtermenu-dropdown-label-${columnOption.key}`}
+                            id={`filtermenu-dropdown-label-${filterOption.key}`}
                           >
-                            {columnOption.label}
+                            {filterOption.label}
                           </InputLabel>
                           <Select
                             labelId="filtermenu-dropdown-select-label"
                             id="filtermenu-dropdown-select"
-                            value={filteredColumns[columnOption.key]}
-                            label={columnOption.label}
+                            value={filteredColumns[filterOption.key]}
+                            label={filterOption.label}
                             onChange={e =>
                               handleFilterChange(
-                                columnOption.key,
+                                filterOption.key,
                                 e.target.value as string,
                               )
                             }
@@ -265,6 +300,12 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
               hidden={true}
             >
               <CatalogFilterLayout.Filters>
+                <EntityBooleanValuePicker
+                  columnOptions={columnOptions
+                    .filter(columnOption => columnOption.binary)
+                    .map(columnOption => columnOption.key)}
+                  filteredColumns={filteredColumns}
+                />
                 <EntityKindPicker initialFilter={kind} />
               </CatalogFilterLayout.Filters>
             </div>
