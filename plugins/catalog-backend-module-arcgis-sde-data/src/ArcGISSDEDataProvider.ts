@@ -16,6 +16,7 @@ import {
 import {
   ArcGISDomainValue,
   ArcGISFeatureClassField,
+  ArcGISSDEDataSetEntity,
   ArcGISSDEDomainEntity,
   ArcGISSDEDomainValueEntity,
   ArcGISSDEFeatureClassEntity,
@@ -36,6 +37,22 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     return `arcGIS-SDE-data-${this.uri}`;
   }
 
+  // Breaks out a full name into name and namespace parts.
+  // Namespace is everything before the last dot, name is everything after.
+  // If there is no dot, namespace is empty and name is the full name.
+  breakOutName(fullName: string): { name: string; namespace: string } {
+    const lastDotInNameIndex = fullName.lastIndexOf('.');
+    const name =
+      lastDotInNameIndex === -1
+        ? fullName
+        : fullName.substring(lastDotInNameIndex + 1);
+    const namespace =
+      lastDotInNameIndex === -1
+        ? ''
+        : fullName.substring(0, lastDotInNameIndex);
+    return { name, namespace };
+  }
+
   featureClassFieldToDependency(
     field: ArcGISFeatureClassField,
   ): CompoundEntityRef {
@@ -43,6 +60,14 @@ export class ArcGISSDEDataProvider implements EntityProvider {
       kind: 'Field',
       namespace: field.domain !== '' ? field.domain : 'default',
       name: field.name,
+    };
+  }
+
+  featureClassToDependency(name: string, namespace: string): CompoundEntityRef {
+    return {
+      kind: 'Table',
+      namespace: namespace !== '' ? name : 'default',
+      name,
     };
   }
 
@@ -55,22 +80,6 @@ export class ArcGISSDEDataProvider implements EntityProvider {
       namespace: 'default',
       name: `${domain}.${value.code.toString()}`,
     };
-  }
-
-  // Breaks out a full name into name and namespace parts.
-  // Namespace is everything before the last dot, name is everything after.
-  // If there is no dot, namespace is empty and name is the full name.
-  breakOutName (fullName: string): { name: string; namespace: string } {
-    const lastDotInNameIndex = fullName.lastIndexOf('.');
-    const name =
-      lastDotInNameIndex === -1
-        ? fullName
-        : fullName.substring(lastDotInNameIndex + 1);
-    const namespace =
-      lastDotInNameIndex === -1
-        ? ''
-        : fullName.substring(0, lastDotInNameIndex);
-    return { name, namespace };
   }
 
   async connect(connection: EntityProviderConnection) {
@@ -95,16 +104,18 @@ export class ArcGISSDEDataProvider implements EntityProvider {
       const dataSets = (await this.arcGISSDEClient.fetchDataSets()) ?? [];
 
       for (const dataSet of dataSets ?? []) {
-        const {name: dataSetName} = this.breakOutName(dataSet.name);
+        const { name: dataSetName, namespace: datasetNamespace } =
+          this.breakOutName(dataSet.name);
 
         for (const dataSetFeatureClass of dataSet.featureClasses ?? []) {
-          const {name: featureClassName, namespace} = this.breakOutName(dataSetFeatureClass);
+          const { name: featureClassName, namespace: featureClassNamespace } =
+            this.breakOutName(dataSetFeatureClass);
 
-          this.loggerService.info(
+          this.loggerService.debug(
             'Processing feature class: ' +
               featureClassName +
               ' in namespace: ' +
-              namespace,
+              featureClassNamespace,
           );
 
           let fields;
@@ -150,8 +161,8 @@ export class ArcGISSDEDataProvider implements EntityProvider {
             kind: 'Table',
             metadata: {
               name:
-                namespace !== ''
-                  ? `${namespace}.${featureClassName}`
+                featureClassNamespace !== ''
+                  ? `${featureClassNamespace}.${featureClassName}`
                   : featureClassName,
               title: featureClassName,
               description: undefined,
@@ -167,12 +178,45 @@ export class ArcGISSDEDataProvider implements EntityProvider {
           };
           entities.push(ArcGISFeatureClassEntity);
         }
+
+        if (dataSet.name !== 'root') {
+          const ArcGISDataSetEntity: ArcGISSDEDataSetEntity = {
+            apiVersion: 'geoportia.se/v1alpha1',
+            kind: 'DataSet',
+            metadata: {
+              name:
+                datasetNamespace !== ''
+                  ? `${datasetNamespace}.${dataSet.name}`
+                  : dataSet.name,
+              title: dataSet.name,
+              description: undefined,
+              annotations: {
+                [ANNOTATION_LOCATION]: `url:${this.uri}`,
+                [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
+              },
+            },
+            spec: {
+              dialect: 'arcgis',
+              dependencyOf: dataSet.featureClasses.map(featureClass => {
+                const {
+                  name: featureClassName,
+                  namespace: featureClassNamespace,
+                } = this.breakOutName(featureClass);
+                return this.featureClassToDependency(
+                  featureClassName,
+                  featureClassNamespace,
+                );
+              }),
+            } as any,
+          };
+          entities.push(ArcGISDataSetEntity);
+        }
       }
 
       const domains = (await this.arcGISSDEClient.fetchDomains()) ?? [];
 
       for (const domain of domains) {
-        const {name: domainName} = this.breakOutName(domain.name);
+        const { name: domainName } = this.breakOutName(domain.name);
         const domainValues =
           (await this.arcGISSDEClient.fetchDomainValues(domainName)) ?? [];
 

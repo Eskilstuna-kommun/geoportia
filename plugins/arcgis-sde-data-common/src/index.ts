@@ -47,7 +47,6 @@ export interface DomainValue {
   description: string;
 }
 
-
 export interface ArcGISSDEDomainEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
   kind: 'GPDomain';
@@ -60,6 +59,15 @@ export interface ArcGISSDEDomainEntity extends Entity {
 export interface ArcGISSDEDomainValueEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
   kind: 'Value';
+  spec: {
+    dialect: 'arcgis';
+    dependencyOf: CompoundEntityRef[];
+  } & JsonObject;
+}
+
+export interface ArcGISSDEDataSetEntity extends Entity {
+  apiVersion: 'geoportia.se/v1alpha1';
+  kind: 'DataSet';
   spec: {
     dialect: 'arcgis';
     dependencyOf: CompoundEntityRef[];
@@ -108,6 +116,12 @@ export const arcGISSDEFeatureClassFieldEntityValidator: KindValidator = {
   },
 };
 
+export const arcGISSDEDataSetEntityValidator: KindValidator = {
+  async check(_data: Entity) {
+    return true;
+  },
+};
+
 export const isArcGISSDEDomainEntity = (data: Entity): data is ArcGISSDEDomainEntity =>
   data.apiVersion === 'geoportia.se/v1alpha1' &&
   data.kind === 'GPDomain' &&
@@ -133,3 +147,10 @@ export const isArcGISSDEFeatureClassFieldEntity = (
   data.apiVersion === 'geoportia.se/v1alpha1' &&
   data.kind === 'Field' &&
   data.spec?.dialect === 'arcgis';
+
+  export const isArcGISSDEDataSetEntity = (
+    data: Entity,
+  ): data is ArcGISSDEDataSetEntity =>
+    data.apiVersion === 'geoportia.se/v1alpha1' &&
+    data.kind === 'DataSet' &&
+    data.spec?.dialect === 'arcgis';

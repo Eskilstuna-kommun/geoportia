@@ -10,6 +10,7 @@ import {
 } from '@backstage/catalog-model';
 import { LocationSpec } from '@backstage/plugin-catalog-common';
 import {
+  arcGISSDEDataSetEntityValidator,
   arcGISSDEDomainEntityValidator,
   arcGISSDEDomainValueEntityValidator,
   arcGISSDEFeatureClassEntityValidator,
@@ -26,7 +27,8 @@ export class ArcGISSDEEntitiesProcessor implements CatalogProcessor {
       arcGISSDEDomainEntityValidator.check(entity) ||
       arcGISSDEDomainValueEntityValidator.check(entity) ||
       arcGISSDEFeatureClassEntityValidator.check(entity) ||
-      arcGISSDEFeatureClassFieldEntityValidator.check(entity)
+      arcGISSDEFeatureClassFieldEntityValidator.check(entity) ||
+      arcGISSDEDataSetEntityValidator.check(entity)
     );
   }
 

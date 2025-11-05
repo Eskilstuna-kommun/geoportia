@@ -259,6 +259,9 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
           items={[
             { to: 'domain', text: 'Domains' },
             { to: 'value', text: 'Values' },
+            { to: 'dataset', text: 'Data Sets' },
+            { to: 'tables', text: 'Tables' },
+            { to: 'field', text: 'Fields' },
           ]}
         />
 
