@@ -128,6 +128,10 @@ const routes = (
       element={<CatalogIndexPage key="value" initialKind="value" />}
     />
     <Route
+      path="/dataset"
+      element={<CatalogIndexPage key="dataset" initialKind="dataset" />}
+    />
+    <Route
       path="/catalog/:namespace/:kind/:name"
       element={<CatalogEntityPage />}
     >
