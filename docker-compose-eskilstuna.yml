@@ -1,0 +1,20 @@
+services:
+  postgis:
+    image: postgis/postgis
+    ports:
+      - 15432:5432
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    volumes:
+      - type: bind
+        source: ./demo.sql
+        target: /docker-entrypoint-initdb.d/demo.sql
+  geoserver:
+    image: docker.osgeo.org/geoserver:2.28.x
+    ports:
+      - 18080:8080
+    volumes:
+      - geoserver_data:/opt/geoserver_data
+volumes:
+  geoserver_data:
