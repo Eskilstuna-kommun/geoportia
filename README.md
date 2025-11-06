@@ -75,6 +75,14 @@ If you do not have Docker Desktop, you must install it first. Then, you can spin
 docker compose -f 'docker-compose.yml' up -d --build 
 ```
 
+or:
+
+```bash
+docker compose -f 'docker-compose-eskilstuna.yml' up -d --build 
+```
+
+depending on whether you want the run against a dummy ArcGIS script or an existing SDE database. In the latter case, you also need to start the eskilstunaTest.py script in your own ArcGIS environment.
+
 ### 7. Start the app
  
 ```bash
