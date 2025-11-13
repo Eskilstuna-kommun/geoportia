@@ -22,6 +22,7 @@ import {
   ArcGISSDEFeatureClassEntity,
   ArcGISSDEFeatureClassFieldEntity,
 } from '../../arcgis-sde-data-common/src';
+import CryptoJS from 'crypto-js';
 
 export class ArcGISSDEDataProvider implements EntityProvider {
   private connection?: EntityProviderConnection;
@@ -53,21 +54,55 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     return { name, namespace };
   }
 
+  convertNameToBackstageCompliant(name: string): string {
+    return (
+      `${name}`.substring(0, 58).replace(/[^a-zA-Z0-9._-]/g, '_') +
+      '-' +
+      CryptoJS.MD5(`${name}`).toString().substring(0, 4)
+    );
+  }
+
+  createBackstageCompliantFeatureClassFieldName(
+    field: ArcGISFeatureClassField,
+  ): string { 
+    return this.convertNameToBackstageCompliant(
+      field.domain !== '' ? `${field.domain}.${field.name}` : field.name,
+    );
+  }
+
   featureClassFieldToDependency(
     field: ArcGISFeatureClassField,
   ): CompoundEntityRef {
     return {
       kind: 'Field',
       namespace: field.domain !== '' ? field.domain : 'default',
-      name: field.name,
+      name: this.createBackstageCompliantFeatureClassFieldName(field),
     };
+  }
+
+  createBackstageCompliantDomainValueName(
+    value: ArcGISDomainValue,
+    domain: string,
+  ): string {
+    return this.convertNameToBackstageCompliant(
+      `${domain}.${value.code.toString()}`,
+    );
+  }
+
+  createBackstageCompliantFeatureClassName(
+    name: string,
+    namespace: string,
+  ): string {
+    return namespace !== ''
+      ? this.convertNameToBackstageCompliant(`${namespace}.${name}`)
+      : this.convertNameToBackstageCompliant(name);
   }
 
   featureClassToDependency(name: string, namespace: string): CompoundEntityRef {
     return {
       kind: 'Table',
-      namespace: namespace !== '' ? name : 'default',
-      name,
+      namespace: namespace !== '' ? namespace : 'default',
+      name: this.createBackstageCompliantFeatureClassName(name, namespace),
     };
   }
 
@@ -78,7 +113,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     return {
       kind: 'Value',
       namespace: 'default',
-      name: `${domain}.${value.code.toString()}`,
+      name: this.createBackstageCompliantDomainValueName(value, domain),
     };
   }
 
@@ -136,11 +171,9 @@ export class ArcGISSDEDataProvider implements EntityProvider {
               apiVersion: 'geoportia.se/v1alpha1',
               kind: 'Field',
               metadata: {
-                name:
-                  field.domain !== ''
-                    ? `${field.domain}.${field.name}`
-                    : field.name,
-                title: field.name,
+                name: this.createBackstageCompliantFeatureClassFieldName(field),
+                title:
+                  this.createBackstageCompliantFeatureClassFieldName(field),
                 description: undefined,
                 annotations: {
                   [ANNOTATION_LOCATION]: `url:${this.uri}`,
@@ -161,10 +194,14 @@ export class ArcGISSDEDataProvider implements EntityProvider {
             kind: 'Table',
             metadata: {
               name:
-                featureClassNamespace !== ''
-                  ? `${featureClassNamespace}.${featureClassName}`
-                  : featureClassName,
-              title: featureClassName,
+                this.createBackstageCompliantFeatureClassName(
+                  featureClassName,
+                  featureClassNamespace,
+                ),
+              title: this.createBackstageCompliantFeatureClassName(
+                  featureClassName,
+                  featureClassNamespace,
+                ),
               description: undefined,
               annotations: {
                 [ANNOTATION_LOCATION]: `url:${this.uri}`,
@@ -173,9 +210,12 @@ export class ArcGISSDEDataProvider implements EntityProvider {
             },
             spec: {
               dialect: 'arcgis',
-              dependencyOf: fields.map(this.featureClassFieldToDependency),
+              dependencyOf: fields.map((field) => {
+                return this.featureClassFieldToDependency(field);
+            }),
             } as any,
           };
+          
           entities.push(ArcGISFeatureClassEntity);
         }
 
@@ -186,9 +226,11 @@ export class ArcGISSDEDataProvider implements EntityProvider {
             metadata: {
               name:
                 datasetNamespace !== ''
-                  ? `${datasetNamespace}.${dataSet.name}`
-                  : dataSet.name,
-              title: dataSet.name,
+                  ? `${this.convertNameToBackstageCompliant(
+                      datasetNamespace,
+                    )}.${this.convertNameToBackstageCompliant(dataSet.name)}`
+                  : this.convertNameToBackstageCompliant(dataSet.name),
+              title: this.convertNameToBackstageCompliant(dataSet.name),
               description: undefined,
               annotations: {
                 [ANNOTATION_LOCATION]: `url:${this.uri}`,
@@ -225,8 +267,14 @@ export class ArcGISSDEDataProvider implements EntityProvider {
             apiVersion: 'geoportia.se/v1alpha1',
             kind: 'Value',
             metadata: {
-              name: `${domain.name}.${domainValue.code.toString()}`,
-              title: `${domain.name}.${domainValue.code.toString()}`,
+              name: this.createBackstageCompliantDomainValueName(
+                domainValue,
+                domain.name,
+              ),
+              title: this.createBackstageCompliantDomainValueName(
+                domainValue,
+                domain.name,
+              ),
               description: domainValue.description,
               annotations: {
                 [ANNOTATION_LOCATION]: `url:${this.uri}`,
@@ -246,8 +294,8 @@ export class ArcGISSDEDataProvider implements EntityProvider {
           apiVersion: 'geoportia.se/v1alpha1',
           kind: 'GPDomain',
           metadata: {
-            name: domain.name,
-            title: domain.name,
+            name: this.convertNameToBackstageCompliant(domain.name),
+            title: this.convertNameToBackstageCompliant(domain.name),
             description: undefined,
             annotations: {
               [ANNOTATION_LOCATION]: `url:${this.uri}`,

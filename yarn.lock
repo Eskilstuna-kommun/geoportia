@@ -18803,6 +18803,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"crypto-js@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "crypto-js@npm:4.2.0"
+  checksum: 10c0/8fbdf9d56f47aea0794ab87b0eb9833baf80b01a7c5c1b0edc7faf25f662fb69ab18dc2199e2afcac54670ff0cd9607a9045a3f7a80336cccd18d77a55b9fdf0
+  languageName: node
+  linkType: hard
+
 "crypto-random-string@npm:^2.0.0":
   version: 2.0.0
   resolution: "crypto-random-string@npm:2.0.0"
@@ -32411,6 +32418,7 @@ __metadata:
     "@mui/icons-material": "npm:^7.3.7"
     "@playwright/test": "npm:^1.32.3"
     "@useoptic/optic": "npm:^1.0.5"
+    crypto-js: "npm:^4.2.0"
     node-gyp: "npm:^10.0.0"
     pg-listen: "npm:^1.7.0"
     prettier: "npm:^2.3.2"
