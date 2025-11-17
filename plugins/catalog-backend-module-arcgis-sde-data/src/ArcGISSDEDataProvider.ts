@@ -172,8 +172,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
               kind: 'Field',
               metadata: {
                 name: this.createBackstageCompliantFeatureClassFieldName(field),
-                title:
-                  this.createBackstageCompliantFeatureClassFieldName(field),
+                title: `${field.name}`,
                 description: undefined,
                 annotations: {
                   [ANNOTATION_LOCATION]: `url:${this.uri}`,
@@ -198,10 +197,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
                   featureClassName,
                   featureClassNamespace,
                 ),
-              title: this.createBackstageCompliantFeatureClassName(
-                  featureClassName,
-                  featureClassNamespace,
-                ),
+              title: `${featureClassName}`,
               description: undefined,
               annotations: {
                 [ANNOTATION_LOCATION]: `url:${this.uri}`,
@@ -230,7 +226,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
                       datasetNamespace,
                     )}.${this.convertNameToBackstageCompliant(dataSet.name)}`
                   : this.convertNameToBackstageCompliant(dataSet.name),
-              title: this.convertNameToBackstageCompliant(dataSet.name),
+              title: `${dataSet.name}`,
               description: undefined,
               annotations: {
                 [ANNOTATION_LOCATION]: `url:${this.uri}`,
@@ -271,10 +267,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
                 domainValue,
                 domain.name,
               ),
-              title: this.createBackstageCompliantDomainValueName(
-                domainValue,
-                domain.name,
-              ),
+              title: `${domainValue.code}`,
               description: domainValue.description,
               annotations: {
                 [ANNOTATION_LOCATION]: `url:${this.uri}`,
@@ -295,7 +288,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
           kind: 'GPDomain',
           metadata: {
             name: this.convertNameToBackstageCompliant(domain.name),
-            title: this.convertNameToBackstageCompliant(domain.name),
+            title: `${domain.name}`,
             description: undefined,
             annotations: {
               [ANNOTATION_LOCATION]: `url:${this.uri}`,
