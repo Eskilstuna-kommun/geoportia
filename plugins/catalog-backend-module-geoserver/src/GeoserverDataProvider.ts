@@ -115,7 +115,7 @@ export class GeoserverDataProvider implements EntityProvider {
               );
 
               geoserverStoresInWorkspace.push({
-                name: this.convertNameToBackstageCompliant(dataStore.name),
+                name: dataStore.name,
                 description: fullDataStoreObject?.dataStore?.description ?? '',
                 dependencies: [],
               });
@@ -150,9 +150,7 @@ export class GeoserverDataProvider implements EntityProvider {
                 );
 
               geoserverStoresInWorkspace.push({
-                name: this.convertNameToBackstageCompliant(
-                  coverageStore.name,
-                ),
+                name: coverageStore.name,
                 description:
                   fullCoverageStoreObject?.covarageStore?.description ?? '',
                 dependencies: [],
@@ -188,7 +186,7 @@ export class GeoserverDataProvider implements EntityProvider {
               );
 
               geoserverStoresInWorkspace.push({
-                name: this.convertNameToBackstageCompliant(wmsStore.name),
+                name: wmsStore.name,
                 description: fullWmsStoreObject?.wmsStore?.description ?? '',
                 dependencies: [],
               });
@@ -222,7 +220,7 @@ export class GeoserverDataProvider implements EntityProvider {
               );
 
               geoserverStoresInWorkspace.push({
-                name: this.convertNameToBackstageCompliant(wmtsStore.name),
+                name: wmtsStore.name,
                 description: fullWmtsStoreObject?.wmtsStore?.description ?? '',
                 dependencies: [],
               });
@@ -261,6 +259,7 @@ export class GeoserverDataProvider implements EntityProvider {
               kind: 'GeoserverLayer',
               metadata: {
                 name: compliantLayerName,
+                title: `${layer.name}`,
                 namespace: compliantWorkspaceName,
                 description: undefined,
                 annotations: {
@@ -299,7 +298,7 @@ export class GeoserverDataProvider implements EntityProvider {
                       );
 
                       const dataStoreEntity = geoserverStoresInWorkspace.find(
-                        store => store.name === this.convertNameToBackstageCompliant(dataStoreForLayer.name),
+                        store => store.name === dataStoreForLayer.name,
                       );
 
                       if (dataStoreEntity === undefined) {
@@ -335,7 +334,7 @@ export class GeoserverDataProvider implements EntityProvider {
 
                       const coverageStoreEntity =
                         geoserverStoresInWorkspace.find(
-                          store => store.name === this.convertNameToBackstageCompliant(coverageStoreForLayer.name),
+                          store => store.name === coverageStoreForLayer.name,
                         );
 
                       if (coverageStoreEntity === undefined) {
@@ -371,7 +370,7 @@ export class GeoserverDataProvider implements EntityProvider {
                       );
 
                       const wmsStoreEntity = geoserverStoresInWorkspace.find(
-                        store => store.name === this.convertNameToBackstageCompliant(wmsStoreForLayer.name),
+                        store => store.name === wmsStoreForLayer.name,
                       );
 
                       if (wmsStoreEntity === undefined) {
@@ -407,7 +406,7 @@ export class GeoserverDataProvider implements EntityProvider {
                       );
 
                       const wmtsStoreEntity = geoserverStoresInWorkspace.find(
-                        store => store.name === this.convertNameToBackstageCompliant(wmtsStoreForLayer.name),
+                        store => store.name === wmtsStoreForLayer.name,
                       );
 
                       if (wmtsStoreEntity === undefined) {
@@ -458,7 +457,8 @@ export class GeoserverDataProvider implements EntityProvider {
             apiVersion: 'geoportia.se/v1alpha1',
             kind: 'GeoserverStore',
             metadata: {
-              name: geoserverStore.name,
+              name: this.convertNameToBackstageCompliant(geoserverStore.name),
+              title: `${geoserverStore.name}`,
               namespace: compliantWorkspaceName,
               description: `${geoserverStore.description}`,
               annotations: {
