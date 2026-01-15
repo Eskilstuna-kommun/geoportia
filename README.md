@@ -10,7 +10,7 @@ yarn install
  
 The plugin code is automatically generated after install via a `postinstall` script.
 
-You will require a number of devolpment environments for the build to be successful, including Python, C++, and Node.js. Install them as needed. Note that Node.js must be of version 22 or earlier; if you have a later version installed, we suggest using nvm to temporarily change to running an earlier version.
+You will require a number of development environments for the build to be successful, including Python, C++, and Node.js. Install them as needed. Note that Node.js must be of version 22 or earlier; if you have a later version installed, we suggest using nvm to temporarily change to running an earlier version.
 
 ### 2. Kör generate-script
 
