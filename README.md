@@ -63,9 +63,11 @@ ARCPY_DATABASE=somedatabase
 
 The your_github_client_id and your_github_client_secret should be from the previous step.
 
-The your_fmeflow_base_url, your_fmeflow_token and your_fme_repository_name must be taken from an FME flow you supply yourself.
+In the development version, the your_fmeflow_base_url, your_fmeflow_token and your_fme_repository_name must be taken from an FME flow you supply yourself. For the production version, an FME flow will be provided for GeoPortia.
  
 ### 6. Start the Docker containers
+
+For the development version of GeoPortia, we will be making use of some Docker containers to provide the PostGIS database, the GeoServer instance, and the simulated ArcGIS environment. If you plan to replace these components with your own production or development environments, you may ignore this part.
 
 If you do not have Docker Desktop, you must install it first. Then, you can spin up the containers used for testing with the following command:
 
