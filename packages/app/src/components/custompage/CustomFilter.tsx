@@ -52,7 +52,7 @@ export class EntityBooleanFilter implements EntityFilter {
   }
 
   toQueryValue() {
-    return this.filteredColumns.description;
+    return this.filteredColumns.toString();
   }
 }
 
