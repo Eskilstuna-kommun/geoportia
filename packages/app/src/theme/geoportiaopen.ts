@@ -64,4 +64,12 @@ export const useGeoportiaOpenStyles = makeStyles(theme => ({
   filterMenuDropdownLabel: {
     padding: 5,
   },
+  flexBoxColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  dropdownMenu: {
+    minWidth: 150,
+    padding: '0 5px',
+  }
 }));

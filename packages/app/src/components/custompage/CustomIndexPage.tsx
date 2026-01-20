@@ -33,6 +33,9 @@ import {
   MenuItem,
   Select,
 } from '@material-ui/core';
+import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined';
+import TableRowsOutlinedIcon from '@mui/icons-material/TableRowsOutlined';
+
 import { EntityBooleanValuePicker } from './EntityBooleanValuePicker';
 
 export const CustomIndexPage = ({ kind }: { kind: string }) => {
@@ -183,6 +186,7 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
                         aria-haspopup="true"
                         aria-expanded={filterMenuOpen ? 'true' : undefined}
                       >
+                        <FilterAltOutlinedIcon />
                         Filter
                       </Button>
                     </Tooltip>
@@ -196,43 +200,51 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
                     transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                     anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                   >
-                    {columnOptions
-                      .filter(option => option.binary)
-                      .map(filterOption => (
-                        <FormControl
-                          className={geoportiaOpenStyles.filterMenuDropdownForm}
-                        >
-                          <InputLabel
+                    <div
+                      className={`${geoportiaOpenStyles.flexBoxColumn} ${geoportiaOpenStyles.filterMenuDropdown}`}
+                    >
+                      {columnOptions
+                        .filter(option => option.binary)
+                        .map(filterOption => (
+                          <FormControl
+                            variant="filled"
                             className={
-                              geoportiaOpenStyles.filterMenuDropdownLabel
-                            }
-                            id={`filtermenu-dropdown-label-${filterOption.key}`}
-                          >
-                            {filterOption.label}
-                          </InputLabel>
-                          <Select
-                            labelId="filtermenu-dropdown-select-label"
-                            id="filtermenu-dropdown-select"
-                            value={filteredColumns[filterOption.key]}
-                            label={filterOption.label}
-                            onChange={e =>
-                              handleFilterChange(
-                                filterOption.key,
-                                e.target.value as string,
-                              )
+                              geoportiaOpenStyles.filterMenuDropdownForm
                             }
                           >
-                            {filterOptions.map(option => (
-                              <MenuItem
-                                key={`${option.label}_${option.value}`}
-                                value={option.value}
-                              >
-                                {option.label}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      ))}
+                            <InputLabel
+                              className={
+                                geoportiaOpenStyles.filterMenuDropdownLabel
+                              }
+                              id={`filtermenu-dropdown-label-${filterOption.key}`}
+                            >
+                              {filterOption.label}
+                            </InputLabel>
+                            <Select
+                              className={geoportiaOpenStyles.dropdownMenu}
+                              labelId="filtermenu-dropdown-select-label"
+                              id="filtermenu-dropdown-select"
+                              value={filteredColumns[filterOption.key]}
+                              label={filterOption.label}
+                              onChange={e =>
+                                handleFilterChange(
+                                  filterOption.key,
+                                  e.target.value as string,
+                                )
+                              }
+                            >
+                              {filterOptions.map(option => (
+                                <MenuItem
+                                  key={`${option.label}_${option.value}`}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        ))}
+                    </div>
                   </Menu>
                 </React.Fragment>
               </div>
@@ -259,6 +271,7 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
                         aria-haspopup="true"
                         aria-expanded={columnMenuOpen ? 'true' : undefined}
                       >
+                        <TableRowsOutlinedIcon />
                         Columns
                       </Button>
                     </Tooltip>
