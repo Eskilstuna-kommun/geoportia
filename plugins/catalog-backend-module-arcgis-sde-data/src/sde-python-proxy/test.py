@@ -5,16 +5,16 @@ from flask import jsonify
 from waitress import serve
 import logging
 
-logging.basicConfig(
-    filename="log_geoportia_utv.log",
-    format="%(levelname)s %(asctime)s %(message)s",
-    datefmt="%m/%d/%Y %I:%M:%S %p",
-    level=logging.DEBUG,
-)
+# logging.basicConfig(
+#     filename="log_geoportia_utv.log",
+#     format="%(levelname)s %(asctime)s %(message)s",
+#     datefmt="%m/%d/%Y %I:%M:%S %p",
+#     level=logging.DEBUG,
+# )
 
 app: Flask = Flask(__name__)
 
-logging.info("anslutning klar!")
+# logging.info("anslutning klar!")
 
 
 @app.post("/sdedatabase")
