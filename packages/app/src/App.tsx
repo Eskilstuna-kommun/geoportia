@@ -95,30 +95,33 @@ const routes = (
   <FlatRoutes>
     <Route path="/" element={<Navigate to="catalog" />} />
     <Route path="/catalog" element={<CatalogIndexPage key="catalog" />} />
-    <Route
-      path="/table"
-      element={<CustomIndexPage key="table" kind="table" />}
-    ></Route>
-    <Route
-      path="/views"
-      element={<CustomIndexPage key="view" kind="view" />}
-    ></Route>
+    <Route path="/table" element={<CatalogIndexPage  />}>
+      <CustomIndexPage key="table" kind="table" />
+    </Route>
+    <Route path="/views" element={<CatalogIndexPage />}>
+      <CustomIndexPage key="view" kind="view" />
+    </Route>
     <Route
       path="/geoserverlayer"
-      element={<CustomIndexPage key="geoserverlayer" kind="geoserverlayer" />}
-    ></Route>
+      element={<CatalogIndexPage  />}
+    >
+      <CustomIndexPage key="geoserverlayer" kind="geoserverlayer" />
+    </Route>
     <Route
       path="/geoserverstore"
-      element={<CustomIndexPage key="geoserverstore" kind="geoserverstore" />}
-    ></Route>
+      element={<CatalogIndexPage  />}
+    >
+      <CustomIndexPage key="geoserverstore" kind="geoserverstore" />
+    </Route>
     <Route
       path="/fmeworkspace"
-      element={<CustomIndexPage key="fmeworkspace" kind="fmeworkspace" />}
-    ></Route>
-    <Route
-      path="/field"
-      element={<CustomIndexPage key="field" kind="field" />}
-    ></Route>
+      element={<CatalogIndexPage  />}
+    >
+      <CustomIndexPage key="fmeworkspace" kind="fmeworkspace" />
+    </Route>
+    <Route path="/field" element={<CatalogIndexPage />}>
+      <CustomIndexPage key="field" kind="field" />
+    </Route>
     <Route
       path="/catalog/:namespace/:kind/:name"
       element={<CatalogEntityPage />}
