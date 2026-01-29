@@ -42,6 +42,7 @@ import { UnifiedThemeProvider } from '@backstage/theme';
 import { eskilstunaTheme } from './theme/eskilstuna';
 import WbSunny from '@material-ui/icons/WbSunny';
 import { CustomIndexPage } from './components/custompage/CustomIndexPage';
+import { CatalogFrontendPage } from '@internal/backstage-plugin-catalog-frontend';
 
 const app = createApp({
   apis,
@@ -161,6 +162,7 @@ const routes = (
     </Route>
     <Route path="/settings" element={<UserSettingsPage />} />
     <Route path="/catalog-graph" element={<CatalogGraphPage />} />
+    <Route path="/catalog-frontend" element={<CatalogFrontendPage />} />
   </FlatRoutes>
 );
 
