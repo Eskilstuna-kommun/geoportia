@@ -39,10 +39,9 @@ import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/
 
 import { githubAuthApiRef } from '@backstage/core-plugin-api';
 import { UnifiedThemeProvider } from '@backstage/theme';
-import { eskilstunaTheme } from './theme/eskilstuna';
+import { eskilstunaTheme } from '@internal/geoportia-ui/src/theme/eskilstuna';
 import WbSunny from '@material-ui/icons/WbSunny';
-import { CustomIndexPage } from './components/custompage/CustomIndexPage';
-import { CatalogFrontendPage } from '@internal/backstage-plugin-catalog-frontend';
+import { CatalogFrontendPage, CustomTable } from '@internal/backstage-plugin-catalog-frontend';
 
 const app = createApp({
   apis,
@@ -98,27 +97,27 @@ const routes = (
     <Route path="/catalog" element={<CatalogIndexPage key="catalog" />} />
     <Route
       path="/table"
-      element={<CustomIndexPage key="table" kind="table" />}
+      element={<CustomTable key="table" kind="table" />}
     ></Route>
     <Route
       path="/views"
-      element={<CustomIndexPage key="view" kind="view" />}
+      element={<CustomTable key="view" kind="view" />}
     ></Route>
     <Route
       path="/geoserverlayer"
-      element={<CustomIndexPage key="geoserverlayer" kind="geoserverlayer" />}
+      element={<CustomTable key="geoserverlayer" kind="geoserverlayer" />}
     ></Route>
     <Route
       path="/geoserverstore"
-      element={<CustomIndexPage key="geoserverstore" kind="geoserverstore" />}
+      element={<CustomTable key="geoserverstore" kind="geoserverstore" />}
     ></Route>
     <Route
       path="/fmeworkspace"
-      element={<CustomIndexPage key="fmeworkspace" kind="fmeworkspace" />}
+      element={<CustomTable key="fmeworkspace" kind="fmeworkspace" />}
     ></Route>
     <Route
       path="/field"
-      element={<CustomIndexPage key="field" kind="field" />}
+      element={<CustomTable key="field" kind="field" />}
     ></Route>
     <Route
       path="/catalog/:namespace/:kind/:name"
