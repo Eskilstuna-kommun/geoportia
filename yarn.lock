@@ -8228,6 +8228,15 @@ __metadata:
   languageName: node
   linkType: soft
 
+"@internal/geoportia-ui@workspace:packages/geoportia-ui":
+  version: 0.0.0-use.local
+  resolution: "@internal/geoportia-ui@workspace:packages/geoportia-ui"
+  dependencies:
+    "@backstage/cli": "npm:^0.32.1"
+    "@testing-library/jest-dom": "npm:^6.0.0"
+  languageName: unknown
+  linkType: soft
+
 "@internal/geoserver-data-common@link:../geoserver-data-common::locator=%40internal%2Fbackstage-plugin-catalog-backend-module-geoserver%40workspace%3Aplugins%2Fcatalog-backend-module-geoserver":
   version: 0.0.0-use.local
   resolution: "@internal/geoserver-data-common@link:../geoserver-data-common::locator=%40internal%2Fbackstage-plugin-catalog-backend-module-geoserver%40workspace%3Aplugins%2Fcatalog-backend-module-geoserver"

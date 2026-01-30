@@ -71,5 +71,10 @@ export const useGeoportiaOpenStyles = makeStyles(theme => ({
   dropdownMenu: {
     minWidth: 150,
     padding: '0 5px',
-  }
+  },
+  dialogContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2rem',
+  },
 }));
