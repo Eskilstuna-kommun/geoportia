@@ -63,10 +63,17 @@ export class PostgreSQLDatabaseHandler {
     await pool.end();
   }
 
+  /**
+   * Gets the definition of a specific view within a schema.
+   * 
+   * @param viewName The view name to query.
+   * @param schemaName The schema name to query.
+   * @returns A promise that resolves to the view definition.
+   */
   async getView(viewName: string, schemaName: string) {
     const columns = await this.getViewColumns(viewName, schemaName);
 
-    // Method implementation goes here
+    throw new Error('Method not implemented.');
   }
 
   /**
@@ -106,7 +113,7 @@ export class PostgreSQLDatabaseHandler {
     const query = `SELECT table_name
     FROM information_schema.views
     WHERE table_schema = '${schemaName}'
-    AND table_type = 'BASE TABLE';`;
+    AND table_name NOT IN ('geography_columns', 'geometry_columns');`;
 
     try {
       const res = await pool.query(query);
@@ -152,7 +159,8 @@ export class PostgreSQLDatabaseHandler {
     const query = `SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = '${schemaName}'
-    AND table_type = 'BASE TABLE';`;
+    AND table_type = 'BASE TABLE'
+    AND table_name != 'spatial_ref_sys';`;
 
     try {
       const res = await pool.query(query);
