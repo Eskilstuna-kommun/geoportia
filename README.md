@@ -49,6 +49,11 @@ Create a `.env` file inside the `packages/backend` directory with the following 
 ```
 GITHUB_CLIENT_ID=your_github_client_id
 GITHUB_CLIENT_SECRET=your_github_client_secret
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=postgres 
+POSTGRES_URL=localhost
+POSTGRES_PORT=15432
 FMEFLOW_BASE_URL=your_fmeflow_base_url
 FMEFLOW_TOKEN=your_fmeflow_token
 FME_REPOSITORY_NAME=your_fme_repository_name
