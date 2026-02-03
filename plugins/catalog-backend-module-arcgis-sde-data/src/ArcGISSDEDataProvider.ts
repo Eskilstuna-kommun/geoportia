@@ -38,9 +38,14 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     return `arcGIS-SDE-data-${this.uri}`;
   }
 
-  // Breaks out a full name into name and namespace parts.
-  // Namespace is everything before the last dot, name is everything after.
-  // If there is no dot, namespace is empty and name is the full name.
+  /**
+  * Breaks out a full name into name and namespace parts.
+  * Namespace is everything before the last dot, name is everything after.
+  * If there is no dot, namespace is empty and name is the full name.
+  * 
+  * @param fullName The full name to break apart.
+  * @returns A structure containing the name and namespace.
+  */
   breakOutName(fullName: string): { name: string; namespace: string } {
     const lastDotInNameIndex = fullName.lastIndexOf('.');
     const name =
@@ -54,6 +59,12 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     return { name, namespace };
   }
 
+  /**
+   * Converts the name of a feature class, field, domain or domain value to a Backstage-compliant entity name.
+   * 
+   * @param name The name to convert.
+   * @returns A Backstage-compliant version of the name.
+   */
   convertNameToBackstageCompliant(name: string): string {
     return (
       `${name}`.substring(0, 58).replace(/[^a-zA-Z0-9._-]/g, '_') +
@@ -62,14 +73,26 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     );
   }
 
+  /**
+   * Creates a Backstage-compliant name for a feature class field.
+   * 
+   * @param field The feature class field.
+   * @returns A Backstage-compliant name for the field.
+   */
   createBackstageCompliantFeatureClassFieldName(
     field: ArcGISFeatureClassField,
-  ): string { 
+  ): string {
     return this.convertNameToBackstageCompliant(
       field.domain !== '' ? `${field.domain}.${field.name}` : field.name,
     );
   }
 
+  /**
+   * Creates a compound entity reference for a feature class field. Used to generate dependencies for feature classes.
+   * 
+   * @param field The feature class field.
+   * @returns A compound entity reference for the field.
+   */
   featureClassFieldToDependency(
     field: ArcGISFeatureClassField,
   ): CompoundEntityRef {
@@ -80,6 +103,13 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     };
   }
 
+  /**
+   * Creates a Backstage-compliant name for a domain value.
+   * 
+   * @param value The domain value.
+   * @param domain The domain name.
+   * @returns A Backstage-compliant name for the domain value.
+   */
   createBackstageCompliantDomainValueName(
     value: ArcGISDomainValue,
     domain: string,
@@ -89,6 +119,13 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     );
   }
 
+  /**
+   * Creates a Backstage-compliant name for a feature class.
+   * 
+   * @param name The feature class name.
+   * @param namespace The feature class namespace. Leave blank if the feature class does not belong to any namespace.
+   * @returns A Backstage-compliant name for the feature class.
+   */
   createBackstageCompliantFeatureClassName(
     name: string,
     namespace: string,
@@ -98,6 +135,13 @@ export class ArcGISSDEDataProvider implements EntityProvider {
       : this.convertNameToBackstageCompliant(name);
   }
 
+  /**
+   * Creates a compound entity reference for a feature class. Used to generate dependencies for data sets.
+   * 
+   * @param name The feature class name.
+   * @param namespace The feature class namespace. Leave blank for default namespace.
+   * @returns A compound entity reference for the feature class.
+   */
   featureClassToDependency(name: string, namespace: string): CompoundEntityRef {
     return {
       kind: 'Table',
@@ -106,6 +150,13 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     };
   }
 
+  /**
+   * Creates a compound entity reference for a domain value. Used to generate dependencies for domains.
+   * 
+   * @param value The domain value.
+   * @param domain The domain name.
+   * @returns A compound entity reference for the domain value.
+   */
   domainValueToDependency(
     value: ArcGISDomainValue,
     domain: string,
@@ -136,11 +187,15 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     const entities: Entity[] = [];
 
     try {
+      // Create data sets, feature classes for each data sets, and fields for each feature class
+
       const dataSets = (await this.arcGISSDEClient.fetchDataSets()) ?? [];
 
       for (const dataSet of dataSets ?? []) {
         const { name: dataSetName, namespace: datasetNamespace } =
           this.breakOutName(dataSet.name);
+
+        // Create feature classes for the data set
 
         for (const dataSetFeatureClass of dataSet.featureClasses ?? []) {
           const { name: featureClassName, namespace: featureClassNamespace } =
@@ -166,6 +221,8 @@ export class ArcGISSDEDataProvider implements EntityProvider {
             continue;
           }
 
+          // Create fields for the feature class
+
           for (const field of fields ?? []) {
             const ArcGISField: ArcGISSDEFeatureClassFieldEntity = {
               apiVersion: 'geoportia.se/v1alpha1',
@@ -188,15 +245,16 @@ export class ArcGISSDEDataProvider implements EntityProvider {
             entities.push(ArcGISField);
           }
 
+          // Create the feature class itself
+
           const ArcGISFeatureClassEntity: ArcGISSDEFeatureClassEntity = {
             apiVersion: 'geoportia.se/v1alpha1',
             kind: 'Table',
             metadata: {
-              name:
-                this.createBackstageCompliantFeatureClassName(
-                  featureClassName,
-                  featureClassNamespace,
-                ),
+              name: this.createBackstageCompliantFeatureClassName(
+                featureClassName,
+                featureClassNamespace,
+              ),
               title: `${featureClassName}`,
               description: undefined,
               annotations: {
@@ -206,14 +264,16 @@ export class ArcGISSDEDataProvider implements EntityProvider {
             },
             spec: {
               dialect: 'arcgis',
-              dependencyOf: fields.map((field) => {
+              dependencyOf: fields.map(field => {
                 return this.featureClassFieldToDependency(field);
-            }),
+              }),
             } as any,
           };
-          
+
           entities.push(ArcGISFeatureClassEntity);
         }
+
+        // Create data set entity (skip root data set)
 
         if (dataSet.name !== 'root') {
           const ArcGISDataSetEntity: ArcGISSDEDataSetEntity = {
@@ -250,6 +310,8 @@ export class ArcGISSDEDataProvider implements EntityProvider {
           entities.push(ArcGISDataSetEntity);
         }
       }
+
+      // Create domains and domain values
 
       const domains = (await this.arcGISSDEClient.fetchDomains()) ?? [];
 
