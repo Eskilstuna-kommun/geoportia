@@ -16,7 +16,7 @@ export class PostgreSQLDatabaseHandler {
     private logger: LoggerService,
   ) {}
 
-  private createPool() {
+  private createPool(): Pool {
     return new Pool({
       user: this.user,
       host: this.host,
