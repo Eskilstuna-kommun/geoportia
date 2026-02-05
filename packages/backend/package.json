@@ -44,6 +44,7 @@
     "@internal/backstage-plugin-catalog-backend-module-geoserver": "workspace:^",
     "@internal/backstage-plugin-catalog-backend-module-postgresql-data": "^0.1.0",
     "@internal/backstage-plugin-geoportia-metadata-backend": "^0.1.0",
+    "@internal/backstage-plugin-postgresql-backend-module-db-handler": "workspace:^",
     "app": "link:../app",
     "better-sqlite3": "^9.0.0",
     "node-gyp": "^10.0.0",

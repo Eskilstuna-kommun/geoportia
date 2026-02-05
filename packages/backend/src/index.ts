@@ -68,4 +68,5 @@ backend.add(scaffolderModuleGeoportiaMetadata);
 backend.add(import('@internal/backstage-plugin-catalog-backend-module-fmeflow'));
 backend.add(import('@internal/backstage-plugin-catalog-backend-module-geoserver'));
 backend.add(import('@internal/backstage-plugin-catalog-backend-module-arcgis-sde-data'));
+backend.add(import('@internal/backstage-plugin-postgresql-backend-module-db-handler'));
 backend.start();
