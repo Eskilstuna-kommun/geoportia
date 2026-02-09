@@ -6,7 +6,7 @@ export interface ViewTable {
   columns: string[];
 }
 
-export class PostgreSQLDatabaseHandler {
+export class PostgreSQLDatabaseService {
   constructor(
     private host: string,
     private port: number,
