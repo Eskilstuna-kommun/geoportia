@@ -7,9 +7,15 @@ import {
   Button,
   TextField,
   Chip,
+  CircularProgress,
 } from '@material-ui/core';
 import Autocomplete from '@material-ui/lab/Autocomplete';
-import { columnViewOptions, tableViewOptions } from '../../utils/columnOptions';
+import {
+  fetchTables,
+  fetchColumns,
+} from '../DbFetchComponent/DbFetchComponent';
+
+type Option = { key: string; label: string };
 
 type Props = {
   open: boolean;
@@ -32,11 +38,20 @@ export const ViewDialog = ({
   onClose,
   onSubmit,
   initialValue = '',
-  geoportiaOpenStyles
+  geoportiaOpenStyles,
 }: Props) => {
   const [viewName, setViewName] = useState(initialValue);
   const [tableKeys, setTableKeys] = useState<string[]>([]);
   const [columnKeys, setColumnKeys] = useState<string[]>([]);
+
+  // NEW: options loaded from API
+  const [tableOptions, setTableOptions] = useState<Option[]>([]);
+  const [columnOptions, setColumnOptions] = useState<Option[]>([]);
+
+  // NEW: loading + error
+  const [tablesLoading, setTablesLoading] = useState(false);
+  const [columnsLoading, setColumnsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Reset fields each time the dialog is opened
   useEffect(() => {
@@ -44,8 +59,87 @@ export const ViewDialog = ({
       setViewName(initialValue);
       setTableKeys([]);
       setColumnKeys([]);
+      setLoadError(null);
     }
   }, [open, initialValue]);
+
+  // Fetch tables when dialog opens
+  useEffect(() => {
+    if (!open) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        setTablesLoading(true);
+        setLoadError(null);
+
+        const tables = (await fetchTables("public")).tables ?? [];
+
+        if (!cancelled) setTableOptions(
+          tables.map(table => ({ key: table, label: table })),
+        );
+      } catch (e: any) {
+        if (!cancelled) setLoadError(e?.message ?? 'Failed to load tables');
+      } finally {
+        if (!cancelled) setTablesLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
+  // Fetch columns when selected tables change (or if your API needs only one table, use tableKeys[0])
+  useEffect(() => {
+    if (!open) return;
+
+    // common UX: no tables selected => clear columns
+    if (tableKeys.length === 0) {
+      setColumnOptions([]);
+      setColumnKeys([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        setColumnsLoading(true);
+        setLoadError(null);
+
+        let allCols: Option[] = [];
+
+        for (const table of tableKeys) {
+          const cols = (await fetchColumns("public", table)).columns ?? [];
+
+          console.log(`Fetched columns for ${table}:`, JSON.stringify(cols));
+
+          allCols = allCols.concat(cols.map(col => ({
+            key: `${table}.${col}`,
+            label: `${table}.${col}`,
+          })));
+        }
+
+        if (!cancelled) setColumnOptions(allCols);
+
+        // Optional: drop selected columns that are no longer valid
+        if (!cancelled) {
+          const valid = new Set(allCols.map(c => c.key));
+          setColumnKeys(prev => prev.filter(k => valid.has(k)));
+        }
+      } catch (e: any) {
+        if (!cancelled) setLoadError(e?.message ?? 'Failed to load columns');
+      } finally {
+        if (!cancelled) setColumnsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, tableKeys]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,13 +151,11 @@ export const ViewDialog = ({
     onClose();
   };
 
-  const tableOptions = tableViewOptions();
-  const columnOptions = columnViewOptions();
-
   return (
     <Dialog open={open} fullWidth maxWidth="sm" onClose={onClose}>
       <form onSubmit={handleSubmit}>
         <DialogTitle>Lägg till vy</DialogTitle>
+
         <DialogContent className={geoportiaOpenStyles.dialogContent}>
           <TextField
             autoFocus
@@ -84,6 +176,7 @@ export const ViewDialog = ({
             onChange={(_, newValue) =>
               setTableKeys(newValue.map(opt => opt.key))
             }
+            loading={tablesLoading}
             renderTags={(value, getTagProps) =>
               value.map((option, index) => {
                 const { key, ...tagProps } = getTagProps({ index }) as {
@@ -93,7 +186,23 @@ export const ViewDialog = ({
               })
             }
             renderInput={params => (
-              <TextField {...params} label="Table" variant="outlined" />
+              <TextField
+                {...params}
+                label="Table"
+                variant="outlined"
+                helperText={loadError ?? ''}
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {tablesLoading ? (
+                        <CircularProgress color="inherit" size={18} />
+                      ) : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+              />
             )}
           />
 
@@ -105,6 +214,8 @@ export const ViewDialog = ({
             onChange={(_, newValue) =>
               setColumnKeys(newValue.map(opt => opt.key))
             }
+            loading={columnsLoading}
+            disabled={tableKeys.length === 0}
             renderTags={(value, getTagProps) =>
               value.map((option, index) => {
                 const { key, ...tagProps } = getTagProps({ index }) as {
@@ -114,10 +225,26 @@ export const ViewDialog = ({
               })
             }
             renderInput={params => (
-              <TextField {...params} label="Column" variant="outlined" />
+              <TextField
+                {...params}
+                label="Column"
+                variant="outlined"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {columnsLoading ? (
+                        <CircularProgress color="inherit" size={18} />
+                      ) : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+              />
             )}
           />
         </DialogContent>
+
         <DialogActions>
           <Button onClick={onClose} color="primary">
             Avbryt

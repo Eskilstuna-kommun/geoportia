@@ -32,9 +32,9 @@ export const postgresqlDbHandlerPlugin = createBackendPlugin({
         const postgresDatabase = rootConfig.getString(
           'catalog.providers.postgresql.database',
         );
-        const postgresPort = Number(rootConfig.getString(
-          'catalog.providers.postgresql.port',
-        ));
+        const postgresPort = Number(
+          rootConfig.getString('catalog.providers.postgresql.port'),
+        );
         const postgresUrl = rootConfig.getString(
           'catalog.providers.postgresql.url',
         );
@@ -54,6 +54,14 @@ export const postgresqlDbHandlerPlugin = createBackendPlugin({
             dbService,
           }),
         );
+        httpRouter.addAuthPolicy({
+          path: '/list-tables/:schemaName',
+          allow: 'unauthenticated',
+        });
+        httpRouter.addAuthPolicy({
+          path: '/list-columns/:schemaName/:tableName',
+          allow: 'unauthenticated',
+        });
       },
     });
   },

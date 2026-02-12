@@ -185,8 +185,8 @@ export class PostgreSQLDatabaseService {
 
     const query = `SELECT column_name
     FROM information_schema.columns
-    WHERE table_schema = '${tableName}'
-    AND table_name = '${schemaName}';`;
+    WHERE table_name = '${tableName}'
+    AND table_schema = '${schemaName}';`;
 
     try {
       const res = await pool.query(query);
