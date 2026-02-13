@@ -38,12 +38,11 @@ export class PostgreSQLDatabaseService {
   async createView(viewName: string, schemaName: string, tables: ViewTable[]) {
     if (tables.length === 0) {
       this.logger.error('No tables provided for view creation.');
-      return;
+      return false;
     }
 
-    const pool = this.createPool();
-
     const tableList = tables
+      .filter(t => t.columns.length > 0) // Only include tables that have columns selected
       .map((t, i) => `${schemaName}.${t.name} t${i}`)
       .join(', ');
 
@@ -51,21 +50,32 @@ export class PostgreSQLDatabaseService {
       .map((t, i) => t.columns.map(col => `t${i}.${col}`).join(', '))
       .join(', ');
 
+    if (!tableList || !columnsList) {
+      this.logger.error(
+        'No valid tables or columns provided for view creation.',
+      );
+      return false;
+    }
+
+    const pool = this.createPool();
+
     const query = `CREATE VIEW ${schemaName}.${viewName} AS SELECT ${columnsList} FROM ${tableList};`;
 
     try {
       await pool.query(query);
       this.logger.info(`View ${schemaName}.${viewName} created successfully.`);
+      return true;
     } catch (err) {
       this.logger.error(`Error creating view: ${err}`);
+      return false;
+    } finally {
+      await pool.end();
     }
-
-    await pool.end();
   }
 
   /**
    * Gets the definition of a specific view within a schema.
-   * 
+   *
    * @param viewName The view name to query.
    * @param schemaName The schema name to query.
    * @returns A promise that resolves to the view definition.

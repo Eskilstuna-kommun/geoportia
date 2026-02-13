@@ -1,27 +1,26 @@
-import { HttpAuthService } from '@backstage/backend-plugin-api';
-import { InputError } from '@backstage/errors';
-import { z } from 'zod';
 import express from 'express';
 import Router from 'express-promise-router';
 import { PostgreSQLDatabaseService } from './services/PostgreSQLDatabaseService';
 
 export async function createRouter({
-  httpAuth,
   dbService,
 }: {
-  httpAuth: HttpAuthService;
   dbService: PostgreSQLDatabaseService;
 }): Promise<express.Router> {
   const router = Router();
   router.use(express.json());
 
   router.post('/create-view', async (_req, res) => {
-    const info = await dbService.createView(
+    const viewCreated = await dbService.createView(
       _req.body.viewName,
       _req.body.schemaName,
       _req.body.tables,
     );
-    res.status(200).send({ message: 'View created successfully', info });
+    if (viewCreated) {
+      res.status(200).send({ message: 'View created successfully.' });
+    } else {
+      res.status(400).send({ message: 'Error: view could not be created.' });
+    }
   });
 
   router.get('/list-views/:schemaName', async (_req, res) => {

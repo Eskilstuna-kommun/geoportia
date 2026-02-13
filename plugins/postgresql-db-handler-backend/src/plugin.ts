@@ -17,12 +17,10 @@ export const postgresqlDbHandlerPlugin = createBackendPlugin({
     env.registerInit({
       deps: {
         logger: coreServices.logger,
-        httpAuth: coreServices.httpAuth,
         httpRouter: coreServices.httpRouter,
-        catalog: catalogServiceRef,
         rootConfig: coreServices.rootConfig,
       },
-      async init({ logger, httpAuth, httpRouter, catalog, rootConfig }) {
+      async init({ logger, httpRouter, rootConfig }) {
         const postgresUser = rootConfig.getString(
           'catalog.providers.postgresql.user',
         );
@@ -50,7 +48,6 @@ export const postgresqlDbHandlerPlugin = createBackendPlugin({
 
         httpRouter.use(
           await createRouter({
-            httpAuth,
             dbService,
           }),
         );

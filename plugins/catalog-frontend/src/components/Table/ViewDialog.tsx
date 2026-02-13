@@ -11,8 +11,7 @@ import {
 } from '@material-ui/core';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import {
-  fetchTables,
-  fetchColumns,
+  DbFetchComponent,
 } from '../DbFetchComponent/DbFetchComponent';
 
 type Option = { key: string; label: string };
@@ -51,6 +50,8 @@ export const ViewDialog = ({
   const [columnsLoading, setColumnsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  const dbFetchComponent = new DbFetchComponent();
+
   // Reset fields each time the dialog is opened
   useEffect(() => {
     if (open) {
@@ -72,7 +73,7 @@ export const ViewDialog = ({
         setTablesLoading(true);
         setLoadError(null);
 
-        const tables = (await fetchTables("public")).tables ?? [];
+        const tables = (await dbFetchComponent.fetchTables()).tables ?? [];
 
         if (!cancelled) setTableOptions(
           tables.map(table => ({ key: table, label: table })),
@@ -110,9 +111,7 @@ export const ViewDialog = ({
         let allCols: Option[] = [];
 
         for (const table of tableKeys) {
-          const cols = (await fetchColumns("public", table)).columns ?? [];
-
-          console.log(`Fetched columns for ${table}:`, JSON.stringify(cols));
+          const cols = (await dbFetchComponent.fetchColumns(table)).columns ?? [];
 
           allCols = allCols.concat(cols.map(col => ({
             key: `${table}.${col}`,
