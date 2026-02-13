@@ -44,11 +44,9 @@ export const ViewDialog = ({
   const [tableKeys, setTableKeys] = useState<string[]>([]);
   const [columnKeys, setColumnKeys] = useState<string[]>([]);
 
-  // NEW: options loaded from API
   const [tableOptions, setTableOptions] = useState<Option[]>([]);
   const [columnOptions, setColumnOptions] = useState<Option[]>([]);
 
-  // NEW: loading + error
   const [tablesLoading, setTablesLoading] = useState(false);
   const [columnsLoading, setColumnsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);

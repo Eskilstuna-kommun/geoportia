@@ -62,6 +62,10 @@ export const postgresqlDbHandlerPlugin = createBackendPlugin({
           path: '/list-columns/:schemaName/:tableName',
           allow: 'unauthenticated',
         });
+        httpRouter.addAuthPolicy({
+          path: '/create-view',
+          allow: 'unauthenticated',
+        });
       },
     });
   },

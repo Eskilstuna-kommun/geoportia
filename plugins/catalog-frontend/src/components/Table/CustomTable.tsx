@@ -23,6 +23,7 @@ import { EntityBooleanValuePicker } from './EntityBooleanValuePicker';
 import { FilterBar } from './FilterBar';
 import { ViewDialog, ViewDialogProps } from './ViewDialog';
 import { tableFilterOptions } from '../../utils/columnOptions';
+import { createView } from '../DbFetchComponent/DbFetchComponent';
 
 export const CustomTable = ({ kind }: { kind: string }) => {
   const orgName =
@@ -116,9 +117,24 @@ export const CustomTable = ({ kind }: { kind: string }) => {
     return CatalogTable.defaultColumnsFunc(entityListContext);
   };
 
-  const handleAddView = (view: ViewDialogProps) => {
-    console.log('New view added:', view);
-  }
+  const handleAddView = async (view: ViewDialogProps) => {
+    const tableDefinitions = [];
+
+    for (const table of view.Table) {
+      const tableColumns = view.Columns.filter(col =>
+        col.startsWith(`${table}.`),
+      );
+
+      const tableDefinition = {
+        name: table,
+        columns: tableColumns.map(col => col.split('.').slice(1).join('.')),
+      };
+
+      tableDefinitions.push(tableDefinition);
+    }
+
+    await createView(view.viewName, "public", tableDefinitions);
+  };
 
   return (
     <>
