@@ -33,12 +33,15 @@ export class PostgreSQLDatabaseService {
    * @param columns The columns to be included in the view.
    * @param tableName The name of the table from which to select the columns.
    * @param schemaName The schema where the view will be created.
-   * @returns A promise that resolves when the view is created.
+   * @returns A promise of a result object indicating success or failure.
    */
   async createView(viewName: string, schemaName: string, tables: ViewTable[]) {
     if (tables.length === 0) {
       this.logger.error('No tables provided for view creation.');
-      return false;
+      return {
+        successful: false,
+        message: 'No tables provided for view creation.',
+      };
     }
 
     const tableList = tables
@@ -54,7 +57,10 @@ export class PostgreSQLDatabaseService {
       this.logger.error(
         'No valid tables or columns provided for view creation.',
       );
-      return false;
+      return {
+        successful: false,
+        message: 'No valid tables or columns provided for view creation.',
+      };
     }
 
     const pool = this.createPool();
@@ -64,10 +70,13 @@ export class PostgreSQLDatabaseService {
     try {
       await pool.query(query);
       this.logger.info(`View ${schemaName}.${viewName} created successfully.`);
-      return true;
+      return { successful: true, message: 'View created successfully.' };
     } catch (err) {
       this.logger.error(`Error creating view: ${err}`);
-      return false;
+      return {
+        successful: false,
+        message: `Exception occurred when creating view: see log for details.`,
+      };
     } finally {
       await pool.end();
     }
@@ -103,10 +112,16 @@ export class PostgreSQLDatabaseService {
 
     try {
       const res = await pool.query(query);
-      return res.rows;
+      return {
+        successful: true,
+        columns: res.rows.map(row => row.column_name),
+      };
     } catch (err) {
       this.logger.error(`Error fetching view columns: ${err}`);
-      return [];
+      return {
+        successful: false,
+        message: `Exception occurred when fetching view columns: see log for details.`,
+      };
     } finally {
       await pool.end();
     }
@@ -127,10 +142,13 @@ export class PostgreSQLDatabaseService {
 
     try {
       const res = await pool.query(query);
-      return res.rows.map(row => row.table_name);
+      return { successful: true, views: res.rows.map(row => row.table_name) };
     } catch (err) {
       this.logger.error(`Error fetching views: ${err}`);
-      return [];
+      return {
+        successful: false,
+        message: `Exception occurred when fetching views: see log for details.`,
+      };
     } finally {
       await pool.end();
     }
@@ -150,11 +168,16 @@ export class PostgreSQLDatabaseService {
     try {
       await pool.query(query);
       this.logger.info(`View ${schemaName}.${viewName} deleted successfully.`);
+      return { successful: true, message: 'View deleted successfully.' };
     } catch (err) {
       this.logger.error(`Error deleting view: ${err}`);
+      return {
+        successful: false,
+        message: `Exception occurred when deleting view: see log for details.`,
+      };
+    } finally {
+      await pool.end();
     }
-
-    await pool.end();
   }
 
   /**
@@ -174,10 +197,13 @@ export class PostgreSQLDatabaseService {
 
     try {
       const res = await pool.query(query);
-      return res.rows.map(row => row.table_name);
+      return { successful: true, tables: res.rows.map(row => row.table_name) };
     } catch (err) {
       this.logger.error(`Error fetching tables: ${err}`);
-      return [];
+      return {
+        successful: false,
+        message: `Exception occurred when fetching tables: see log for details.`,
+      };
     } finally {
       await pool.end();
     }
@@ -200,10 +226,13 @@ export class PostgreSQLDatabaseService {
 
     try {
       const res = await pool.query(query);
-      return res.rows.map(row => row.column_name);
+      return { successful: true, columns: res.rows.map(row => row.column_name) };
     } catch (err) {
       this.logger.error(`Error fetching table columns: ${err}`);
-      return [];
+      return {
+        successful: false,
+        message: `Exception occurred when fetching table columns: see log for details.`,
+      };
     } finally {
       await pool.end();
     }
