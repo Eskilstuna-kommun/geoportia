@@ -44,3 +44,4 @@ nav:
       - development/index.md
       - development/geoserver.md
       - development/arcpy.md
+    - development/eskilstuna.md
