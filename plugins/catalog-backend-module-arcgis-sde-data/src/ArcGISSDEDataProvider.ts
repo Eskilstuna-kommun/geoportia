@@ -22,7 +22,7 @@ import {
   ArcGISSDEFeatureClassEntity,
   ArcGISSDEFeatureClassFieldEntity,
 } from '../../arcgis-sde-data-common/src';
-import CryptoJS from 'crypto-js';
+import { createHash } from 'node:crypto';
 
 export class ArcGISSDEDataProvider implements EntityProvider {
   private connection?: EntityProviderConnection;
@@ -38,14 +38,6 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     return `arcGIS-SDE-data-${this.uri}`;
   }
 
-  /**
-  * Breaks out a full name into name and namespace parts.
-  * Namespace is everything before the last dot, name is everything after.
-  * If there is no dot, namespace is empty and name is the full name.
-  * 
-  * @param fullName The full name to break apart.
-  * @returns A structure containing the name and namespace.
-  */
   breakOutName(fullName: string): { name: string; namespace: string } {
     const lastDotInNameIndex = fullName.lastIndexOf('.');
     const name =
@@ -59,26 +51,20 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     return { name, namespace };
   }
 
-  /**
-   * Converts the name of a feature class, field, domain or domain value to a Backstage-compliant entity name.
-   * 
-   * @param name The name to convert.
-   * @returns A Backstage-compliant version of the name.
-   */
   convertNameToBackstageCompliant(name: string): string {
+    const normalizedName = `${name}`;
+    const shortHash = createHash('md5')
+      .update(normalizedName, 'utf8')
+      .digest('hex')
+      .substring(0, 4);
+
     return (
-      `${name}`.substring(0, 58).replace(/[^a-zA-Z0-9._-]/g, '_') +
+      normalizedName.substring(0, 58).replace(/[^a-zA-Z0-9._-]/g, '_') +
       '-' +
-      CryptoJS.MD5(`${name}`).toString().substring(0, 4)
+      shortHash
     );
   }
 
-  /**
-   * Creates a Backstage-compliant name for a feature class field.
-   * 
-   * @param field The feature class field.
-   * @returns A Backstage-compliant name for the field.
-   */
   createBackstageCompliantFeatureClassFieldName(
     field: ArcGISFeatureClassField,
   ): string {
@@ -87,12 +73,6 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     );
   }
 
-  /**
-   * Creates a compound entity reference for a feature class field. Used to generate dependencies for feature classes.
-   * 
-   * @param field The feature class field.
-   * @returns A compound entity reference for the field.
-   */
   featureClassFieldToDependency(
     field: ArcGISFeatureClassField,
   ): CompoundEntityRef {
@@ -103,13 +83,6 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     };
   }
 
-  /**
-   * Creates a Backstage-compliant name for a domain value.
-   * 
-   * @param value The domain value.
-   * @param domain The domain name.
-   * @returns A Backstage-compliant name for the domain value.
-   */
   createBackstageCompliantDomainValueName(
     value: ArcGISDomainValue,
     domain: string,
@@ -119,13 +92,6 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     );
   }
 
-  /**
-   * Creates a Backstage-compliant name for a feature class.
-   * 
-   * @param name The feature class name.
-   * @param namespace The feature class namespace. Leave blank if the feature class does not belong to any namespace.
-   * @returns A Backstage-compliant name for the feature class.
-   */
   createBackstageCompliantFeatureClassName(
     name: string,
     namespace: string,
@@ -135,13 +101,6 @@ export class ArcGISSDEDataProvider implements EntityProvider {
       : this.convertNameToBackstageCompliant(name);
   }
 
-  /**
-   * Creates a compound entity reference for a feature class. Used to generate dependencies for data sets.
-   * 
-   * @param name The feature class name.
-   * @param namespace The feature class namespace. Leave blank for default namespace.
-   * @returns A compound entity reference for the feature class.
-   */
   featureClassToDependency(name: string, namespace: string): CompoundEntityRef {
     return {
       kind: 'Table',
@@ -150,13 +109,6 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     };
   }
 
-  /**
-   * Creates a compound entity reference for a domain value. Used to generate dependencies for domains.
-   * 
-   * @param value The domain value.
-   * @param domain The domain name.
-   * @returns A compound entity reference for the domain value.
-   */
   domainValueToDependency(
     value: ArcGISDomainValue,
     domain: string,

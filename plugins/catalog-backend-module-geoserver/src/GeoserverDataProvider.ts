@@ -14,6 +14,7 @@ import {
   Entity,
   stringifyEntityRef,
 } from '@backstage/catalog-model';
+import { createHash } from 'node:crypto';
 
 export class GeoserverDataProvider implements EntityProvider {
   private connection?: EntityProviderConnection;
@@ -28,6 +29,20 @@ export class GeoserverDataProvider implements EntityProvider {
 
   getProviderName(): string {
     return `geoserver-data-${this.uri}`;
+  }
+
+  private convertNameToBackstageCompliant(name: string): string {
+    const normalizedName = `${name ?? ''}`;
+    const shortHash = createHash('md5')
+      .update(normalizedName, 'utf8')
+      .digest('hex')
+      .substring(0, 4);
+
+    return (
+      normalizedName.substring(0, 58).replace(/[^a-zA-Z0-9._-]/g, '_') +
+      '-' +
+      shortHash
+    );
   }
 
   async connect(connection: EntityProviderConnection) {
@@ -54,6 +69,7 @@ export class GeoserverDataProvider implements EntityProvider {
       kind: 'GeoserverStore',
       metadata: {
         name,
+        title: this.convertNameToBackstageCompliant(`${workspace}.${name}`),
         namespace: workspace,
         description,
         annotations: {
@@ -234,6 +250,9 @@ export class GeoserverDataProvider implements EntityProvider {
           kind: 'GeoserverLayer',
           metadata: {
             name: layer.name,
+            title: this.convertNameToBackstageCompliant(
+              `${workspace.name}.${layer.name}`,
+            ),
             namespace: workspace.name,
             description: undefined,
             annotations: {
