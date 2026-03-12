@@ -13,7 +13,7 @@ import {
   Entity,
   CompoundEntityRef,
 } from '@backstage/catalog-model';
-import CryptoJS from 'crypto-js';
+import { createHash } from 'node:crypto';
 
 interface GeoserverStore {
   name: string;
@@ -36,15 +36,6 @@ export class GeoserverDataProvider implements EntityProvider {
     return `geoserver-data-${this.uri}`;
   }
 
-  // Converts a string to a valid Backstage entity name
-  convertNameToBackstageCompliant(name: string): string {
-    return (
-      `${name}`.substring(0, 58).replace(/[^a-zA-Z0-9._-]/g, '_') +
-      '-' +
-      CryptoJS.MD5(`${name}`).toString().substring(0, 4)
-    );
-  }
-
   // Converts a string to a valid Backstage namespace name
   convertNamespaceToBackstageCompliant(name: string): string {
     return (
@@ -54,6 +45,20 @@ export class GeoserverDataProvider implements EntityProvider {
         .substring(0, 58) +
       '-' +
       CryptoJS.MD5(`${name}`).toString().substring(0, 4)
+    );
+  }
+
+  private convertNameToBackstageCompliant(name: string): string {
+    const normalizedName = `${name ?? ''}`;
+    const shortHash = createHash('md5')
+      .update(normalizedName, 'utf8')
+      .digest('hex')
+      .substring(0, 4);
+
+    return (
+      normalizedName.substring(0, 58).replace(/[^a-zA-Z0-9._-]/g, '_') +
+      '-' +
+      shortHash
     );
   }
 
@@ -67,6 +72,50 @@ export class GeoserverDataProvider implements EntityProvider {
       },
     });
     await this.run();
+  }
+
+  // Creates a new Geoserver data store entity
+  private createStoreEntity(
+    name: string,
+    workspace: string,
+    description: string,
+    spec: any,
+  ): Entity {
+    return {
+      apiVersion: 'geoportia.se/v1alpha1',
+      kind: 'GeoserverStore',
+      metadata: {
+        name,
+        title: this.convertNameToBackstageCompliant(`${workspace}.${name}`),
+        namespace: workspace,
+        description,
+        annotations: {
+          [ANNOTATION_LOCATION]: `url:${this.uri}`,
+          [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
+        },
+      },
+      spec,
+    };
+  }
+
+  // Creates a custom property on a layer entity's spec object, to be read by the entity processor
+  private addStoreToLayer(
+    layer: Entity,
+    workspaceName: string,
+    storeName: string,
+  ): void {
+    if (layer.spec !== undefined) {
+      layer.spec.store = {
+        type: RELATION_PART_OF,
+        targetRef: stringifyEntityRef({
+          kind: 'GeoserverStore',
+          namespace: workspaceName,
+          name: storeName,
+        }),
+      };
+    } else {
+      this.logger.warn('Layer spec is undefined, cannot set store relation.');
+    }
   }
 
   async run() {
@@ -254,29 +303,23 @@ export class GeoserverDataProvider implements EntityProvider {
 
             const compliantLayerName = this.convertNameToBackstageCompliant(layer.name);
 
-            entities.push({
-              apiVersion: 'geoportia.se/v1alpha1',
-              kind: 'GeoserverLayer',
-              metadata: {
-                name: compliantLayerName,
-                title: `${layer.name}`,
-                namespace: compliantWorkspaceName,
-                description: undefined,
-                annotations: {
-                  [ANNOTATION_LOCATION]: `url:${this.uri}`,
-                  [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
-                },
-              },
-              spec: {
-                dependencyOf: [],
-              },
-            });
-
-            try {
-              const fullLayerObject = await grc.layers.get(
-                workspace.name,
-                layer.name,
-              );
+        const layerEntity: Entity = {
+          apiVersion: 'geoportia.se/v1alpha1',
+          kind: 'GeoserverLayer',
+          metadata: {
+            name: layer.name,
+            title: this.convertNameToBackstageCompliant(
+              `${workspace.name}.${layer.name}`,
+            ),
+            namespace: workspace.name,
+            description: undefined,
+            annotations: {
+              [ANNOTATION_LOCATION]: `url:${this.uri}`,
+              [ANNOTATION_ORIGIN_LOCATION]: `url:${this.uri}`,
+            },
+          },
+          spec: fullLayerObject?.layer ? fullLayerObject.layer : {},
+        };
 
               if (
                 fullLayerObject &&
