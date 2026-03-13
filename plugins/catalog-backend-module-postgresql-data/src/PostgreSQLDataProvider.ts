@@ -12,7 +12,7 @@ import {
   ANNOTATION_ORIGIN_LOCATION,
   Entity,
 } from '@backstage/catalog-model';
-import { createHash } from 'node:crypto';
+import { convertNameToBackstageCompliant as toBackstageCompliantName } from '@internal/backstage-plugin-entity-name-common';
 
 export class PostgreSQLDataProvider implements EntityProvider {
   private connection?: EntityProviderConnection;
@@ -25,28 +25,6 @@ export class PostgreSQLDataProvider implements EntityProvider {
 
   getProviderName(): string {
     return `postgresql-data-${this.uri}`;
-  }
-
-  /**
-   * Converts a database object name into a Backstage-compliant identifier-like string.
-   *
-   * Note: In this provider, the *original* database name is kept as `metadata.name`.
-   * The converted variant is used as `metadata.title`, to align with the naming
-   * strategy used by the other data providers.
-   */
-  private convertNameToBackstageCompliant(name: string): string {
-    const normalizedName = `${name ?? ''}`;
-    const shortHash = createHash('md5')
-      .update(normalizedName, 'utf8')
-      .digest('hex')
-      .substring(0, 4);
-
-    // Keep the same 58+"-"+4 pattern as other providers.
-    return (
-      normalizedName.substring(0, 58).replace(/[^a-zA-Z0-9._-]/g, '_') +
-      '-' +
-      shortHash
-    );
   }
 
   async connect(connection: EntityProviderConnection) {
@@ -87,8 +65,8 @@ export class PostgreSQLDataProvider implements EntityProvider {
       apiVersion: 'geoportia.se/v1alpha1',
       kind: entityType,
       metadata: {
-        name: entityName,
-        title: this.convertNameToBackstageCompliant(entityName),
+        name: toBackstageCompliantName(entityName),
+        title: entityName,
         description: comment || undefined,
         annotations: {
           [ANNOTATION_LOCATION]: this.uri,
@@ -169,10 +147,8 @@ export class PostgreSQLDataProvider implements EntityProvider {
             apiVersion: 'geoportia.se/v1alpha1',
             kind: 'Table',
             metadata: {
-              name: `${schemaName}.${table.name}`,
-              title: this.convertNameToBackstageCompliant(
-                `${schemaName}.${table.name}`,
-              ),
+              name: toBackstageCompliantName(`${schemaName}.${table.name}`),
+              title: `${schemaName}.${table.name}`,
               evenName: table.name.length % 2 === 0 ? 'true' : 'false',
               longName: table.name.length > 5 ? 'true' : 'false',
               description: table.comment || undefined,
@@ -189,10 +165,8 @@ export class PostgreSQLDataProvider implements EntityProvider {
             apiVersion: 'geoportia.se/v1alpha1',
             kind: 'View',
             metadata: {
-              name: `${schemaName}.${view.name}`,
-              title: this.convertNameToBackstageCompliant(
-                `${schemaName}.${view.name}`,
-              ),
+              name: toBackstageCompliantName(`${schemaName}.${view.name}`),
+              title: `${schemaName}.${view.name}`,
               description: view.comment || undefined,
               annotations: {
                 [ANNOTATION_LOCATION]: this.uri,

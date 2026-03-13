@@ -13,7 +13,7 @@ import {
   Entity,
   CompoundEntityRef,
 } from '@backstage/catalog-model';
-import { createHash } from 'node:crypto';
+import { convertNameToBackstageCompliant as toBackstageCompliantName } from '@internal/backstage-plugin-entity-name-common';
 
 interface GeoserverStore {
   name: string;
@@ -34,32 +34,6 @@ export class GeoserverDataProvider implements EntityProvider {
 
   getProviderName(): string {
     return `geoserver-data-${this.uri}`;
-  }
-
-  // Converts a string to a valid Backstage namespace name
-  convertNamespaceToBackstageCompliant(name: string): string {
-    return (
-      `${name}`
-        .toLowerCase()
-        .replace(/[^a-z0-9-]/g, '')
-        .substring(0, 58) +
-      '-' +
-      CryptoJS.MD5(`${name}`).toString().substring(0, 4)
-    );
-  }
-
-  private convertNameToBackstageCompliant(name: string): string {
-    const normalizedName = `${name ?? ''}`;
-    const shortHash = createHash('md5')
-      .update(normalizedName, 'utf8')
-      .digest('hex')
-      .substring(0, 4);
-
-    return (
-      normalizedName.substring(0, 58).replace(/[^a-zA-Z0-9._-]/g, '_') +
-      '-' +
-      shortHash
-    );
   }
 
   async connect(connection: EntityProviderConnection) {
@@ -85,8 +59,8 @@ export class GeoserverDataProvider implements EntityProvider {
       apiVersion: 'geoportia.se/v1alpha1',
       kind: 'GeoserverStore',
       metadata: {
-        name,
-        title: this.convertNameToBackstageCompliant(`${workspace}.${name}`),
+        name: toBackstageCompliantName(`${workspace}.${name}`),
+        title: `${workspace}.${name}`,
         namespace: workspace,
         description,
         annotations: {
@@ -110,7 +84,7 @@ export class GeoserverDataProvider implements EntityProvider {
         targetRef: stringifyEntityRef({
           kind: 'GeoserverStore',
           namespace: workspaceName,
-          name: storeName,
+          name: toBackstageCompliantName(`${workspaceName}.${storeName}`),
         }),
       };
     } else {
@@ -307,10 +281,8 @@ export class GeoserverDataProvider implements EntityProvider {
           apiVersion: 'geoportia.se/v1alpha1',
           kind: 'GeoserverLayer',
           metadata: {
-            name: layer.name,
-            title: this.convertNameToBackstageCompliant(
-              `${workspace.name}.${layer.name}`,
-            ),
+            name: toBackstageCompliantName(`${workspace.name}.${layer.name}`),
+            title: `${workspace.name}.${layer.name}`,
             namespace: workspace.name,
             description: undefined,
             annotations: {
