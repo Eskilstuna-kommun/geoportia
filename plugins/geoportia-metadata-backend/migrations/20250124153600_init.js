@@ -6,16 +6,30 @@
 exports.up = async function up(knex) {
   await knex.schema.createTable('table', table => {
     table.increments('id');
+
+    table.string('entity_ref').notNullable();
+
     table.string('database').notNullable();
     table.string('name').notNullable();
     table.integer('version').notNullable().unsigned();
     table.boolean('active').notNullable();
+
+    // Dynamic metadata approach: keep the schema used to create the metadata and the metadata itself.
+    table.jsonb('schema').notNullable();
+    table.jsonb('metadata').notNullable();
+
+    // Legacy columns kept for backwards compatibility with existing API/code.
     table.string('title').notNullable();
     table.string('owner').notNullable();
     table.jsonb('properties').notNullable();
 
     table.unique(['database', 'name', 'version']);
     table.unique(['database', 'name'], {
+      predicate: knex.where('active', knex.raw(true)),
+    });
+
+    // Ensure only one active metadata entry per described entity.
+    table.unique(['entity_ref'], {
       predicate: knex.where('active', knex.raw(true)),
     });
   });
