@@ -28,6 +28,7 @@
     "@backstage/catalog-model": "^1.7.4",
     "@backstage/plugin-catalog-common": "^1.1.4",
     "@backstage/plugin-catalog-node": "^1.17.0",
+    "@internal/backstage-plugin-entity-name-common": "link:../entity-name-common",
     "@internal/postgresql-data-common": "link:../postgresql-data-common",
     "extract-pg-schema": "^5.3.4",
     "knex": "^3.1.0"

@@ -22,7 +22,7 @@ import {
   ArcGISSDEFeatureClassEntity,
   ArcGISSDEFeatureClassFieldEntity,
 } from '../../arcgis-sde-data-common/src';
-import { createHash } from 'node:crypto';
+import { convertNameToBackstageCompliant as toBackstageCompliantName } from '@internal/backstage-plugin-entity-name-common';
 
 export class ArcGISSDEDataProvider implements EntityProvider {
   private connection?: EntityProviderConnection;
@@ -52,17 +52,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
   }
 
   convertNameToBackstageCompliant(name: string): string {
-    const normalizedName = `${name}`;
-    const shortHash = createHash('md5')
-      .update(normalizedName, 'utf8')
-      .digest('hex')
-      .substring(0, 4);
-
-    return (
-      normalizedName.substring(0, 58).replace(/[^a-zA-Z0-9._-]/g, '_') +
-      '-' +
-      shortHash
-    );
+    return toBackstageCompliantName(name);
   }
 
   createBackstageCompliantFeatureClassFieldName(
