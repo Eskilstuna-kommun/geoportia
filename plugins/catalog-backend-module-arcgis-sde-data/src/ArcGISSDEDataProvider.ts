@@ -94,7 +94,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
   featureClassToDependency(name: string, namespace: string): CompoundEntityRef {
     return {
       kind: 'Table',
-      namespace: namespace !== '' ? namespace : 'default',
+      namespace: 'default',
       name: this.createBackstageCompliantFeatureClassName(name, namespace),
     };
   }
@@ -222,12 +222,9 @@ export class ArcGISSDEDataProvider implements EntityProvider {
             apiVersion: 'geoportia.se/v1alpha1',
             kind: 'DataSet',
             metadata: {
-              name:
-                datasetNamespace !== ''
-                  ? `${this.convertNameToBackstageCompliant(
-                      datasetNamespace,
-                    )}.${this.convertNameToBackstageCompliant(dataSet.name)}`
-                  : this.convertNameToBackstageCompliant(dataSet.name),
+              name: this.convertNameToBackstageCompliant(
+                `${dataSetName}`,
+              ),
               title: `${dataSet.name}`,
               description: undefined,
               annotations: {
