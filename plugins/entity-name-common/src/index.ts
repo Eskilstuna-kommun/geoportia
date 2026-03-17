@@ -44,3 +44,35 @@ export function convertNameToBackstageCompliant(
     shortHash
   );
 }
+
+  /**
+ * Converts an arbitrary namespace name to a Backstage-compliant, stable string.
+ *
+ * Algorithm (defaults):
+ * - sanitize: keep [a-zA-Z0-9._-], replace other chars with '_'
+ * - prefix: first 58 chars of the original string
+ * - suffix: '-' + first 4 chars of md5 hex digest
+ */
+  export function convertNamespaceToBackstageCompliant(
+    name: string,
+    options?: BackstageNameConversionOptions,
+  ): string {
+    const normalizedName = `${name ?? ''}`;
+    const {
+      maxPrefixLength = 58,
+      hashLength = 4,
+      separator = '-',
+      algorithm = 'md5',
+    } = options ?? {};
+
+    const shortHash = createHash(algorithm)
+      .update(normalizedName, 'utf8')
+      .digest('hex')
+      .substring(0, hashLength);
+
+    return (
+      normalizedName.substring(0, maxPrefixLength).replace(/[^a-z0-9-]/g, '') +
+      separator +
+      shortHash
+    );
+  }
