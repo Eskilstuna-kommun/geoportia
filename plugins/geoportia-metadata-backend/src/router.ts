@@ -1,7 +1,12 @@
 import { HttpAuthService } from '@backstage/backend-plugin-api';
 import express from 'express';
 import { createOpenApiRouter } from './schema/openapi';
-import { MetadataService } from './services/MetadataService/types';
+import {
+  MetadataEntryCreate,
+  MetadataEntryUpdate,
+  MetadataService,
+} from './services/MetadataService/types';
+import { z } from 'zod';
 
 export async function createRouter({
   httpAuth,
@@ -10,7 +15,51 @@ export async function createRouter({
   httpAuth: HttpAuthService;
   metadataService: MetadataService;
 }): Promise<express.Router> {
-  const router = await createOpenApiRouter();
+  const router = (await createOpenApiRouter()) as express.Router;
+
+  router.post('/', async (req, res) => {
+    const credentials = await httpAuth.credentials(req, { allow: ['user'] });
+
+    const body = z
+      .object({
+        entityRef: z.string().min(1),
+        schema: z.unknown(),
+        metadata: z.unknown(),
+      })
+      .parse(req.body) as MetadataEntryCreate;
+
+    const result = await metadataService.createMetadataEntry(body, {
+      credentials,
+    });
+
+    res.status(201).json(result);
+  });
+
+  router.put('/:entityRef', async (req, res) => {
+    const credentials = await httpAuth.credentials(req, { allow: ['user'] });
+    const entityRef = decodeURIComponent(req.params.entityRef);
+
+    const body = z
+      .object({
+        schema: z.unknown(),
+        metadata: z.unknown(),
+      })
+      .parse(req.body) as Omit<MetadataEntryUpdate, 'entityRef'>;
+
+    const result = await metadataService.updateMetadataEntry(
+      { entityRef, ...body },
+      { credentials },
+    );
+
+    res.json(result);
+  });
+
+  router.delete('/:entityRef', async (req, res) => {
+    const credentials = await httpAuth.credentials(req, { allow: ['user'] });
+    const entityRef = decodeURIComponent(req.params.entityRef);
+    await metadataService.deleteMetadataEntry({ entityRef }, { credentials });
+    res.status(204).send();
+  });
 
   router.get('/data/:database/:table/preview', async (req, res) => {
     const result = await metadataService.preview({
@@ -35,7 +84,7 @@ export async function createRouter({
       const result = await metadataService.getTableAtVersion({
         database: req.params.database,
         name: req.params.table,
-        version: req.params.version,
+        version: Number.parseInt(req.params.version, 10),
       });
 
       res.json(result);
@@ -69,7 +118,7 @@ export async function createRouter({
         {
           database: req.params.database,
           name: req.params.table,
-          version: req.params.version,
+          version: Number.parseInt(req.params.version, 10),
         },
         { credentials },
       );

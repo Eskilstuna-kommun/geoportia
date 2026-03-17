@@ -34,6 +34,8 @@
     "@backstage/repo-tools": "^0.13.3",
     "@internal/backstage-plugin-geoportia-metadata-backend": "file:",
     "@internal/geoportia-metadata-common": "link:../geoportia-metadata-common",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "express": "^4.17.1",
     "express-promise-router": "^4.1.0",
     "knex": "^3.1.0",

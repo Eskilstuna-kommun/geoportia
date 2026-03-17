@@ -5,6 +5,7 @@ import {
 } from '@backstage/backend-plugin-api';
 import { createRouter } from './router';
 import { MetadataService } from './services/MetadataService/MetadataService';
+import { CatalogClient } from '@backstage/catalog-client';
 
 /**
  * geoportiaMetadataBackendPlugin backend plugin
@@ -20,8 +21,9 @@ export const geoportiaMetadataBackendPlugin = createBackendPlugin({
         httpAuth: coreServices.httpAuth,
         httpRouter: coreServices.httpRouter,
         database: coreServices.database,
+        discovery: coreServices.discovery,
       },
-      async init({ httpAuth, httpRouter, database }) {
+      async init({ httpAuth, httpRouter, database, auth, discovery }) {
         const client = await database.getClient();
         if (!database.migrations?.skip) {
           await client.migrate.latest({
@@ -31,7 +33,9 @@ export const geoportiaMetadataBackendPlugin = createBackendPlugin({
             ),
           });
         }
-        const metadata = new MetadataService(client);
+
+        const catalogClient = new CatalogClient({ discoveryApi: discovery });
+        const metadata = new MetadataService(client, catalogClient, auth);
         httpRouter.use(
           await createRouter({
             httpAuth,
