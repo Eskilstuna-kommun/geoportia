@@ -14098,13 +14098,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/crypto-js@npm:^4":
-  version: 4.2.2
-  resolution: "@types/crypto-js@npm:4.2.2"
-  checksum: 10c0/760a2078f36f2a3a1089ef367b0d13229876adcf4bcd6e8824d00d9e9bfad8118dc7e6a3cc66322b083535e12be3a29044ccdc9603bfb12519ff61551a3322c6
-  languageName: node
-  linkType: hard
-
 "@types/debug@npm:^4.0.0, @types/debug@npm:^4.1.7":
   version: 4.1.12
   resolution: "@types/debug@npm:4.1.12"
@@ -32446,9 +32439,7 @@ __metadata:
     "@backstage/repo-tools": "npm:^0.13.3"
     "@mui/icons-material": "npm:^7.3.7"
     "@playwright/test": "npm:^1.32.3"
-    "@types/crypto-js": "npm:^4"
     "@useoptic/optic": "npm:^1.0.5"
-    crypto-js: "npm:^4.2.0"
     geoserver-rest-client: "https://github.com/sweco-se1g7y/geoserver-node-client.git#typescript"
     node-gyp: "npm:^10.0.0"
     pg-listen: "npm:^1.7.0"
