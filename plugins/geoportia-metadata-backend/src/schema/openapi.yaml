@@ -4,6 +4,77 @@ info:
   title: geoportia-metadata
   description: ""
 paths:
+  /:
+    post:
+      operationId: "CreateMetadataEntry"
+      description: "Create a new dataset metadata entry. The entityRef identifies the catalog entity (e.g. a Table) that the metadata describes."
+      security:
+        - {}
+        - JWT: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MetadataEntryCreate"
+      responses:
+        201:
+          description: "Metadata entry created"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetadataEntry"
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /{entityRef}:
+    put:
+      operationId: "UpdateMetadataEntry"
+      description: "Update an existing dataset metadata entry identified by entityRef (URL-encoded)."
+      security:
+        - {}
+        - JWT: []
+      parameters:
+        - in: "path"
+          name: "entityRef"
+          required: true
+          schema:
+            type: "string"
+          description: "URL-encoded Backstage entityRef, e.g. encodeURIComponent('table:default/public.my_table')"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MetadataEntryUpdate"
+      responses:
+        200:
+          description: "Metadata entry updated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetadataEntry"
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      operationId: "DeleteMetadataEntry"
+      description: "Delete a dataset metadata entry (and all versions) identified by entityRef (URL-encoded)."
+      security:
+        - {}
+        - JWT: []
+      parameters:
+        - in: "path"
+          name: "entityRef"
+          required: true
+          schema:
+            type: "string"
+          description: "URL-encoded Backstage entityRef"
+      responses:
+        204:
+          description: "Metadata entry deleted"
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   /data/{database}/{table}/preview:
     get:
       operationId: "GetTablePreview"
@@ -175,6 +246,36 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
   schemas:
+    MetadataEntry:
+      type: object
+      required: [entityRef, schema, metadata]
+      additionalProperties: false
+      properties:
+        entityRef:
+          type: string
+          description: "Backstage string reference, e.g. table:default/public.my_table"
+        schema:
+          type: object
+          description: "JSON schema used to build forms and validate/translate metadata"
+          additionalProperties: true
+        metadata:
+          type: object
+          description: "Metadata payload matching the schema"
+          additionalProperties: true
+    MetadataEntryCreate:
+      allOf:
+        - $ref: "#/components/schemas/MetadataEntry"
+    MetadataEntryUpdate:
+      type: object
+      required: [schema, metadata]
+      additionalProperties: false
+      properties:
+        schema:
+          type: object
+          additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: true
     Error:
       type: object
       properties:
