@@ -8112,13 +8112,11 @@ __metadata:
     "@internal/geoportia-metadata-common": "link:../geoportia-metadata-common"
     "@types/express": "npm:^4.17.6"
     "@types/supertest": "npm:^2.0.12"
-    ajv: "npm:^8.17.1"
-    ajv-formats: "npm:^3.0.1"
     express: "npm:^4.17.1"
     express-promise-router: "npm:^4.1.0"
     knex: "npm:^3.1.0"
     supertest: "npm:^6.2.4"
-    zod: "npm:^3.22.4"
+    zod: "npm:^4.0.0"
   languageName: unknown
   linkType: soft
 
@@ -15760,7 +15758,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ajv-formats@npm:^3.0.1, ajv-formats@npm:~3.0.1":
+"ajv-formats@npm:~3.0.1":
   version: 3.0.1
   resolution: "ajv-formats@npm:3.0.1"
   dependencies:
@@ -36836,6 +36834,13 @@ __metadata:
   version: 3.24.1
   resolution: "zod@npm:3.24.1"
   checksum: 10c0/0223d21dbaa15d8928fe0da3b54696391d8e3e1e2d0283a1a070b5980a1dbba945ce631c2d1eccc088fdbad0f2dfa40155590bf83732d3ac4fcca2cc9237591b
+  languageName: node
+  linkType: hard
+
+"zod@npm:^4.0.0":
+  version: 4.3.6
+  resolution: "zod@npm:4.3.6"
+  checksum: 10c0/860d25a81ab41d33aa25f8d0d07b091a04acb426e605f396227a796e9e800c44723ed96d0f53a512b57be3d1520f45bf69c0cb3b378a232a00787a2609625307
   languageName: node
   linkType: hard
 
