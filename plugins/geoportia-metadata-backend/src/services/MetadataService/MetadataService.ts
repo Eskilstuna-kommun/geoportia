@@ -17,45 +17,62 @@ import {
   AttributeTypeEnum,
   PreviewResponse,
 } from '../../schema/openapi/generated/models';
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
 import { ConflictError, InputError, NotFoundError } from '@backstage/errors';
 import { parseEntityRef } from '@backstage/catalog-model';
 import { CatalogClient } from '@backstage/catalog-client';
+import * as z from 'zod';
 
 export class MetadataService implements IMetadataService {
-  private readonly ajv: Ajv;
-
   constructor(
     private readonly database: Knex,
     private readonly catalogApi?: CatalogClient,
     private readonly auth?: AuthService,
-  ) {
-    this.ajv = new Ajv({ allErrors: true, strict: false });
-    addFormats(this.ajv);
-  }
+  ) {}
 
-  private validateSchemaAndData(schema: unknown, metadata: unknown) {
-    // Basic structural checks
+  private readonly zodSchemaCache = new Map<string, z.ZodType>();
+
+  private getZodSchemaFromJsonSchema(schema: unknown): z.ZodType {
     if (schema === null || typeof schema !== 'object' || Array.isArray(schema)) {
       throw new InputError('schema must be a JSON object');
     }
-    if (metadata === null || typeof metadata !== 'object' || Array.isArray(metadata)) {
-      throw new InputError('metadata must be a JSON object');
+
+    // Cache by JSON stringification when possible.
+    let cacheKey: string | undefined;
+    try {
+      cacheKey = JSON.stringify(schema);
+    } catch {
+      cacheKey = undefined;
     }
 
+    if (cacheKey) {
+      const cached = this.zodSchemaCache.get(cacheKey);
+      if (cached) return cached;
+    }
+
+    let zodSchema: z.ZodType;
     try {
-      const validate = this.ajv.compile(schema as object);
-      const ok = validate(metadata);
-      if (!ok) {
-        throw new InputError(
-          `metadata does not match schema: ${this.ajv.errorsText(validate.errors)}`,
-        );
-      }
+      zodSchema = (z as any).fromJSONSchema(schema);
     } catch (e: any) {
-      // If compilation fails, it is likely an invalid JSON schema.
-      if (e instanceof InputError) throw e;
       throw new InputError(`Invalid schema: ${e?.message ?? String(e)}`);
+    }
+
+    if (cacheKey) {
+      // Keep the cache bounded.
+      if (this.zodSchemaCache.size > 200) {
+        const firstKey = this.zodSchemaCache.keys().next().value;
+        if (firstKey) this.zodSchemaCache.delete(firstKey);
+      }
+      this.zodSchemaCache.set(cacheKey, zodSchema);
+    }
+
+    return zodSchema;
+  }
+
+  private validateSchemaAndData(schema: unknown, metadata: unknown) {
+    const zodSchema = this.getZodSchemaFromJsonSchema(schema);
+    const parsed = zodSchema.safeParse(metadata);
+    if (!parsed.success) {
+      throw new InputError(`metadata does not match schema: ${parsed.error.message}`);
     }
   }
 
