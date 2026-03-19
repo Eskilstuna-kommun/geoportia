@@ -16,7 +16,7 @@ export const CatalogFrontendPage = catalogFrontendPlugin.provide(
   createRoutableExtension({
     name: 'CatalogFrontendPage',
     component: () =>
-      import('./components/ExampleComponent').then(m => m.ExampleComponent),
+      import('./components/Table/CustomTable').then(m => m.CustomTable),
     mountPoint: rootRouteRef,
   }),
 );
