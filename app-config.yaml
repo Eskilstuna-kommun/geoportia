@@ -121,11 +121,7 @@ catalog:
     #     - allow: [User, Group]
   providers:
     postgresql:
-      user: ${POSTGRES_USER}
-      password: ${POSTGRES_PASSWORD}
-      database: ${POSTGRES_DB}
-      url: ${POSTGRES_URL}
-      port: ${POSTGRES_PORT}
+      uri: ${POSTGRES_URI}
     
     arcgissde:
       proxyUri: 
