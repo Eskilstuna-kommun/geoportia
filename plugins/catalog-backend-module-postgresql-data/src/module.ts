@@ -24,23 +24,7 @@ export const catalogModulePostgresqlData = createBackendModule({
           timeout: { minutes: 5 },
         });
 
-        const postgresUser = rootConfig.getString(
-          'catalog.providers.postgresql.user',
-        );
-        const postgresPassword = rootConfig.getString(
-          'catalog.providers.postgresql.password',
-        );
-        const postgresDatabase = rootConfig.getString(
-          'catalog.providers.postgresql.database',
-        );
-        const postgresPort = rootConfig.getString(
-          'catalog.providers.postgresql.port',
-        );
-        const postgresUrl = rootConfig.getString(
-          'catalog.providers.postgresql.url',
-        );
-
-        const postgresUri = `postgresql://${postgresUser}:${postgresPassword}@${postgresUrl}:${postgresPort}/${postgresDatabase}`;
+        const postgresUri = rootConfig.getString('catalog.providers.postgresql.uri');
 
         const provider = new PostgreSQLDataProvider(postgresUri, taskRunner, logger);
         catalog.addEntityProvider(provider);
