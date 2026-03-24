@@ -51,6 +51,7 @@ export const postgresqlDbHandlerPlugin = createBackendPlugin({
         httpRouter.use(
           await createRouter({
             httpAuth,
+            catalog,
             dbService,
           }),
         );

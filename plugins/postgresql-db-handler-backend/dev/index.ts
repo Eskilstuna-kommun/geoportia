@@ -9,19 +9,16 @@ import { catalogServiceMock } from '@backstage/plugin-catalog-node/testUtils';
 // Start up the backend by running `yarn start` in the package directory.
 // Once it's up and running, try out the following requests:
 //
-// Create a new todo item, standalone or for the sample component:
+// List tables/views/columns (served from the Backstage Catalog):
 //
-//   curl http://localhost:7007/api/postgresql-db-handler/todos -H 'Content-Type: application/json' -d '{"title": "My Todo"}'
-//   curl http://localhost:7007/api/postgresql-db-handler/todos -H 'Content-Type: application/json' -d '{"title": "My Todo", "entityRef": "component:default/sample"}'
-//
-// List TODOs:
-//
-//   curl http://localhost:7007/api/postgresql-db-handler/todos
+//   curl http://localhost:7007/api/postgresql-db-handler/list-tables/public
+//   curl http://localhost:7007/api/postgresql-db-handler/list-views/public
+//   curl http://localhost:7007/api/postgresql-db-handler/list-columns/public/roads
 //
 // Explicitly make an unauthenticated request, or with service auth:
 //
-//   curl http://localhost:7007/api/postgresql-db-handler/todos -H 'Authorization: Bearer mock-none-token'
-//   curl http://localhost:7007/api/postgresql-db-handler/todos -H 'Authorization: Bearer mock-service-token'
+//   curl http://localhost:7007/api/postgresql-db-handler/list-tables/public -H 'Authorization: Bearer mock-none-token'
+//   curl http://localhost:7007/api/postgresql-db-handler/list-tables/public -H 'Authorization: Bearer mock-service-token'
 
 const backend = createBackend();
 
@@ -41,14 +38,23 @@ backend.add(
   catalogServiceMock.factory({
     entities: [
       {
-        apiVersion: 'backstage.io/v1alpha1',
-        kind: 'Component',
-        metadata: {
-          name: 'sample',
-          title: 'Sample Component',
-        },
+        apiVersion: 'geoportia.se/v1alpha1',
+        kind: 'Table',
+        metadata: { name: 'public.roads-aaaa', namespace: 'default' },
         spec: {
-          type: 'service',
+          schemaName: 'public',
+          name: 'roads',
+          columns: [{ name: 'id' }, { name: 'name' }],
+        },
+      },
+      {
+        apiVersion: 'geoportia.se/v1alpha1',
+        kind: 'View',
+        metadata: { name: 'public.roads_view-bbbb', namespace: 'default' },
+        spec: {
+          schemaName: 'public',
+          name: 'roads_view',
+          columns: [{ name: 'id' }, { name: 'name' }],
         },
       },
     ],
