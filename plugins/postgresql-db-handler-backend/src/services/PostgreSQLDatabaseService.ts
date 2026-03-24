@@ -64,19 +64,6 @@ export class PostgreSQLDatabaseService {
   }
 
   /**
-   * Gets the definition of a specific view within a schema.
-   * 
-   * @param viewName The view name to query.
-   * @param schemaName The schema name to query.
-   * @returns A promise that resolves to the view definition.
-   */
-  async getView(viewName: string, schemaName: string) {
-    const columns = await this.getViewColumns(viewName, schemaName);
-
-    throw new Error('Method not implemented.');
-  }
-
-  /**
    * Gets a list of all columns in a specific view within a schema.
    *
    * @param viewName The view name to query.
