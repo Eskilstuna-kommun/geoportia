@@ -7,14 +7,12 @@ exports.up = async function up(knex) {
   await knex.schema.createTable('table', table => {
     table.increments('id');
 
-    table.string('table').notNullable();
+    table.string('entity_ref').notNullable();
 
     table.jsonb('schema').notNullable();
     table.jsonb('metadata').notNullable();
 
-    table.unique(['table'], {
-      predicate: knex.where('active', knex.raw(true)),
-    });
+    table.unique(['entity_ref']);
   });
   await knex.schema.createTable('attribute', table => {
     table
@@ -36,6 +34,6 @@ exports.up = async function up(knex) {
  * @param {import('knex').Knex} knex
  */
 exports.down = async function down(knex) {
-  await knex.schema.dropTable('table');
   await knex.schema.dropTable('attribute');
+  await knex.schema.dropTable('table');
 };

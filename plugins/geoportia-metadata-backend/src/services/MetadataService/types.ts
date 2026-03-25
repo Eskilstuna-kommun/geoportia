@@ -6,11 +6,6 @@ import {
   createServiceFactory,
   createServiceRef,
 } from '@backstage/backend-plugin-api';
-import {
-  AttributeTypeEnum,
-  PreviewResponse,
-  TableResponsePropertiesValue,
-} from '../../schema/openapi/generated/models';
 import { MetadataClient } from '@internal/geoportia-metadata-common';
 
 export interface MetadataEntry {
@@ -27,30 +22,7 @@ export interface MetadataEntryUpdate {
   metadata: unknown;
 }
 
-export interface TableItem {
-  database: string;
-  name: string;
-  version: number;
-  active: boolean;
-  title: string;
-  owner: string;
-  properties: Record<string, TableResponsePropertiesValue>;
-  attributes: Attribute[];
-}
-export interface ExtendedTableItem extends TableItem {
-  versions: { version: number; active: boolean }[];
-}
-export interface Attribute {
-  name: string;
-  title: string;
-  type: AttributeTypeEnum;
-  properties: Record<string, TableResponsePropertiesValue>;
-}
-
 export interface MetadataService {
-  preview(
-    input: Pick<TableItem, 'database' | 'name'>,
-  ): Promise<PreviewResponse>;
 
   /** Create a new metadata entry identified by its entityRef. */
   createMetadataEntry(
@@ -75,28 +47,6 @@ export interface MetadataService {
       credentials: BackstageCredentials<BackstageUserPrincipal>;
     },
   ): Promise<void>;
-
-  createTableVersion(
-    input: TableItem,
-    options: {
-      credentials: BackstageCredentials<BackstageUserPrincipal>;
-    },
-  ): Promise<TableItem>;
-
-  activateTableVersion(
-    input: Pick<TableItem, 'database' | 'name' | 'version'>,
-    options: {
-      credentials: BackstageCredentials<BackstageUserPrincipal>;
-    },
-  ): Promise<ExtendedTableItem>;
-
-  getTable(
-    request: Pick<TableItem, 'database' | 'name'>,
-  ): Promise<ExtendedTableItem>;
-
-  getTableAtVersion(
-    request: Pick<TableItem, 'database' | 'name' | 'version'>,
-  ): Promise<TableItem>;
 }
 
 class MetadataServiceFacade implements MetadataService {
@@ -104,31 +54,6 @@ class MetadataServiceFacade implements MetadataService {
     readonly auth: AuthService,
     readonly metadataApi: MetadataClient,
   ) {}
-
-  async createTableVersion(
-    input: TableItem,
-    options: { credentials: BackstageCredentials<BackstageUserPrincipal> },
-  ): Promise<TableItem> {
-    const resp = await this.metadataApi.createTableDescription(
-      {
-        path: {
-          database: input.database,
-          table: input.name,
-        },
-        body: input,
-      },
-      await this.auth.getPluginRequestToken({
-        onBehalfOf: options.credentials,
-        targetPluginId: 'geoportia-metadata',
-      }),
-    );
-    if (!resp.ok) {
-      throw new Error(
-        `Request failed with code ${resp.status}: ${await resp.text()}`,
-      );
-    }
-    return resp.json();
-  }
 
   async createMetadataEntry(
     input: MetadataEntryCreate,
@@ -187,95 +112,6 @@ class MetadataServiceFacade implements MetadataService {
         `Request failed with code ${resp.status}: ${await resp.text()}`,
       );
     }
-  }
-  async activateTableVersion(
-    input: Pick<TableItem, 'database' | 'name' | 'version'>,
-    options: { credentials: BackstageCredentials<BackstageUserPrincipal> },
-  ): Promise<ExtendedTableItem> {
-    const resp = await this.metadataApi.activateTableDescriptionVersion(
-      {
-        path: {
-          database: input.database,
-          table: input.name,
-          version: input.version,
-        },
-      },
-      await this.auth.getPluginRequestToken({
-        onBehalfOf: options.credentials,
-        targetPluginId: 'geoportia-metadata',
-      }),
-    );
-    if (!resp.ok) {
-      throw new Error(
-        `Request failed with code ${resp.status}: ${await resp.text()}`,
-      );
-    }
-    return resp.json();
-  }
-  async getTable(
-    request: Pick<TableItem, 'database' | 'name'>,
-  ): Promise<ExtendedTableItem> {
-    const resp = await this.metadataApi.getTableDescription(
-      {
-        path: {
-          database: request.database,
-          table: request.name,
-        },
-      },
-      await this.auth.getPluginRequestToken({
-        onBehalfOf: await this.auth.getOwnServiceCredentials(),
-        targetPluginId: 'geoportia-metadata',
-      }),
-    );
-    if (!resp.ok) {
-      throw new Error(
-        `Request failed with code ${resp.status}: ${await resp.text()}`,
-      );
-    }
-    return resp.json();
-  }
-  async getTableAtVersion(
-    request: Pick<TableItem, 'database' | 'name' | 'version'>,
-  ): Promise<TableItem> {
-    const resp = await this.metadataApi.getTableDescriptionAtVersion(
-      {
-        path: {
-          database: request.database,
-          table: request.name,
-          version: request.version,
-        },
-      },
-      await this.auth.getPluginRequestToken({
-        onBehalfOf: await this.auth.getOwnServiceCredentials(),
-        targetPluginId: 'geoportia-metadata',
-      }),
-    );
-    if (!resp.ok) {
-      throw new Error(
-        `Request failed with code ${resp.status}: ${await resp.text()}`,
-      );
-    }
-    return resp.json();
-  }
-
-  async preview(
-    input: Pick<TableItem, 'database' | 'name'>,
-  ): Promise<PreviewResponse> {
-    const resp = await this.metadataApi.getTablePreview(
-      {
-        path: { database: input.database, table: input.name },
-      },
-      await this.auth.getPluginRequestToken({
-        onBehalfOf: await this.auth.getOwnServiceCredentials(),
-        targetPluginId: 'geoportia-metadata',
-      }),
-    );
-    if (!resp.ok) {
-      throw new Error(
-        `Request failed with code ${resp.status}: ${await resp.text()}`,
-      );
-    }
-    return resp.json();
   }
 }
 
