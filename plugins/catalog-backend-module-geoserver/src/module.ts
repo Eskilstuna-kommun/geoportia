@@ -32,10 +32,16 @@ export const catalogModuleGeoserver = createBackendModule({
           'catalog.providers.geoserver.password',
         );
 
+        const ignoreWorkspaces =
+          rootConfig.getOptionalStringArray(
+            'catalog.providers.geoserver.ignoreWorkspaces',
+          ) ?? [];
+
         const provider = new GeoserverDataProvider(
           geoserverUri,
           geoserverUsername,
           geoserverPassword,
+          ignoreWorkspaces,
           taskRunner,
           logger,
         );

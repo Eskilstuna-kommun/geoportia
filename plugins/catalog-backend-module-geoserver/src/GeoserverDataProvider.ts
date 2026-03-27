@@ -27,6 +27,11 @@ interface GeoserverStore {
   dependencies: CompoundEntityRef[];
 }
 
+interface GeoserverWorkspace {
+  name: string;
+  href?: string;
+}
+
 export class GeoserverDataProvider implements EntityProvider {
   private connection?: EntityProviderConnection;
 
@@ -34,6 +39,7 @@ export class GeoserverDataProvider implements EntityProvider {
     private uri: string,
     private username: string,
     private password: string,
+    private ignoreWorkspaces: string[] = [],
     private taskRunner: SchedulerServiceTaskRunner,
     private logger: LoggerService,
   ) {}
@@ -62,13 +68,40 @@ export class GeoserverDataProvider implements EntityProvider {
     const grc = new GeoServerRestClient(this.uri, this.username, this.password);
 
     const workspacesObject = await grc.workspaces.getAll();
-    const workspaces = workspacesObject?.workspaces?.workspace;
+    const allWorkspaces: GeoserverWorkspace[] =
+      workspacesObject?.workspaces?.workspace ?? [];
 
-    if (workspaces === undefined || workspaces.length === 0) {
+    if (allWorkspaces.length === 0) {
       this.logger.info(
         'No workspaces found in GeoServer. No Geoserver entities will be created.',
       );
       return;
+    }
+
+    const ignoreSet = new Set(
+      (this.ignoreWorkspaces ?? [])
+        .map(n => n.trim().toLowerCase())
+        .filter(Boolean),
+    );
+
+    const workspaces =
+      ignoreSet.size === 0
+        ? allWorkspaces
+        : allWorkspaces.filter(
+            (ws: GeoserverWorkspace) => !ignoreSet.has(ws.name.toLowerCase()),
+          );
+
+    if (ignoreSet.size > 0) {
+      const ignoredCount = allWorkspaces.length - workspaces.length;
+      if (ignoredCount > 0) {
+        this.logger.info(
+          `Ignoring ${ignoredCount} GeoServer workspace(s) based on catalog.providers.geoserver.ignoreWorkspaces`,
+        );
+      } else {
+        this.logger.debug(
+          'GeoServer workspace ignore list is configured, but no workspaces matched it.',
+        );
+      }
     }
 
     const entities: Entity[] = [];
