@@ -139,6 +139,12 @@ catalog:
         $env: GEOSERVER_USERNAME
       password:
         $env: GEOSERVER_PASSWORD
+      # Workspace names to exclude from the GeoServer Data Importer.
+      # Matching is case-insensitive.
+      # Example:
+      #   - "topp"
+      #   - "internal"
+      ignoreWorkspaces: []
 
 kubernetes:
   # see https://backstage.io/docs/features/kubernetes/configuration for kubernetes configuration options
