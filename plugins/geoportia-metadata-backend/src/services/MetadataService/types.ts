@@ -6,20 +6,21 @@ import {
   createServiceFactory,
   createServiceRef,
 } from '@backstage/backend-plugin-api';
+import { JsonObject } from '@backstage/types';
 import { MetadataClient } from '@internal/geoportia-metadata-common';
 
 export interface MetadataEntry {
   entityRef: string;
-  schema: unknown;
-  metadata: unknown;
+  schema: JsonObject;
+  metadata: JsonObject;
 }
 
 export interface MetadataEntryCreate extends MetadataEntry {}
 
 export interface MetadataEntryUpdate {
   entityRef: string;
-  schema: unknown;
-  metadata: unknown;
+  schema: JsonObject;
+  metadata: JsonObject;
 }
 
 export interface MetadataService {
@@ -59,7 +60,7 @@ class MetadataServiceFacade implements MetadataService {
     input: MetadataEntryCreate,
     options: { credentials: BackstageCredentials<BackstageUserPrincipal> },
   ): Promise<MetadataEntry> {
-    const resp = await (this.metadataApi as any).createMetadataEntry(
+    const resp = await this.metadataApi.createMetadataEntry(
       { body: input },
       await this.auth.getPluginRequestToken({
         onBehalfOf: options.credentials,
@@ -78,9 +79,9 @@ class MetadataServiceFacade implements MetadataService {
     input: MetadataEntryUpdate,
     options: { credentials: BackstageCredentials<BackstageUserPrincipal> },
   ): Promise<MetadataEntry> {
-    const resp = await (this.metadataApi as any).updateMetadataEntry(
+    const resp = await this.metadataApi.updateMetadataEntry(
       {
-        path: { entityRef: input.entityRef },
+        path: { entityRef: input.entityRef},
         body: { schema: input.schema, metadata: input.metadata },
       },
       await this.auth.getPluginRequestToken({
@@ -100,7 +101,7 @@ class MetadataServiceFacade implements MetadataService {
     input: Pick<MetadataEntry, 'entityRef'>,
     options: { credentials: BackstageCredentials<BackstageUserPrincipal> },
   ): Promise<void> {
-    const resp = await (this.metadataApi as any).deleteMetadataEntry(
+    const resp = await this.metadataApi.deleteMetadataEntry(
       { path: { entityRef: input.entityRef } },
       await this.auth.getPluginRequestToken({
         onBehalfOf: options.credentials,
