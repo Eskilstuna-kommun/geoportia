@@ -11,8 +11,6 @@ exports.up = async function up(knex) {
 
     table.jsonb('schema').notNullable();
     table.jsonb('metadata').notNullable();
-
-    table.unique(['entity_ref']);
   });
   await knex.schema.createTable('attribute', table => {
     table
