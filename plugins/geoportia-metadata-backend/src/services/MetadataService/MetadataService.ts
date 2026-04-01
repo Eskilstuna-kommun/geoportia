@@ -10,9 +10,8 @@ import {
   MetadataEntryUpdate,
 } from './types';
 import { Knex } from 'knex';
-import { AttributeRow, TableRow } from '../../database';
+import { TableRow } from '../../database';
 import { ConflictError, InputError, NotFoundError } from '@backstage/errors';
-import { parseEntityRef } from '@backstage/catalog-model';
 import { CatalogClient } from '@backstage/catalog-client';
 import * as z from 'zod';
 
@@ -99,32 +98,18 @@ export class MetadataService implements IMetadataService {
     }
     this.validateSchemaAndData(input.schema, input.metadata);
 
-    const ref = parseEntityRef(input.entityRef);
-    const databaseKey = `${ref.kind}:${ref.namespace ?? 'default'}`;
-    const nameKey = ref.name;
-
     await this.database.transaction(async db => {
-      const existing = await db<TableRow>('table')
+      const existing = await db<TableRow>('geoportia_metadata')
         .where({ entity_ref: input.entityRef })
-        .andWhere({ active: true })
         .first();
       if (existing) {
         throw new ConflictError('Metadata entry already exists');
       }
 
-      const metaObj = input.metadata as any;
-      await db<TableRow>('table').insert({
+      await db<TableRow>('geoportia_metadata').insert({
         entity_ref: input.entityRef,
-        database: databaseKey,
-        name: nameKey,
-        version: 1,
-        active: true,
         schema: input.schema,
         metadata: input.metadata,
-        // Legacy fields
-        title: typeof metaObj?.title === 'string' ? metaObj.title : nameKey,
-        owner: typeof metaObj?.owner === 'string' ? metaObj.owner : 'unknown',
-        properties: metaObj?.properties ?? {},
       });
     });
 
@@ -143,38 +128,17 @@ export class MetadataService implements IMetadataService {
     }
     this.validateSchemaAndData(input.schema, input.metadata);
 
-    const ref = parseEntityRef(input.entityRef);
-    const databaseKey = `${ref.kind}:${ref.namespace ?? 'default'}`;
-    const nameKey = ref.name;
-
     await this.database.transaction(async db => {
-      const previousVersion = await db<TableRow>('table')
+      const existing = await db<TableRow>('geoportia_metadata')
         .where({ entity_ref: input.entityRef })
-        .orderBy('version', 'desc')
         .first();
-      if (!previousVersion) {
+      if (!existing) {
         throw new NotFoundError('Metadata entry not found');
       }
-      const version = (previousVersion.version ?? 0) + 1;
 
-      await db<TableRow>('table')
+      await db<TableRow>('geoportia_metadata')
         .where({ entity_ref: input.entityRef })
-        .update({ active: false });
-
-      const metaObj = input.metadata as any;
-      await db<TableRow>('table').insert({
-        entity_ref: input.entityRef,
-        database: databaseKey,
-        name: nameKey,
-        version,
-        active: true,
-        schema: input.schema,
-        metadata: input.metadata,
-        // Legacy fields
-        title: typeof metaObj?.title === 'string' ? metaObj.title : nameKey,
-        owner: typeof metaObj?.owner === 'string' ? metaObj.owner : 'unknown',
-        properties: metaObj?.properties ?? {},
-      });
+        .update({ schema: input.schema, metadata: input.metadata });
     });
 
     await this.refreshCatalogEntity(input.entityRef);
@@ -192,16 +156,12 @@ export class MetadataService implements IMetadataService {
     }
 
     await this.database.transaction(async db => {
-      const rows = await db<TableRow>('table')
+      const deleted = await db<TableRow>('geoportia_metadata')
         .where({ entity_ref: input.entityRef })
-        .select(['id']);
-      if (rows.length === 0) {
+        .del();
+      if (deleted === 0) {
         throw new NotFoundError('Metadata entry not found');
       }
-
-      const ids = rows.map(r => r.id);
-      await db<AttributeRow>('attribute').whereIn('table_id', ids).del();
-      await db<TableRow>('table').where({ entity_ref: input.entityRef }).del();
     });
 
     await this.refreshCatalogEntity(input.entityRef);

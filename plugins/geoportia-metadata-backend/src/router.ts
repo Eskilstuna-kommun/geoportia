@@ -15,7 +15,7 @@ export async function createRouter({
   httpAuth: HttpAuthService;
   metadataService: MetadataService;
 }): Promise<express.Router> {
-  const router = (await createOpenApiRouter()) as express.Router;
+  const router = await createOpenApiRouter();
 
   router.post('/', async (req, res) => {
     const credentials = await httpAuth.credentials(req, { allow: ['user'] });
