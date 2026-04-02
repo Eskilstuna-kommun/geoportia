@@ -8614,7 +8614,7 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@internal/backstage-plugin-entity-name-common@workspace:plugins/entity-name-common":
+"@internal/backstage-plugin-entity-name-common@workspace:^, @internal/backstage-plugin-entity-name-common@workspace:plugins/entity-name-common":
   version: 0.0.0-use.local
   resolution: "@internal/backstage-plugin-entity-name-common@workspace:plugins/entity-name-common"
   dependencies:
@@ -8652,6 +8652,8 @@ __metadata:
     "@backstage/errors": "npm:^1.2.7"
     "@backstage/plugin-catalog-node": "npm:^1.17.0"
     "@backstage/repo-tools": "npm:^0.13.3"
+    "@backstage/types": "npm:^1.2.2"
+    "@internal/backstage-plugin-entity-name-common": "workspace:^"
     "@internal/backstage-plugin-geoportia-metadata-backend": "file:"
     "@internal/geoportia-metadata-common": "link:../geoportia-metadata-common"
     "@types/express": "npm:^4.17.6"

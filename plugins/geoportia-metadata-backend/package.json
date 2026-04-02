@@ -32,6 +32,8 @@
     "@backstage/errors": "^1.2.7",
     "@backstage/plugin-catalog-node": "^1.17.0",
     "@backstage/repo-tools": "^0.13.3",
+    "@backstage/types": "^1.2.2",
+    "@internal/backstage-plugin-entity-name-common": "workspace:^",
     "@internal/backstage-plugin-geoportia-metadata-backend": "file:",
     "@internal/geoportia-metadata-common": "link:../geoportia-metadata-common",
     "express": "^4.17.1",
