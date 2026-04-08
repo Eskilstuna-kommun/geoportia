@@ -92,11 +92,17 @@ catalog:
 #    entityFilename: catalog-info.yaml
 #    pullRequestBranchName: backstage-integration
   rules:
-    - allow: [Component, System, API, Resource, Location, FMEWorkspace]
+    - allow: [Component, System, API, Resource, Location, FMEWorkspace, Template]
   locations:
     # Local example data, file locations are relative to the backend process, typically `packages/backend`
 #    - type: file
 #      target: ../../examples/entities.yaml
+
+    # GeoPortia Metadata template
+    - type: file
+      target: ../../plugins/geoportia-metadata/templates/template.yaml
+      rules:
+        - allow: [Template]
 
     # Local example organizational data
     - type: file

@@ -1,0 +1,201 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: geoportia-metadata-template
+  title: GeoPortia Metadata Template
+  description: A template that demonstrates the GeoPortiaMetadataField for collecting custom metadata
+spec:
+  owner: user:guest
+  type: service
+
+  parameters:
+    - title: Lager
+      required:
+        - lagerinfo
+      properties:
+        lagerinfo:
+          title: Lagerinformation
+          type: object
+          ui:field: GeoPortiaMetadataField
+          ui:options:
+            headerTitle: Lagerinformation
+            geoportiaMetadataSchema:
+              required:
+                - status
+                - lagernamn
+                - titel
+                - sammanfattning
+                - skyddsklass
+              properties:
+                status:
+                  type: string
+                  title: Status
+                  enum:
+                    - Godkänd
+                    - Utkast
+                    - Under granskning
+                    - Avvisad
+                  default: Godkänd
+                lagernamn:
+                  type: string
+                  title: Lagernamn
+                titel:
+                  type: string
+                  title: Titel
+                sammanfattning:
+                  type: string
+                  title: Sammanfattning
+                skyddsklass:
+                  type: string
+                  title: Skyddsklass
+                  enum:
+                    - 'Inget skyddsbehov - tillgänglig för allmän åtkomst'
+                    - 'Begränsat skyddsbehov'
+                    - 'Högt skyddsbehov'
+                  default: 'Inget skyddsbehov - tillgänglig för allmän åtkomst'
+                oppenData:
+                  type: boolean
+                  title: Öppen data
+                  default: false
+                kontaktperson:
+                  type: string
+                  title: Kontaktperson
+            geoportiaMetadataUiSchema:
+              sammanfattning:
+                'ui:widget': 'textarea'
+                'ui:options':
+                  rows: 4
+    - title: Databas
+      required:
+        - databasinfo
+        - attributspec
+      properties:
+        databasinfo:
+          title: Databasinformation
+          type: object
+          ui:field: GeoPortiaMetadataField
+          ui:options:
+            headerTitle: Databas
+            geoportiaMetadataSchema:
+              required:
+                - databas
+                - datatyp
+                - dataset
+              properties:
+                databas:
+                  type: string
+                  title: Databas
+                datatyp:
+                  type: string
+                  title: Datatyp
+                dataset:
+                  type: string
+                  title: DataSet
+                tillatBilagor:
+                  type: boolean
+                  title: Tillåt Bilagor
+                  default: false
+        attributspec:
+          title: Attributspecifikation
+          type: object
+          ui:field: GeoPortiaMetadataField
+          ui:options:
+            headerTitle: Attributspecifikationer
+            addButtonText: Skapa nytt attribut
+            tableView: true
+            geoportiaMetadataSchema:
+              properties:
+                attribut:
+                  type: array
+                  title: ''
+                  items:
+                    type: object
+                    required:
+                      - namn
+                    properties:
+                      namn:
+                        type: string
+                        title: Namn
+                      alias:
+                        type: string
+                        title: Alias
+                      beskrivning:
+                        type: string
+                        title: Beskrivning
+                      skyddsklass:
+                        type: string
+                        title: Skyddsklass
+                        enum:
+                          - 'Inget skyddsbehov'
+                          - 'Begränsat skyddsbehov'
+                          - 'Högt skyddsbehov'
+                        default: 'Inget skyddsbehov'
+                      doman:
+                        type: string
+                        title: Domän
+    - title: Metadata
+      required:
+        - metadata
+      properties:
+        metadata:
+          title: Metadata
+          type: object
+          ui:field: GeoPortiaMetadataField
+          ui:options:
+            headerTitle: Metadata
+            geoportiaMetadataSchema:
+              required: 
+                - Adminstrationsrutin
+                - Underhållsfrekvens
+                - Ämnesområde
+                - Tillkomsthistorik
+                - Källa
+                - Kvalitet
+                - Datainsamlingsmetod
+                - Bearbetningsmetod
+                - Boundinboxtyp
+                - Status datamängd
+              properties:
+                Adminstrationsrutin:
+                  type: string
+                  title: Adminstrationsrutin
+                  description: Beskrivning av hur datamängden administreras, t.ex. processer för uppdatering, kvalitetskontroll och hantering av användarfeedback.
+                Underhållsfrekvens:
+                  type: string
+                  title: Underhållsfrekvens
+                Ämnesområde:
+                  type: string
+                  title: Ämnesområde
+                Tillkomsthistorik:
+                  type: string
+                  title: Tillkomsthistorik
+                Källa:
+                  type: string
+                  title: Källa
+                Kvalitet:
+                  type: string
+                  title: Kvalitet
+                Datainsamlingsmetod:
+                  type: string
+                  title: Datainsamlingsmetod
+                Bearbetningsmetod:
+                  type: string
+                  title: Bearbetningsmetod
+                Boundinboxtyp:
+                  type: string
+                  title: Boundinboxtyp
+                Status datamängd:
+                  type: string
+                  title: Status datamängd
+  steps:
+    - id: log
+      name: Log values
+      action: debug:log
+      input:
+        message: 'Metadata collected'
+
+  output:
+    links:
+      - title: View in catalog
+        icon: catalog
+        entityRef: ${{ steps['log'].output.entityRef }}
