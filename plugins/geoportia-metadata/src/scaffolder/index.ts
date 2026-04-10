@@ -4,4 +4,4 @@ export {
   type GeoPortiaMetadataFieldUiOptions,
 } from './extensions';
 export { GeoPortiaMetadataField } from './GeoPortiaMetadataField';
-export type { AttributRow } from './types';
+export { TableArrayFieldTemplate } from './TableArrayFieldTemplate';
