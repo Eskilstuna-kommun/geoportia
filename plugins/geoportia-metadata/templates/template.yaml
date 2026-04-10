@@ -68,7 +68,7 @@ spec:
     - title: Databas
       required:
         - databasinfo
-        - attributspec
+        - attributes
       properties:
         databasinfo:
           title: Databasinformation
@@ -95,44 +95,67 @@ spec:
                   type: boolean
                   title: Tillåt Bilagor
                   default: false
-        attributspec:
+        attributes:
           title: Attributspecifikation
           type: object
           ui:field: GeoPortiaMetadataField
           ui:options:
             headerTitle: Attributspecifikationer
-            addButtonText: Skapa nytt attribut
-            tableView: true
             geoportiaMetadataSchema:
-              properties:
-                attribut:
-                  type: array
-                  title: ''
-                  items:
-                    type: object
-                    required:
-                      - namn
-                    properties:
-                      namn:
-                        type: string
-                        title: Namn
-                      alias:
-                        type: string
-                        title: Alias
-                      beskrivning:
-                        type: string
-                        title: Beskrivning
-                      skyddsklass:
-                        type: string
-                        title: Skyddsklass
-                        enum:
-                          - 'Inget skyddsbehov'
-                          - 'Begränsat skyddsbehov'
-                          - 'Högt skyddsbehov'
-                        default: 'Inget skyddsbehov'
-                      doman:
-                        type: string
-                        title: Domän
+              type: array
+              items:
+                type: object
+                required:
+                  - namn
+                  - alias
+                  - skyddsklass
+                  - dataformat
+                properties:
+                  namn:
+                    type: string
+                    title: Namn
+                  alias:
+                    type: string
+                    title: Alias (FTL-namn)
+                  beskrivning:
+                    type: string
+                    title: Beskrivning
+                  dataformat:
+                    type: string
+                    title: Dataformat
+                  längd:
+                    type: string
+                    title: Längd
+                  skyddsklass:
+                    type: string
+                    title: Skyddsklass
+                    enum:
+                      - 'Inget skyddsbehov'
+                      - 'Begränsat skyddsbehov'
+                      - 'Högt skyddsbehov'
+                    default: 'Inget skyddsbehov'
+                  doman:
+                    type: string
+                    title: Domän
+                  tillatTommaVarden:
+                    type: boolean
+                    title: Tillåt tomma väden
+                    default: false
+            geoportiaMetadataUiSchema:
+              'ui:options':
+                addButtonText: Skapa nytt attribut
+                emptyMessage: Inga attribut ännu. Klicka på knappen ovan för att lägga till.
+                tableColumns:
+                  - namn
+                  - alias
+                  - skyddsklass
+                  - Beskrivning
+                  - Domän
+              items:
+                beskrivning:
+                  'ui:widget': 'textarea'
+                  'ui:options':
+                    rows: 3
     - title: Metadata
       required:
         - metadata
