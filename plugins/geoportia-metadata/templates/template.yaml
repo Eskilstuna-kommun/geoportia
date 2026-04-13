@@ -9,150 +9,150 @@ spec:
   type: service
 
   parameters:
-    - title: Lager
+    - title: Layer
       required:
-        - lagerinfo
+        - layerInfo
       properties:
-        lagerinfo:
-          title: Lagerinformation
+        layerInfo:
+          title: Layer Information
           type: object
           ui:field: GeoPortiaMetadataField
           ui:options:
-            headerTitle: Lagerinformation
+            headerTitle: Layer Information
             geoportiaMetadataSchema:
               required:
                 - status
-                - lagernamn
-                - titel
-                - sammanfattning
-                - skyddsklass
+                - layerName
+                - title
+                - summary
+                - securityClass
               properties:
                 status:
                   type: string
                   title: Status
                   enum:
-                    - Godkänd
-                    - Utkast
-                    - Under granskning
-                    - Avvisad
-                  default: Godkänd
-                lagernamn:
+                    - Approved
+                    - Draft
+                    - Under Review
+                    - Rejected
+                  default: Approved
+                layerName:
                   type: string
-                  title: Lagernamn
-                titel:
+                  title: Layer Name
+                title:
                   type: string
-                  title: Titel
-                sammanfattning:
+                  title: Title
+                summary:
                   type: string
-                  title: Sammanfattning
-                skyddsklass:
+                  title: Summary
+                securityClass:
                   type: string
-                  title: Skyddsklass
+                  title: Security Class
                   enum:
-                    - 'Inget skyddsbehov - tillgänglig för allmän åtkomst'
-                    - 'Begränsat skyddsbehov'
-                    - 'Högt skyddsbehov'
-                  default: 'Inget skyddsbehov - tillgänglig för allmän åtkomst'
-                oppenData:
+                    - 'No protection required - available for public access'
+                    - 'Limited protection required'
+                    - 'High protection required'
+                  default: 'No protection required - available for public access'
+                openData:
                   type: boolean
-                  title: Öppen data
+                  title: Open Data
                   default: false
-                kontaktperson:
+                contactPerson:
                   type: string
-                  title: Kontaktperson
+                  title: Contact Person
             geoportiaMetadataUiSchema:
-              sammanfattning:
+              summary:
                 'ui:widget': 'textarea'
                 'ui:options':
                   rows: 4
-    - title: Databas
+    - title: Database
       required:
-        - databasinfo
+        - databaseInfo
         - attributes
       properties:
-        databasinfo:
-          title: Databasinformation
+        databaseInfo:
+          title: Database Information
           type: object
           ui:field: GeoPortiaMetadataField
           ui:options:
-            headerTitle: Databas
+            headerTitle: Database
             geoportiaMetadataSchema:
               required:
-                - databas
-                - datatyp
+                - database
+                - dataType
                 - dataset
               properties:
-                databas:
+                database:
                   type: string
-                  title: Databas
-                datatyp:
+                  title: Database
+                dataType:
                   type: string
-                  title: Datatyp
+                  title: Data Type
                 dataset:
                   type: string
-                  title: DataSet
-                tillatBilagor:
+                  title: Dataset
+                allowAttachments:
                   type: boolean
-                  title: Tillåt Bilagor
+                  title: Allow Attachments
                   default: false
         attributes:
-          title: Attributspecifikation
+          title: Attribute Specification
           type: object
           ui:field: GeoPortiaMetadataField
           ui:options:
-            headerTitle: Attributspecifikationer
+            headerTitle: Attribute Specifications
             geoportiaMetadataSchema:
               type: array
               items:
                 type: object
                 required:
-                  - namn
+                  - name
                   - alias
-                  - skyddsklass
-                  - dataformat
+                  - securityClass
+                  - dataFormat
                 properties:
-                  namn:
+                  name:
                     type: string
-                    title: Namn
+                    title: Name
                   alias:
                     type: string
-                    title: Alias (FTL-namn)
-                  beskrivning:
+                    title: Alias (FTL Name)
+                  description:
                     type: string
-                    title: Beskrivning
-                  dataformat:
+                    title: Description
+                  dataFormat:
                     type: string
-                    title: Dataformat
-                  längd:
+                    title: Data Format
+                  length:
                     type: string
-                    title: Längd
-                  skyddsklass:
+                    title: Length
+                  securityClass:
                     type: string
-                    title: Skyddsklass
+                    title: Security Class
                     enum:
-                      - 'Inget skyddsbehov'
-                      - 'Begränsat skyddsbehov'
-                      - 'Högt skyddsbehov'
-                    default: 'Inget skyddsbehov'
-                  doman:
+                      - 'No protection required'
+                      - 'Limited protection required'
+                      - 'High protection required'
+                    default: 'No protection required'
+                  domain:
                     type: string
-                    title: Domän
-                  tillatTommaVarden:
+                    title: Domain
+                  allowEmptyValues:
                     type: boolean
-                    title: Tillåt tomma väden
+                    title: Allow Empty Values
                     default: false
             geoportiaMetadataUiSchema:
               'ui:options':
-                addButtonText: Skapa nytt attribut
-                emptyMessage: Inga attribut ännu. Klicka på knappen ovan för att lägga till.
+                addButtonText: Create new attribute
+                emptyMessage: No attributes yet. Click the button above to add one.
                 tableColumns:
-                  - namn
+                  - name
                   - alias
-                  - skyddsklass
-                  - Beskrivning
-                  - Domän
+                  - securityClass
+                  - description
+                  - domain
               items:
-                beskrivning:
+                description:
                   'ui:widget': 'textarea'
                   'ui:options':
                     rows: 3
@@ -168,48 +168,48 @@ spec:
             headerTitle: Metadata
             geoportiaMetadataSchema:
               required: 
-                - Adminstrationsrutin
-                - Underhållsfrekvens
-                - Ämnesområde
-                - Tillkomsthistorik
-                - Källa
-                - Kvalitet
-                - Datainsamlingsmetod
-                - Bearbetningsmetod
-                - Boundinboxtyp
-                - Status datamängd
+                - administrationRoutine
+                - maintenanceFrequency
+                - subjectArea
+                - originHistory
+                - source
+                - quality
+                - dataCollectionMethod
+                - processingMethod
+                - boundingBoxType
+                - datasetStatus
               properties:
-                Adminstrationsrutin:
+                administrationRoutine:
                   type: string
-                  title: Adminstrationsrutin
-                  description: Beskrivning av hur datamängden administreras, t.ex. processer för uppdatering, kvalitetskontroll och hantering av användarfeedback.
-                Underhållsfrekvens:
+                  title: Administration Routine
+                  description: Description of how the dataset is administered, e.g. processes for updating, quality control and handling user feedback.
+                maintenanceFrequency:
                   type: string
-                  title: Underhållsfrekvens
-                Ämnesområde:
+                  title: Maintenance Frequency
+                subjectArea:
                   type: string
-                  title: Ämnesområde
-                Tillkomsthistorik:
+                  title: Subject Area
+                originHistory:
                   type: string
-                  title: Tillkomsthistorik
-                Källa:
+                  title: Origin History
+                source:
                   type: string
-                  title: Källa
-                Kvalitet:
+                  title: Source
+                quality:
                   type: string
-                  title: Kvalitet
-                Datainsamlingsmetod:
+                  title: Quality
+                dataCollectionMethod:
                   type: string
-                  title: Datainsamlingsmetod
-                Bearbetningsmetod:
+                  title: Data Collection Method
+                processingMethod:
                   type: string
-                  title: Bearbetningsmetod
-                Boundinboxtyp:
+                  title: Processing Method
+                boundingBoxType:
                   type: string
-                  title: Boundinboxtyp
-                Status datamängd:
+                  title: Bounding Box Type
+                datasetStatus:
                   type: string
-                  title: Status datamängd
+                  title: Dataset Status
   steps:
     - id: log
       name: Log values

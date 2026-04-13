@@ -69,14 +69,29 @@ const ADD_BUTTON_STYLE: React.CSSProperties = {
   color: 'white',
 };
 
-const SKYDDSKLASS_COLORS = {
+const SECURITY_CLASS_COLORS = {
   high: '#4caf50',
   limited: '#ff9800',
   none: '#f44336',
   default: '#757575',
 } as const;
 
-const DEFAULT_TEXTS = {
+export interface TableArrayFieldTexts {
+  addButton: string;
+  emptyMessage: string;
+  dialogTitleEdit: string;
+  dialogTitleView: string;
+  buttonCancel: string;
+  buttonClose: string;
+  buttonSave: string;
+  menuView: string;
+  menuEdit: string;
+  menuDelete: string;
+  booleanTrue: string;
+  booleanFalse: string;
+}
+
+const DEFAULT_TEXTS: TableArrayFieldTexts = {
   addButton: 'Lägg till',
   emptyMessage: 'Inga objekt ännu. Klicka på knappen ovan för att lägga till.',
   dialogTitleEdit: 'Redigera',
@@ -87,7 +102,9 @@ const DEFAULT_TEXTS = {
   menuView: 'Visa',
   menuEdit: 'Redigera',
   menuDelete: 'Radera',
-} as const;
+  booleanTrue: 'Ja',
+  booleanFalse: 'Nej',
+};
 
 const dialogTemplates = createCustomTemplates(DEFAULT_TEXTS.addButton);
 
@@ -103,25 +120,26 @@ const getColumnsFromSchema = (schema: any): ColumnDefinition[] => {
   );
 };
 
-const formatCellValue = (value: unknown): string => {
+const formatCellValue = (value: unknown, texts: TableArrayFieldTexts = DEFAULT_TEXTS): string => {
   if (value === undefined || value === null) return '';
-  if (typeof value === 'boolean') return value ? 'Ja' : 'Nej';
+  if (typeof value === 'boolean') return value ? texts.booleanTrue : texts.booleanFalse;
   return String(value);
 };
 
-const getSkyddsklassColor = (value: string): string => {
+const getSecurityClassColor = (value: string): string => {
   const lowerValue = value.toLowerCase();
 
-  if (lowerValue.includes('högt skyddsbehov') || lowerValue === '1') {
-    return SKYDDSKLASS_COLORS.high;
+  // Supports both Swedish labels and numeric codes for backwards compatibility
+  if (lowerValue.includes('high protection') || lowerValue.includes('högt skyddsbehov') || lowerValue === '1') {
+    return SECURITY_CLASS_COLORS.high;
   }
-  if (lowerValue.includes('begränsat skyddsbehov') || lowerValue === '2') {
-    return SKYDDSKLASS_COLORS.limited;
+  if (lowerValue.includes('limited protection') || lowerValue.includes('begränsat skyddsbehov') || lowerValue === '2') {
+    return SECURITY_CLASS_COLORS.limited;
   }
-  if (lowerValue.includes('inget skyddsbehov') || lowerValue === '3') {
-    return SKYDDSKLASS_COLORS.none;
+  if (lowerValue.includes('no protection') || lowerValue.includes('inget skyddsbehov') || lowerValue === '3') {
+    return SECURITY_CLASS_COLORS.none;
   }
-  return SKYDDSKLASS_COLORS.default;
+  return SECURITY_CLASS_COLORS.default;
 };
 
 const createDefaultItem = (itemSchema: any): Record<string, any> => {
@@ -152,7 +170,7 @@ const validateRequiredFields = (
   requiredFields: string[] | undefined,
 ): boolean => {
   if (!item) return false;
-  if (item.tillatTommaVarden === true) return true;
+  if (item.allowEmptyValues === true) return true;
   if (!requiredFields || requiredFields.length === 0) return true;
 
   return requiredFields.every((field) => {
@@ -161,12 +179,12 @@ const validateRequiredFields = (
   });
 };
 
-const SkyddsklassIcon: React.FC<{ value: string | undefined }> = ({ value }) => {
+const SecurityClassIcon: React.FC<{ value: string | undefined }> = ({ value }) => {
   if (!value) return null;
   return (
     <SecurityIcon
       fontSize="small"
-      style={{ ...ICON_STYLE, color: getSkyddsklassColor(value) }}
+      style={{ ...ICON_STYLE, color: getSecurityClassColor(value) }}
     />
   );
 };
@@ -176,11 +194,11 @@ const DataCell: React.FC<{
   itemData: Record<string, any>;
 }> = ({ columnKey, itemData }) => {
   const value = itemData[columnKey];
-  const isSkyddsklass = columnKey.toLowerCase() === 'skyddsklass';
+  const isSecurityClass = columnKey.toLowerCase() === 'securityclass' || columnKey.toLowerCase() === 'skyddsklass';
 
   return (
     <TableCell>
-      {isSkyddsklass && <SkyddsklassIcon value={value} />}
+      {isSecurityClass && <SecurityClassIcon value={value} />}
       {formatCellValue(value)}
     </TableCell>
   );
