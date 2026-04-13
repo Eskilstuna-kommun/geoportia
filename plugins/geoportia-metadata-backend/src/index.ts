@@ -1,5 +1,6 @@
 export { geoportiaMetadataBackendPlugin as default } from './plugin';
 export { default as geoportiaMetadataBackendModule } from './module';
+export { MetadataEntryProcessor } from './MetadataEntryProcessor';
 export {
   RELATION_DESCRIBES,
   RELATION_DESCRIBED_BY,

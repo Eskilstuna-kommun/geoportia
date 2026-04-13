@@ -16,9 +16,6 @@ import { JsonObject } from '@backstage/types';
 import { Knex } from 'knex';
 import { TableRow } from './database';
 import { convertNameToBackstageCompliant as toBackstageCompliantName } from '@internal/backstage-plugin-entity-name-common';
-import {
-  RELATION_DESCRIBES,
-} from '@internal/geoportia-metadata-common';
 
 const PROVIDER_NAME = 'geoportia-metadata-entry-provider';
 
@@ -151,13 +148,6 @@ export class MetadataEntryProvider implements EntityProvider {
         ? metadataObj.description
         : undefined;
 
-    // Build the target entity reference for relations
-    const targetRef = {
-      kind: ref.kind,
-      namespace: ref.namespace ?? 'default',
-      name: ref.name,
-    };
-
     // Determine the apiVersion of the described entity (e.g., table.geoportia.se/v1alpha1)
     const describedEntityApiVersion = `${ref.kind.toLowerCase()}.geoportia.se/v1alpha1`;
 
@@ -181,12 +171,7 @@ export class MetadataEntryProvider implements EntityProvider {
         schema: schemaObj,
         metadata: metadataObj,
       },
-      relations: [
-        {
-          type: RELATION_DESCRIBES,
-          targetRef: `${targetRef.kind}:${targetRef.namespace}/${targetRef.name}`,
-        },
-      ],
+      // Relations are emitted by MetadataEntryProcessor for bidirectional linking
     };
 
     return entity;
