@@ -4,6 +4,7 @@ import {
 } from '@backstage/backend-plugin-api';
 import { catalogProcessingExtensionPoint } from '@backstage/plugin-catalog-node/alpha';
 import { MetadataEntryProvider } from './MetadataEntryProvider';
+import { MetadataEntryProcessor } from './MetadataEntryProcessor';
 
 const geoportiaMetadataBackendModule = createBackendModule({
   pluginId: 'catalog',
@@ -26,6 +27,9 @@ const geoportiaMetadataBackendModule = createBackendModule({
 
         const provider = new MetadataEntryProvider(client, taskRunner, logger);
         catalog.addEntityProvider(provider);
+
+        // Register processor for bidirectional relation handling
+        catalog.addProcessor(new MetadataEntryProcessor());
       },
     });
   },
