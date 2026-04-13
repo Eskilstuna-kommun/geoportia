@@ -16,9 +16,9 @@ import { JsonObject } from '@backstage/types';
 import { Knex } from 'knex';
 import { TableRow } from './database';
 import { convertNameToBackstageCompliant as toBackstageCompliantName } from '@internal/backstage-plugin-entity-name-common';
-
-export const RELATION_DESCRIBES = 'describes';
-export const RELATION_DESCRIBED_BY = 'describedBy';
+import {
+  RELATION_DESCRIBES,
+} from '@internal/geoportia-metadata-common';
 
 const PROVIDER_NAME = 'geoportia-metadata-entry-provider';
 
@@ -72,7 +72,6 @@ export class MetadataEntryProvider implements EntityProvider {
     });
   }
 
- //custom helper method  
   async refresh(entityRef: string, deleted: boolean = false) {
     if (!this.connection) {
       this.logger.warn(
