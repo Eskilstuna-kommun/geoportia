@@ -1,7 +1,12 @@
 export {
   geoportiaMetadataPlugin,
-  EntityMetadataCard,
-  EntityPreviewCard,
+  MetadataEntryViewer,
+  EntityMetadataEntryContent,
+} from './plugin';
+
+export type {
+  MetadataEntryViewerProps,
+  EntityMetadataEntryContentProps,
 } from './plugin';
 
 export {

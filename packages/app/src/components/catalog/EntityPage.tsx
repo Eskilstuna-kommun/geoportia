@@ -59,8 +59,7 @@ import {
   isKubernetesAvailable,
 } from '@backstage/plugin-kubernetes';
 import {
-  EntityMetadataCard,
-  EntityPreviewCard,
+  EntityMetadataEntryContent,
 } from '@internal/backstage-plugin-geoportia-metadata';
 import { FMEWorkspaceInfoCard } from '../FMEWorkspace/FMEWorkspaceInfoCard';
 
@@ -283,14 +282,16 @@ const tablePage = (
       </Grid>
     </EntityLayout.Route>
     <EntityLayout.Route path="/metadata" title="Metadata">
-      <EntityMetadataCard />
+      <EntityMetadataEntryContent />
     </EntityLayout.Route>
     <EntityLayout.Route path="/processes" title="Processes">
       <EntityCatalogGraphCard variant="gridItem" height={400} />
     </EntityLayout.Route>
+    {/* TODO: Re-enable when preview API is implemented
     <EntityLayout.Route path="/data-preview" title="Preview">
       <EntityPreviewCard />
     </EntityLayout.Route>
+    */}
   </EntityLayout>
 );
 
