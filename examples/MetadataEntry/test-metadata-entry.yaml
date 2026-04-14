@@ -1,0 +1,53 @@
+apiVersion: geoportia.se/v1alpha1
+kind: MetadataEntry
+metadata:
+  name: landparcels-metadata
+  namespace: default
+  title: Metadata för LandParcels
+spec:
+  # Reference to the table this metadata describes
+  describedEntityRef: table:default/landparcels-a142
+  
+  # JSON Schema for the metadata form
+  schema:
+    type: object
+    required:
+      - status
+      - title
+    properties:
+      status:
+        type: string
+        title: Status
+        enum:
+          - Godkänd
+          - Utkast
+          - Under granskning
+      title:
+        type: string
+        title: Titel
+      summary:
+        type: string
+        title: Sammanfattning
+      securityClass:
+        type: string
+        title: Säkerhetsklass
+        enum:
+          - Öppen data
+          - Begränsad åtkomst
+          - Skyddad
+      contactPerson:
+        type: string
+        title: Kontaktperson
+      lastUpdated:
+        type: string
+        title: Senast uppdaterad
+        format: date
+
+  # The actual metadata values
+  metadata:
+    status: Godkänd
+    title: Byggnader i Eskilstuna kommun
+    summary: Detta lager innehåller alla byggnader inom Eskilstuna kommuns gränser. Data hämtas från fastighetskartan.
+    securityClass: Öppen data
+    contactPerson: Anders Andersson
+    lastUpdated: '2026-04-10'
