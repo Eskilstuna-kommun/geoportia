@@ -13,7 +13,10 @@ import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 import { createBackend } from '@backstage/backend-defaults';
-import { geoportiaMetadataBackendModule } from '@internal/backstage-plugin-geoportia-metadata-backend';
+import {
+  geoportiaMetadataBackendModule,
+  scaffolderModuleGeoportiaMetadata,
+} from '@internal/backstage-plugin-geoportia-metadata-backend';
 
 const backend = createBackend();
 
@@ -63,6 +66,7 @@ backend.add(import('@backstage/plugin-kubernetes-backend'));
 backend.add(import('@internal/backstage-plugin-catalog-backend-module-postgresql-data'));
 backend.add(import('@internal/backstage-plugin-geoportia-metadata-backend'));
 backend.add(geoportiaMetadataBackendModule);
+backend.add(scaffolderModuleGeoportiaMetadata);
 backend.add(import('@internal/backstage-plugin-catalog-backend-module-fmeflow'));
 backend.add(import('@internal/backstage-plugin-catalog-backend-module-geoserver'));
 backend.add(import('@internal/backstage-plugin-catalog-backend-module-arcgis-sde-data'));

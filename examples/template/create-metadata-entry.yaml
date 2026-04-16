@@ -1,0 +1,119 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-metadata-entry
+  title: Create Metadata Entry
+  description: Creates a metadata entry for a dataset or table in Geoportia
+spec:
+  owner: group:default/geoportia-team
+  type: metadata
+
+  parameters:
+    - title: Metadata Information
+      required:
+        - entityName
+        - describedEntityRef
+      properties:
+        entityName:
+          title: Entity Name
+          type: string
+          description: Unique name for the metadata entry (e.g., "my-table-metadata")
+          ui:autofocus: true
+        describedEntityRef:
+          title: Described Entity
+          type: string
+          description: The entityRef of the table/dataset this metadata describes (e.g., "table:default/my-table")
+
+    - title: Enter Metadata
+      required:
+        - metadata
+      properties:
+        metadata:
+          title: Metadata
+          type: object
+          ui:field: GeoPortiaMetadataField
+          ui:options:
+            schema:
+              type: object
+              required:
+                - status
+                - title
+              properties:
+                status:
+                  type: string
+                  title: Status
+                  enum:
+                    - Godkänd
+                    - Utkast
+                    - Under granskning
+                title:
+                  type: string
+                  title: Titel
+                summary:
+                  type: string
+                  title: Sammanfattning
+                securityClass:
+                  type: string
+                  title: Säkerhetsklass
+                  enum:
+                    - Öppen data
+                    - Begränsad åtkomst
+                    - Skyddad
+                contactPerson:
+                  type: string
+                  title: Kontaktperson
+                lastUpdated:
+                  type: string
+                  title: Senast uppdaterad
+                  format: date
+
+  steps:
+    # Store the metadata in the database
+    - id: store-metadata
+      name: Store Metadata
+      action: geoportia:metadata:store
+      input:
+        entityRef: metadataentry:default/${{ parameters.entityName }}
+        schema:
+          type: object
+          required:
+            - status
+            - title
+          properties:
+            status:
+              type: string
+              title: Status
+              enum:
+                - Godkänd
+                - Utkast
+                - Under granskning
+            title:
+              type: string
+              title: Titel
+            summary:
+              type: string
+              title: Sammanfattning
+            securityClass:
+              type: string
+              title: Säkerhetsklass
+              enum:
+                - Öppen data
+                - Begränsad åtkomst
+                - Skyddad
+            contactPerson:
+              type: string
+              title: Kontaktperson
+            lastUpdated:
+              type: string
+              title: Senast uppdaterad
+              format: date
+        metadata: ${{ parameters.metadata }}
+
+  output:
+    links:
+      - title: View Metadata Entry
+        icon: catalog
+        entityRef: ${{ steps['store-metadata'].output.entityRef }}
+    text:
+      - title: Created Entity Reference
+        content: ${{ steps['store-metadata'].output.entityRef }}

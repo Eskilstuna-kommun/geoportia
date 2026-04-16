@@ -8,9 +8,11 @@ import {
   MetadataEntry,
   MetadataEntryCreate,
   MetadataEntryUpdate,
+  Dataset,
+  DatasetCreate,
 } from './types';
 import { Knex } from 'knex';
-import { TableRow } from '../../database';
+import { TableRow, DatasetRow } from '../../database';
 import { ConflictError, InputError, NotFoundError } from '@backstage/errors';
 import { CatalogClient } from '@backstage/catalog-client';
 import * as z from 'zod';
@@ -165,5 +167,78 @@ export class MetadataService implements IMetadataService {
     });
 
     await this.refreshCatalogEntity(input.entityRef);
+  }
+
+  async getDatasets(
+    _options: {
+      credentials: BackstageCredentials<BackstageUserPrincipal>;
+    },
+  ): Promise<Dataset[]> {
+    return this.getDatasetsPublic();
+  }
+
+  async getDatasetsPublic(): Promise<Dataset[]> {
+    const rows = await this.database<DatasetRow>('geoportia_datasets')
+      .select('*')
+      .orderBy('name', 'asc');
+
+    return rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      summary: row.summary ?? undefined,
+      versioning: row.versioning,
+      allowZValues: row.allow_z_values,
+      status: row.status,
+      createdAt: row.created_at ? String(row.created_at) : undefined,
+      createdBy: row.created_by ?? undefined,
+    }));
+  }
+
+  async createDataset(
+    input: DatasetCreate,
+    options: {
+      credentials: BackstageCredentials<BackstageUserPrincipal>;
+    },
+  ): Promise<Dataset> {
+    if (!input?.name) {
+      throw new InputError('name is required');
+    }
+
+    // Generate ID from name
+    const id = input.name
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-z0-9_åäöÅÄÖ]/gi, '');
+
+    const createdBy = options.credentials.principal?.userEntityRef;
+
+    await this.database.transaction(async db => {
+      const existing = await db<DatasetRow>('geoportia_datasets')
+        .where({ id })
+        .first();
+      if (existing) {
+        throw new ConflictError(`Dataset with id "${id}" already exists`);
+      }
+
+      await db<DatasetRow>('geoportia_datasets').insert({
+        id,
+        name: input.name,
+        summary: input.summary ?? null,
+        versioning: input.versioning ?? 'Ej versionerad',
+        allow_z_values: input.allowZValues ?? false,
+        status: input.status ?? 'Godkänd',
+        created_by: createdBy ?? null,
+      });
+    });
+
+    return {
+      id,
+      name: input.name,
+      summary: input.summary,
+      versioning: input.versioning ?? 'Ej versionerad',
+      allowZValues: input.allowZValues ?? false,
+      status: input.status ?? 'Godkänd',
+      createdBy,
+    };
   }
 }

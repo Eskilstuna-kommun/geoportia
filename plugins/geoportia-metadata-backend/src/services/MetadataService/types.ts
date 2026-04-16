@@ -23,6 +23,25 @@ export interface MetadataEntryUpdate {
   metadata: JsonObject;
 }
 
+export interface Dataset {
+  id: string;
+  name: string;
+  summary?: string;
+  versioning: string;
+  allowZValues: boolean;
+  status: string;
+  createdAt?: string;
+  createdBy?: string;
+}
+
+export interface DatasetCreate {
+  name: string;
+  summary?: string;
+  versioning?: string;
+  allowZValues?: boolean;
+  status?: string;
+}
+
 export interface MetadataService {
 
   /** Create a new metadata entry identified by its entityRef. */
@@ -48,6 +67,22 @@ export interface MetadataService {
       credentials: BackstageCredentials<BackstageUserPrincipal>;
     },
   ): Promise<void>;
+
+  /** Get all datasets. */
+  getDatasets(options: {
+    credentials: BackstageCredentials<BackstageUserPrincipal>;
+  }): Promise<Dataset[]>;
+
+  /** Get all datasets (no authentication required). */
+  getDatasetsPublic(): Promise<Dataset[]>;
+
+  /** Create a new dataset. */
+  createDataset(
+    input: DatasetCreate,
+    options: {
+      credentials: BackstageCredentials<BackstageUserPrincipal>;
+    },
+  ): Promise<Dataset>;
 }
 
 class MetadataServiceFacade implements MetadataService {
@@ -113,6 +148,23 @@ class MetadataServiceFacade implements MetadataService {
         `Request failed with code ${resp.status}: ${await resp.text()}`,
       );
     }
+  }
+
+  async getDatasets(
+    _options: { credentials: BackstageCredentials<BackstageUserPrincipal> },
+  ): Promise<Dataset[]> {
+    throw new Error('getDatasets is not supported in the facade - use getDatasetsPublic or call the API directly');
+  }
+
+  async getDatasetsPublic(): Promise<Dataset[]> {
+    throw new Error('getDatasetsPublic is not supported in the facade - call the API directly');
+  }
+
+  async createDataset(
+    _input: DatasetCreate,
+    _options: { credentials: BackstageCredentials<BackstageUserPrincipal> },
+  ): Promise<Dataset> {
+    throw new Error('createDataset is not supported in the facade - call the API directly');
   }
 }
 

@@ -2,23 +2,23 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: geoportia-metadata-template
-  title: GeoPortia Metadata Template
-  description: A template that demonstrates the GeoPortiaMetadataField for collecting custom metadata
+  title: Ändra databasspecifikation
+  description: En mall för att samla in och hantera metadata för GeoPortia-lager
 spec:
   owner: user:guest
   type: service
 
   parameters:
-    - title: Layer
+    - title: Lager
       required:
         - layerInfo
       properties:
         layerInfo:
-          title: Layer Information
+          title: Lagerinformation
           type: object
           ui:field: GeoPortiaMetadataField
           ui:options:
-            headerTitle: Layer Information
+            headerTitle: Lagerinformation
             geoportiaMetadataSchema:
               required:
                 - status
@@ -31,51 +31,70 @@ spec:
                   type: string
                   title: Status
                   enum:
-                    - Approved
-                    - Draft
-                    - Under Review
-                    - Rejected
-                  default: Approved
+                    - Godkänd
+                    - Utkast
+                    - Under granskning
+                    - Avvisad
+                  default: Godkänd
                 layerName:
                   type: string
-                  title: Layer Name
+                  title: Lagernamn
                 title:
                   type: string
-                  title: Title
+                  title: Titel
+                  description: Publik title för kartlagret. Visas bland annat i Eskilstunakartan.
+                suggestedTitle:
+                  type: string
+                  title: Föreslagen titel
                 summary:
                   type: string
-                  title: Summary
+                  title: Sammanfattning
+                  description: En kort sammanfattande text över innehållet i kartlagret.
                 securityClass:
                   type: string
-                  title: Security Class
+                  title: Skyddsklass
+                  description: Ansvarsfördelning för informationsmängden i relation till systemförvalting på GIS-enheten.
                   enum:
-                    - 'No protection required - available for public access'
-                    - 'Limited protection required'
-                    - 'High protection required'
-                  default: 'No protection required - available for public access'
+                    - 'Välj...'
+                    - 'Inget skyddsbehov - tillgänglig för allmän åtkomst Anm: Ingen eller försumbar skada uppstår vid allmän tillgång till resursen.'
+                    - 'Begränsat skyddsbehov - tillgänglig för behörig Anm: Ringa skada uppstår vid obehörig tillgång till resursen.'
+                    - 'Måttligt skyddsbehov - tillgänglig för behörig Anm: Icke obetydlig skada uppstår vid obehörig tillgång till resursen.'
+                    - 'Högt skyddsbehov - tillgänglig för behörig Anm: Betydande skada uppstår vid obehörig tillgång till resursen.'
+                    - 'Mycket högt skyddsbehov - tillgänglig för behörig Anm: Allvarlig skada uppstår vid obehörig tillgång'
+                  default: 'Välj...'
                 openData:
                   type: boolean
-                  title: Open Data
+                  title: Öppen data
                   default: false
+                  description: Datat har en skyddsklass som inte godkänner att det publiceras som öppna data
                 contactPerson:
                   type: string
-                  title: Contact Person
+                  title: Kontaktpersoner
+                suggestedOwnerEnhet:
+                  type: string
+                  title: Enhet
+                  enum:
+                    - 'Välj...'
+                    - 'GIS-enheten'
+                    - 'Kartenheten'
+                    - 'Annan'
+                  default: 'Välj...'
             geoportiaMetadataUiSchema:
               summary:
                 'ui:widget': 'textarea'
                 'ui:options':
                   rows: 4
-    - title: Database
+    - title: Databas
       required:
         - databaseInfo
         - attributes
       properties:
         databaseInfo:
-          title: Database Information
+          title: Databasinformation
           type: object
           ui:field: GeoPortiaMetadataField
           ui:options:
-            headerTitle: Database
+            headerTitle: Databas
             geoportiaMetadataSchema:
               required:
                 - database
@@ -84,23 +103,40 @@ spec:
               properties:
                 database:
                   type: string
-                  title: Database
+                  title: Databas
+                  enum:
+                    - 'Välj...'
+                  default: 'Välj...'
                 dataType:
                   type: string
-                  title: Data Type
+                  title: Datatyp
+                  enum:
+                    - 'Välj...'
+                    - 'Ej definierad'
+                    - 'Linje'
+                    - 'Multipatcher'
+                    - 'Punkt'
+                    - 'Polygon'
+                    - 'Raster'
+                    - 'Tabell'
+                    - 'Text'
+                  default: 'Välj...'
                 dataset:
                   type: string
                   title: Dataset
                 allowAttachments:
                   type: boolean
-                  title: Allow Attachments
+                  title: Tillåt bilagor
                   default: false
+            geoportiaMetadataUiSchema:
+              dataset:
+                'ui:widget': 'DatasetSelectWidget'
         attributes:
-          title: Attribute Specification
+          title: Attributspecifikation
           type: object
           ui:field: GeoPortiaMetadataField
           ui:options:
-            headerTitle: Attribute Specifications
+            headerTitle: Attributspecifikation
             geoportiaMetadataSchema:
               type: array
               items:
@@ -113,38 +149,41 @@ spec:
                 properties:
                   name:
                     type: string
-                    title: Name
+                    title: Namn
                   alias:
                     type: string
-                    title: Alias (FTL Name)
+                    title: Alias (FTL-namn)
                   description:
                     type: string
-                    title: Description
+                    title: Beskrivning
                   dataFormat:
                     type: string
-                    title: Data Format
+                    title: Dataformat
                   length:
                     type: string
-                    title: Length
+                    title: Längd
                   securityClass:
                     type: string
-                    title: Security Class
+                    title: Skyddsklass
                     enum:
-                      - 'No protection required'
-                      - 'Limited protection required'
-                      - 'High protection required'
-                    default: 'No protection required'
+                      - 'Välj...'
+                      - 'Inget skyddsbehov'
+                      - 'Begränsat skyddsbehov'
+                      - 'Måttligt skyddsbehov'
+                      - 'Högt skyddsbehov'
+                      - 'Mycket högt skyddsbehov'
+                    default: 'Välj...'
                   domain:
                     type: string
-                    title: Domain
+                    title: Domän
                   allowEmptyValues:
                     type: boolean
-                    title: Allow Empty Values
+                    title: Tillåt tomma värden
                     default: false
             geoportiaMetadataUiSchema:
               'ui:options':
-                addButtonText: Create new attribute
-                emptyMessage: No attributes yet. Click the button above to add one.
+                addButtonText: Skapa nytt attribut
+                emptyMessage: Inga attribut än. Klicka på knappen ovan för att lägga till ett.
                 tableColumns:
                   - name
                   - alias
@@ -181,8 +220,175 @@ spec:
               properties:
                 administrationRoutine:
                   type: string
+                  title: Administrationsrutin
+                  description: Beskrivning av hur datasetet administreras, t.ex. processer för uppdatering, kvalitetskontroll och hantering av användarfeedback.
+                  enum:
+                    - 'Välj...'
+                    - 'Informationsägaren gör jobbet själv'
+                    - 'Informationsägaren får stöd av kontaktperson på Projekt- och GIS-avdelningen som står för teknisk kvalitetssäkring'
+                    - 'Informationsägaren ger hela uppdraget till Projekt- och GIS-avdelningen'
+                    - 'Information om förvaltningsprocessen saknas'
+                  default: 'Välj...'
+                maintenanceFrequency:
+                  type: string
+                  title: Underhållsfrekvens
+                  enum:
+                    - 'Välj...'
+                    - 'ej definierad'
+                    - 'Ej planerat - det saknas planerad uppdatering'
+                    - 'Kontinuerligt'
+                    - 'Dagligen'
+                    - 'Veckovis'
+                    - 'Månadsvis'
+                    - 'Kvartalsvis'
+                    - 'Årligen'
+                    - 'Vid behov'
+                  default: 'Välj...'
+                subjectArea:
+                  type: string
+                  title: Ämnesområde
+                  enum:
+                    - 'Välj...'
+                    - 'Befolkning'
+                    - 'Boende'
+                    - 'Ekonomi'
+                    - 'Energi'
+                    - 'Fritid'
+                    - 'Hälsa'
+                    - 'Infrastruktur'
+                    - 'Klimat'
+                    - 'Kultur'
+                    - 'Miljö'
+                    - 'Natur'
+                    - 'Politik'
+                    - 'Samhälle'
+                    - 'Säkerhet'
+                    - 'Trafik'
+                    - 'Utbildning'
+                  default: 'Välj...'
+                originHistory:
+                  type: string
+                  title: Tillkomsthistorik
+                source:
+                  type: string
+                  title: Källa
+                quality:
+                  type: string
+                  title: Kvalitet
+                dataCollectionMethod:
+                  type: string
+                  title: Datainsamlingsmetod
+                processingMethod:
+                  type: string
+                  title: Bearbetningsmetod
+                boundingBoxType:
+                  type: string
+                  title: Boundingboxtyp
+                  enum:
+                    - 'Välj...'
+                    - 'Punkt'
+                    - 'Rektangel'
+                    - 'Polygon'
+                  default: 'Välj...'
+                datasetStatus:
+                  type: string
+                  title: Status datamängd
+                  enum:
+                    - 'Komplett. Uppdateras eller kompletteras inte längre.'
+                    - 'Under utveckling'
+                    - 'Pågående'
+                  default: 'Komplett. Uppdateras eller kompletteras inte längre.'
+
+  
+  steps:
+    - id: log
+      name: Log values
+      action: debug:log
+      input:
+        message: 'Metadata collected'
+
+    - id: store-metadata
+      name: Store Metadata
+      action: geoportia:metadata:store
+      input:
+        entityRef: metadataentry:default/${{ parameters.layerInfo.layerName | lower | replace(" ", "-") }}-metadata
+        schema:
+          type: object
+          required:
+            - layerInfo
+            - databaseInfo
+            - metadata
+          properties:
+            layerInfo:
+              type: object
+              title: Layer Information
+              properties:
+                status:
+                  type: string
+                  title: Status
+                layerName:
+                  type: string
+                  title: Layer Name
+                title:
+                  type: string
+                  title: Title
+                summary:
+                  type: string
+                  title: Summary
+                securityClass:
+                  type: string
+                  title: Security Class
+                openData:
+                  type: boolean
+                  title: Open Data
+                contactPerson:
+                  type: string
+                  title: Contact Person
+            databaseInfo:
+              type: object
+              title: Database Information
+              properties:
+                database:
+                  type: string
+                  title: Database
+                dataType:
+                  type: string
+                  title: Data Type
+                dataset:
+                  type: string
+                  title: Dataset
+                allowAttachments:
+                  type: boolean
+                  title: Allow Attachments
+            attributes:
+              type: array
+              title: Attributes
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  alias:
+                    type: string
+                  description:
+                    type: string
+                  dataFormat:
+                    type: string
+                  length:
+                    type: string
+                  securityClass:
+                    type: string
+                  domain:
+                    type: string
+                  allowEmptyValues:
+                    type: boolean
+            metadata:
+              type: object
+              title: Metadata
+              properties:
+                administrationRoutine:
+                  type: string
                   title: Administration Routine
-                  description: Description of how the dataset is administered, e.g. processes for updating, quality control and handling user feedback.
                 maintenanceFrequency:
                   type: string
                   title: Maintenance Frequency
@@ -210,15 +416,14 @@ spec:
                 datasetStatus:
                   type: string
                   title: Dataset Status
-  steps:
-    - id: log
-      name: Log values
-      action: debug:log
-      input:
-        message: 'Metadata collected'
+        metadata:
+          layerInfo: ${{ parameters.layerInfo }}
+          databaseInfo: ${{ parameters.databaseInfo }}
+          attributes: ${{ parameters.attributes }}
+          metadata: ${{ parameters.metadata }}
 
   output:
     links:
-      - title: View in catalog
+      - title: View Metadata Entry
         icon: catalog
-        entityRef: ${{ steps['log'].output.entityRef }}
+        entityRef: ${{ steps['store-metadata'].output.entityRef }}
