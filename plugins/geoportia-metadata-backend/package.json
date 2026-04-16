@@ -31,6 +31,7 @@
     "@backstage/catalog-model": "^1.7.4",
     "@backstage/errors": "^1.2.7",
     "@backstage/plugin-catalog-node": "^1.17.0",
+    "@backstage/plugin-scaffolder-node": "^0.6.3",
     "@backstage/repo-tools": "^0.13.3",
     "@backstage/types": "^1.2.2",
     "@internal/backstage-plugin-entity-name-common": "workspace:^",

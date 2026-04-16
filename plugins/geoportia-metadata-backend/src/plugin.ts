@@ -36,6 +36,13 @@ export const geoportiaMetadataBackendPlugin = createBackendPlugin({
 
         const catalogClient = new CatalogClient({ discoveryApi: discovery });
         const metadata = new MetadataService(client, catalogClient, auth);
+        
+        // Allow unauthenticated access to GET /datasets
+        httpRouter.addAuthPolicy({
+          path: '/datasets',
+          allow: 'unauthenticated',
+        });
+        
         httpRouter.use(
           await createRouter({
             httpAuth,

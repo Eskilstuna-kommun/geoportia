@@ -6,9 +6,9 @@
     "node": "20 || 22"
   },
   "scripts": {
-    "dev": "yarn workspaces foreach -A --include backend --include app --parallel --jobs unlimited -v -i run start",
+    "dev": "cross-env NODE_OPTIONS=--no-node-snapshot yarn workspaces foreach -A --include backend --include app --parallel --jobs unlimited -v -i run start",
     "start": "yarn workspace app start",
-    "start-backend": "yarn workspace backend start",
+    "start-backend": "cross-env NODE_OPTIONS=--no-node-snapshot yarn workspace backend start",
     "build:backend": "yarn workspace backend build",
     "build:all": "backstage-cli repo build --all",
     "build:geoserver-rest-client": "npm run --prefix ./node_modules/geoserver-rest-client build:babel",
@@ -38,6 +38,7 @@
     "@backstage/cli": "^0.32.1",
     "@backstage/e2e-test-utils": "^0.1.1",
     "@playwright/test": "^1.32.3",
+    "cross-env": "^7.0.0",
     "node-gyp": "^10.0.0",
     "prettier": "^2.3.2",
     "typescript": "~5.4.0"
