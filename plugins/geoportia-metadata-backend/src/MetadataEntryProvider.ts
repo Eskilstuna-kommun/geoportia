@@ -50,10 +50,24 @@ export class MetadataEntryProvider implements EntityProvider {
 
     this.logger.info('MetadataEntryProvider: fetching metadata entries');
 
-    const rows = await this.database<TableRow>('geoportia_metadata').select(
-      '*',
-    );
-
+    let rows: TableRow[] = [];
+    try {
+      rows = await this.database<TableRow>('geoportia_metadata').select('*');
+    } catch (error: unknown) {
+      // Handle case where table doesn't exist yet (e.g., migrations haven't run)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      if (
+        errorMessage.includes('no such table') ||
+        errorMessage.includes('does not exist')
+      ) {
+        this.logger.warn(
+          'MetadataEntryProvider: geoportia_metadata table does not exist yet, skipping',
+        );
+        return;
+      }
+      throw error;
+    }
     const entities: Entity[] = rows.map(row => this.rowToEntity(row));
 
     this.logger.info(
