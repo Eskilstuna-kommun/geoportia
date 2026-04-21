@@ -4,14 +4,3 @@ export interface TableRow {
   schema: unknown;
   metadata: unknown;
 }
-
-export interface DatasetRow {
-  id: string;
-  name: string;
-  summary: string | null;
-  versioning: string;
-  allow_z_values: boolean;
-  status: string;
-  created_at: Date;
-  created_by: string | null;
-}

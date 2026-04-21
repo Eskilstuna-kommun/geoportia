@@ -124,13 +124,13 @@ spec:
                 dataset:
                   type: string
                   title: Dataset
+                  enum:
+                    - 'Välj...'
+                  default: 'Välj...'
                 allowAttachments:
                   type: boolean
                   title: Tillåt bilagor
-                  default: false
-            geoportiaMetadataUiSchema:
-              dataset:
-                'ui:widget': 'DatasetSelectWidget'
+            geoportiaMetadataUiSchema: {}
         attributes:
           title: Attributspecifikation
           type: object
@@ -311,116 +311,13 @@ spec:
       name: Store Metadata
       action: geoportia:metadata:store
       input:
-        entityRef: metadataentry:default/${{ parameters.layerInfo.layerName | lower | replace(" ", "-") }}-metadata
-        schema:
-          type: object
-          required:
-            - layerInfo
-            - databaseInfo
-            - metadata
-          properties:
-            layerInfo:
-              type: object
-              title: Layer Information
-              properties:
-                status:
-                  type: string
-                  title: Status
-                layerName:
-                  type: string
-                  title: Layer Name
-                title:
-                  type: string
-                  title: Title
-                summary:
-                  type: string
-                  title: Summary
-                securityClass:
-                  type: string
-                  title: Security Class
-                openData:
-                  type: boolean
-                  title: Open Data
-                contactPerson:
-                  type: string
-                  title: Contact Person
-            databaseInfo:
-              type: object
-              title: Database Information
-              properties:
-                database:
-                  type: string
-                  title: Database
-                dataType:
-                  type: string
-                  title: Data Type
-                dataset:
-                  type: string
-                  title: Dataset
-                allowAttachments:
-                  type: boolean
-                  title: Allow Attachments
-            attributes:
-              type: array
-              title: Attributes
-              items:
-                type: object
-                properties:
-                  name:
-                    type: string
-                  alias:
-                    type: string
-                  description:
-                    type: string
-                  dataFormat:
-                    type: string
-                  length:
-                    type: string
-                  securityClass:
-                    type: string
-                  domain:
-                    type: string
-                  allowEmptyValues:
-                    type: boolean
-            metadata:
-              type: object
-              title: Metadata
-              properties:
-                administrationRoutine:
-                  type: string
-                  title: Administration Routine
-                maintenanceFrequency:
-                  type: string
-                  title: Maintenance Frequency
-                subjectArea:
-                  type: string
-                  title: Subject Area
-                originHistory:
-                  type: string
-                  title: Origin History
-                source:
-                  type: string
-                  title: Source
-                quality:
-                  type: string
-                  title: Quality
-                dataCollectionMethod:
-                  type: string
-                  title: Data Collection Method
-                processingMethod:
-                  type: string
-                  title: Processing Method
-                boundingBoxType:
-                  type: string
-                  title: Bounding Box Type
-                datasetStatus:
-                  type: string
-                  title: Dataset Status
+        entityRef: metadataentry:default/${{ parameters.layerInfo.metadata.layerName | lower | replace(" ", "-") }}-metadata
+        schema: ${{ parameters.layerInfo.schema }}
         metadata:
-          layerInfo: ${{ parameters.layerInfo }}
-          databaseInfo: ${{ parameters.databaseInfo }}
-          attributes: ${{ parameters.attributes }}
-          metadata: ${{ parameters.metadata }}
+          layerInfo: ${{ parameters.layerInfo.metadata }}
+          databaseInfo: ${{ parameters.databaseInfo.metadata }}
+          attributes: ${{ parameters.attributes.metadata }}
+          metadata: ${{ parameters.metadata.metadata }}
 
   output:
     links:
