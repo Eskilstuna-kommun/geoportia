@@ -1,7 +1,6 @@
 import React from 'react';
 import type { WidgetProps } from '@rjsf/utils';
 import { TextField, FormControl, Select, MenuItem, Input } from '@material-ui/core';
-import { DatasetSelectWithModal } from './DatasetSelectWithModal';
 
 export const FullWidthTextWidget = (props: WidgetProps) => {
   const { id, readonly, disabled, value, onChange, onBlur, onFocus, uiSchema } = props;
@@ -51,5 +50,4 @@ export const customWidgets = {
   TextWidget: FullWidthTextWidget,
   TextareaWidget: FullWidthTextWidget,
   SelectWidget: FullWidthSelectWidget,
-  DatasetSelectWidget: DatasetSelectWithModal,
 };
