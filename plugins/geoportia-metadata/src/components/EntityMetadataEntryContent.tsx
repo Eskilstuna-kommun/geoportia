@@ -15,7 +15,7 @@ export interface EntityMetadataEntryContentProps {
   title?: string;
 
   /**
-   * Whether the form is editable. Defaults to false (readonly).
+   * Whether the form is editable. Defaults to true (editable).
    */
   editable?: boolean;
 }
@@ -30,7 +30,7 @@ export interface EntityMetadataEntryContentProps {
  */
 export const EntityMetadataEntryContent: React.FC<
   EntityMetadataEntryContentProps
-> = ({ title = 'Metadata', editable = false }) => {
+> = ({ title = 'Metadata', editable = true }) => {
   const { entity } = useEntity();
 
   // Find the MetadataEntry that describes this entity via relations

@@ -8,46 +8,276 @@ spec:
   # Reference to the table this metadata describes
   describedEntityRef: table:default/landparcels-a142
   
-  # JSON Schema for the metadata form
+  # JSON Schema for the metadata form (matches template.yaml structure)
   schema:
     type: object
-    required:
-      - status
-      - title
     properties:
-      status:
-        type: string
-        title: Status
-        enum:
-          - Godkänd
-          - Utkast
-          - Under granskning
-      title:
-        type: string
-        title: Titel
-      summary:
-        type: string
-        title: Sammanfattning
-      securityClass:
-        type: string
-        title: Säkerhetsklass
-        enum:
-          - Öppen data
-          - Begränsad åtkomst
-          - Skyddad
-      contactPerson:
-        type: string
-        title: Kontaktperson
-      lastUpdated:
-        type: string
-        title: Senast uppdaterad
-        format: date
+      layerInfo:
+        type: object
+        title: Lagerinformation
+        required:
+          - status
+          - layerName
+          - title
+          - summary
+          - securityClass
+        properties:
+          status:
+            type: string
+            title: Status
+            enum:
+              - Godkänd
+              - Utkast
+              - Under granskning
+              - Avvisad
+          layerName:
+            type: string
+            title: Lagernamn
+          title:
+            type: string
+            title: Titel
+          suggestedTitle:
+            type: string
+            title: Föreslagen titel
+          summary:
+            type: string
+            title: Sammanfattning
+          securityClass:
+            type: string
+            title: Skyddsklass
+            enum:
+              - 'Välj...'
+              - 'Inget skyddsbehov - tillgänglig för allmän åtkomst Anm: Ingen eller försumbar skada uppstår vid allmän tillgång till resursen.'
+              - 'Begränsat skyddsbehov - tillgänglig för behörig Anm: Ringa skada uppstår vid obehörig tillgång till resursen.'
+              - 'Måttligt skyddsbehov - tillgänglig för behörig Anm: Icke obetydlig skada uppstår vid obehörig tillgång till resursen.'
+              - 'Högt skyddsbehov - tillgänglig för behörig Anm: Betydande skada uppstår vid obehörig tillgång till resursen.'
+              - 'Mycket högt skyddsbehov - tillgänglig för behörig Anm: Allvarlig skada uppstår vid obehörig tillgång'
+          openData:
+            type: boolean
+            title: Öppen data
+          contactPerson:
+            type: string
+            title: Kontaktpersoner
+          suggestedOwnerEnhet:
+            type: string
+            title: Enhet
+            enum:
+              - 'Välj...'
+              - 'GIS-enheten'
+              - 'Kartenheten'
+              - 'Annan'
+      databaseInfo:
+        type: object
+        title: Databasinformation
+        required:
+          - database
+          - dataType
+          - dataset
+        properties:
+          database:
+            type: string
+            title: Databas
+          dataType:
+            type: string
+            title: Datatyp
+            enum:
+              - 'Välj...'
+              - 'Ej definierad'
+              - 'Linje'
+              - 'Multipatcher'
+              - 'Punkt'
+              - 'Polygon'
+              - 'Raster'
+              - 'Tabell'
+              - 'Text'
+          dataset:
+            type: string
+            title: Dataset
+          allowAttachments:
+            type: boolean
+            title: Tillåt bilagor
+      attributes:
+        type: array
+        title: Attributspecifikation
+        items:
+          type: object
+          required:
+            - name
+            - alias
+            - securityClass
+            - dataFormat
+          properties:
+            name:
+              type: string
+              title: Namn
+            alias:
+              type: string
+              title: Alias (FTL-namn)
+            description:
+              type: string
+              title: Beskrivning
+            dataFormat:
+              type: string
+              title: Dataformat
+            length:
+              type: string
+              title: Längd
+            securityClass:
+              type: string
+              title: Skyddsklass
+              enum:
+                - 'Välj...'
+                - 'Inget skyddsbehov'
+                - 'Begränsat skyddsbehov'
+                - 'Måttligt skyddsbehov'
+                - 'Högt skyddsbehov'
+                - 'Mycket högt skyddsbehov'
+            domain:
+              type: string
+              title: Domän
+            allowEmptyValues:
+              type: boolean
+              title: Tillåt tomma värden
+      metadata:
+        type: object
+        title: Metadata
+        required:
+          - administrationRoutine
+          - maintenanceFrequency
+          - subjectArea
+          - originHistory
+          - source
+          - quality
+          - dataCollectionMethod
+          - processingMethod
+          - boundingBoxType
+          - datasetStatus
+        properties:
+          administrationRoutine:
+            type: string
+            title: Administrationsrutin
+            enum:
+              - 'Välj...'
+              - 'Informationsägaren gör jobbet själv'
+              - 'Informationsägaren får stöd av kontaktperson på Projekt- och GIS-avdelningen som står för teknisk kvalitetssäkring'
+              - 'Informationsägaren ger hela uppdraget till Projekt- och GIS-avdelningen'
+              - 'Information om förvaltningsprocessen saknas'
+          maintenanceFrequency:
+            type: string
+            title: Underhållsfrekvens
+            enum:
+              - 'Välj...'
+              - 'ej definierad'
+              - 'Ej planerat - det saknas planerad uppdatering'
+              - 'Kontinuerligt'
+              - 'Dagligen'
+              - 'Veckovis'
+              - 'Månadsvis'
+              - 'Kvartalsvis'
+              - 'Årligen'
+              - 'Vid behov'
+          subjectArea:
+            type: string
+            title: Ämnesområde
+            enum:
+              - 'Välj...'
+              - 'Befolkning'
+              - 'Boende'
+              - 'Ekonomi'
+              - 'Energi'
+              - 'Fritid'
+              - 'Hälsa'
+              - 'Infrastruktur'
+              - 'Klimat'
+              - 'Kultur'
+              - 'Miljö'
+              - 'Natur'
+              - 'Politik'
+              - 'Samhälle'
+              - 'Säkerhet'
+              - 'Trafik'
+              - 'Utbildning'
+          originHistory:
+            type: string
+            title: Tillkomsthistorik
+          source:
+            type: string
+            title: Källa
+          quality:
+            type: string
+            title: Kvalitet
+          dataCollectionMethod:
+            type: string
+            title: Datainsamlingsmetod
+          processingMethod:
+            type: string
+            title: Bearbetningsmetod
+          boundingBoxType:
+            type: string
+            title: Boundingboxtyp
+            enum:
+              - 'Välj...'
+              - 'Punkt'
+              - 'Rektangel'
+              - 'Polygon'
+          datasetStatus:
+            type: string
+            title: Status datamängd
+            enum:
+              - 'Komplett. Uppdateras eller kompletteras inte längre.'
+              - 'Under utveckling'
+              - 'Pågående'
 
   # The actual metadata values
   metadata:
-    status: Godkänd
-    title: Byggnader i Eskilstuna kommun
-    summary: Detta lager innehåller alla byggnader inom Eskilstuna kommuns gränser. Data hämtas från fastighetskartan.
-    securityClass: Öppen data
-    contactPerson: Anders Andersson
-    lastUpdated: '2026-04-10'
+    layerInfo:
+      status: Godkänd
+      layerName: LandParcels
+      title: Byggnader i Eskilstuna kommun
+      suggestedTitle: Byggnader
+      summary: Detta lager innehåller alla byggnader inom Eskilstuna kommuns gränser. Data hämtas från fastighetskartan.
+      securityClass: 'Inget skyddsbehov - tillgänglig för allmän åtkomst Anm: Ingen eller försumbar skada uppstår vid allmän tillgång till resursen.'
+      openData: true
+      contactPerson: Anders Andersson
+      suggestedOwnerEnhet: 'GIS-enheten'
+    databaseInfo:
+      database: GIS_Produktion
+      dataType: Polygon
+      dataset: Fastigheter
+      allowAttachments: false
+    attributes:
+      - name: OBJECTID
+        alias: Objekt-ID
+        description: Unikt identifierare för objektet
+        dataFormat: Integer
+        length: '10'
+        securityClass: 'Inget skyddsbehov'
+        domain: ''
+        allowEmptyValues: false
+      - name: FASTIGHETSBETECKNING
+        alias: Fastighetsbeteckning
+        description: Fastighetens officiella beteckning
+        dataFormat: String
+        length: '50'
+        securityClass: 'Inget skyddsbehov'
+        domain: ''
+        allowEmptyValues: false
+      - name: AREA_M2
+        alias: Area (m²)
+        description: Byggnadens area i kvadratmeter
+        dataFormat: Double
+        length: '15'
+        securityClass: 'Inget skyddsbehov'
+        domain: ''
+        allowEmptyValues: true
+    metadata:
+      administrationRoutine: 'Informationsägaren får stöd av kontaktperson på Projekt- och GIS-avdelningen som står för teknisk kvalitetssäkring'
+      maintenanceFrequency: 'Månadsvis'
+      subjectArea: 'Samhälle'
+      originHistory: 'Data skapades ursprungligen 2015 från flygbildstolkning och har sedan dess uppdaterats kontinuerligt.'
+      source: 'Lantmäteriet - Fastighetskartan'
+      quality: 'Hög kvalitet, verifierad mot grundkarta'
+      dataCollectionMethod: 'Automatisk import från Lantmäteriets tjänst'
+      processingMethod: 'Geometrisk validering och attributkontroll'
+      boundingBoxType: 'Polygon'
+      datasetStatus: 'Pågående'
