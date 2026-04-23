@@ -1,18 +1,18 @@
 import {
   AuthService,
-  BackstageCredentials,
-  BackstageUserPrincipal,
 } from '@backstage/backend-plugin-api';
 import {
   MetadataService as IMetadataService,
   MetadataEntry,
   MetadataEntryCreate,
   MetadataEntryUpdate,
+  AnyCredentials,
 } from './types';
 import { Knex } from 'knex';
 import { TableRow } from '../../database';
 import { ConflictError, InputError, NotFoundError } from '@backstage/errors';
 import { CatalogClient } from '@backstage/catalog-client';
+import { JsonObject } from '@backstage/types';
 import * as z from 'zod';
 
 export class MetadataService implements IMetadataService {
@@ -44,9 +44,10 @@ export class MetadataService implements IMetadataService {
 
     let zodSchema: z.ZodType;
     try {
-      zodSchema = (z as any).fromJSONSchema(schema);
-    } catch (e: any) {
-      throw new InputError(`Invalid schema: ${e?.message ?? String(e)}`);
+      zodSchema = (z as { fromJSONSchema: (schema: object) => z.ZodType }).fromJSONSchema(schema as object);
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      throw new InputError(`Invalid schema: ${errorMessage}`);
     }
 
     if (cacheKey) {
@@ -90,7 +91,7 @@ export class MetadataService implements IMetadataService {
   async createMetadataEntry(
     input: MetadataEntryCreate,
     _options: {
-      credentials: BackstageCredentials<BackstageUserPrincipal>;
+      credentials: AnyCredentials;
     },
   ): Promise<MetadataEntry> {
     if (!input?.entityRef) {
@@ -108,8 +109,8 @@ export class MetadataService implements IMetadataService {
 
       await db<TableRow>('geoportia_metadata').insert({
         entity_ref: input.entityRef,
-        schema: input.schema,
-        metadata: input.metadata,
+        schema: JSON.stringify(input.schema),
+        metadata: JSON.stringify(input.metadata),
       });
     });
 
@@ -120,7 +121,7 @@ export class MetadataService implements IMetadataService {
   async updateMetadataEntry(
     input: MetadataEntryUpdate,
     _options: {
-      credentials: BackstageCredentials<BackstageUserPrincipal>;
+      credentials: AnyCredentials;
     },
   ): Promise<MetadataEntry> {
     if (!input?.entityRef) {
@@ -138,7 +139,7 @@ export class MetadataService implements IMetadataService {
 
       await db<TableRow>('geoportia_metadata')
         .where({ entity_ref: input.entityRef })
-        .update({ schema: input.schema, metadata: input.metadata });
+        .update({ schema: JSON.stringify(input.schema), metadata: JSON.stringify(input.metadata) });
     });
 
     await this.refreshCatalogEntity(input.entityRef);
@@ -148,7 +149,7 @@ export class MetadataService implements IMetadataService {
   async deleteMetadataEntry(
     input: Pick<MetadataEntry, 'entityRef'>,
     _options: {
-      credentials: BackstageCredentials<BackstageUserPrincipal>;
+      credentials: AnyCredentials;
     },
   ): Promise<void> {
     if (!input?.entityRef) {
@@ -167,5 +168,15 @@ export class MetadataService implements IMetadataService {
     await this.refreshCatalogEntity(input.entityRef);
   }
 
- 
+  async getMetadataEntriesPublic(): Promise<MetadataEntry[]> {
+    const rows = await this.database<TableRow>('geoportia_metadata')
+      .select('*')
+      .orderBy('entity_ref', 'asc');
+
+    return rows.map(row => ({
+      entityRef: row.entity_ref,
+      schema: (typeof row.schema === 'string' ? JSON.parse(row.schema) : row.schema) as JsonObject,
+      metadata: (typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata) as JsonObject,
+    }));
+  }
 }

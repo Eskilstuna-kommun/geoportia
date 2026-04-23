@@ -1,17 +1,13 @@
 import { createTemplateAction } from '@backstage/plugin-scaffolder-node';
-import { Knex } from 'knex';
 import { stringifyEntityRef, parseEntityRef } from '@backstage/catalog-model';
 import { InputError } from '@backstage/errors';
-import { CatalogClient } from '@backstage/catalog-client';
-import { AuthService } from '@backstage/backend-plugin-api';
-import { TableRow } from '../database';
+import { AuthService, DiscoveryService } from '@backstage/backend-plugin-api';
 
 /**
  * Input options for the geoportia:metadata:store action.
  */
 export interface StoreMetadataActionOptions {
-  database: Knex;
-  catalogApi?: CatalogClient;
+  discovery: DiscoveryService;
   auth?: AuthService;
 }
 
@@ -22,7 +18,7 @@ export interface StoreMetadataActionOptions {
  * creating a MetadataEntry entity that can be linked to a table or dataset.
  */
 export function createStoreMetadataAction(options: StoreMetadataActionOptions) {
-  const { database, catalogApi, auth } = options;
+  const { discovery, auth } = options;
 
   return createTemplateAction({
     id: 'geoportia:metadata:store',
@@ -68,7 +64,6 @@ export function createStoreMetadataAction(options: StoreMetadataActionOptions) {
 
       ctx.logger.info(`Storing metadata for entityRef: ${entityRef}`);
 
-      // Validate the entityRef format
       let parsedRef;
       try {
         parsedRef = parseEntityRef(entityRef);
@@ -76,10 +71,8 @@ export function createStoreMetadataAction(options: StoreMetadataActionOptions) {
         throw new InputError(`Invalid entityRef format: ${entityRef}`);
       }
 
-      // Normalize the entityRef
       const normalizedRef = stringifyEntityRef(parsedRef);
 
-      // Validate that schema is a valid JSON Schema (basic check)
       if (!schema || typeof schema !== 'object') {
         throw new InputError('schema must be a valid JSON object');
       }
@@ -87,50 +80,51 @@ export function createStoreMetadataAction(options: StoreMetadataActionOptions) {
         throw new InputError('schema must have a "type" property');
       }
 
-      // Validate that metadata is an object
       if (!metadata || typeof metadata !== 'object') {
         throw new InputError('metadata must be a valid JSON object');
       }
 
-      // Store in database
-      await database.transaction(async db => {
-        // Check if entry already exists
-        const existing = await db<TableRow>('geoportia_metadata')
-          .where({ entity_ref: normalizedRef })
-          .first();
+      const baseUrl = await discovery.getBaseUrl('geoportia-metadata');
 
-        if (existing) {
-          // Update existing entry
-          ctx.logger.info(`Updating existing metadata for ${normalizedRef}`);
-          await db<TableRow>('geoportia_metadata')
-            .where({ entity_ref: normalizedRef })
-            .update({
-              schema: schema,
-              metadata: metadata,
-            });
-        } else {
-          // Insert new entry
-          ctx.logger.info(`Creating new metadata entry for ${normalizedRef}`);
-          await db<TableRow>('geoportia_metadata').insert({
-            entity_ref: normalizedRef,
-            schema: schema,
-            metadata: metadata,
-          });
-        }
+      let token: string | undefined;
+      if (auth) {
+        const tokenResponse = await auth.getPluginRequestToken({
+          onBehalfOf: await auth.getOwnServiceCredentials(),
+          targetPluginId: 'geoportia-metadata',
+        });
+        token = tokenResponse.token;
+      }
+
+      ctx.logger.info(`Storing metadata via API for ${normalizedRef}`);
+
+      const encodedRef = encodeURIComponent(normalizedRef);
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      let response = await fetch(`${baseUrl}/${encodedRef}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({ schema, metadata }),
       });
 
-      // Trigger catalog refresh if available
-      if (catalogApi && auth) {
-        try {
-          const token = await auth.getPluginRequestToken({
-            onBehalfOf: await auth.getOwnServiceCredentials(),
-            targetPluginId: 'catalog',
-          });
-          await (catalogApi as any).refreshEntity(normalizedRef, { token });
-          ctx.logger.info(`Triggered catalog refresh for ${normalizedRef}`);
-        } catch (e) {
-          ctx.logger.warn(`Failed to refresh catalog entity: ${e}`);
-        }
+      if (response.status === 404) {
+        ctx.logger.info(`Creating new metadata entry for ${normalizedRef}`);
+        response = await fetch(`${baseUrl}/`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ entityRef: normalizedRef, schema, metadata }),
+        });
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new InputError(
+          `Failed to store metadata: ${response.status} ${errorText}`,
+        );
       }
 
       ctx.logger.info(`Successfully stored metadata for ${normalizedRef}`);

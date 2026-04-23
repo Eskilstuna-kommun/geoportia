@@ -1,6 +1,9 @@
 import React from 'react';
-import type { WidgetProps } from '@rjsf/utils';
-import { TextField, FormControl, Select, MenuItem, Input } from '@material-ui/core';
+import type { WidgetProps, EnumOptionsType } from '@rjsf/utils';
+import { TextField, FormControl, Select, MenuItem } from '@material-ui/core';
+import { DatasetSelectWithModal } from './DatasetSelectWithModal';
+import { UserSearchWidget } from './UserSearchWidget';
+import { TableSelectWidget } from './TableSelectWidget';
 
 export const FullWidthTextWidget = (props: WidgetProps) => {
   const { id, readonly, disabled, value, onChange, onBlur, onFocus, uiSchema } = props;
@@ -18,7 +21,8 @@ export const FullWidthTextWidget = (props: WidgetProps) => {
       fullWidth
       multiline={multiline}
       rows={rows}
-      variant="standard"
+      variant="outlined"
+      size="small"
     />
   );
 };
@@ -28,16 +32,15 @@ export const FullWidthSelectWidget = (props: WidgetProps) => {
   const enumOptions = options.enumOptions || [];
 
   return (
-    <FormControl fullWidth variant="standard" disabled={disabled || readonly}>
+    <FormControl fullWidth variant="outlined" size="small" disabled={disabled || readonly}>
       <Select
         id={id}
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}
         displayEmpty
-        input={<Input />}
       >
-        {enumOptions.map((opt: { value: any; label: string }) => (
-          <MenuItem key={opt.value} value={opt.value}>
+        {enumOptions.map((opt: EnumOptionsType) => (
+          <MenuItem key={String(opt.value)} value={opt.value}>
             {opt.label}
           </MenuItem>
         ))}
@@ -50,4 +53,7 @@ export const customWidgets = {
   TextWidget: FullWidthTextWidget,
   TextareaWidget: FullWidthTextWidget,
   SelectWidget: FullWidthSelectWidget,
+  DatasetSelectWidget: DatasetSelectWithModal,
+  UserSearchWidget: UserSearchWidget,
+  TableSelectWidget: TableSelectWidget,
 };
