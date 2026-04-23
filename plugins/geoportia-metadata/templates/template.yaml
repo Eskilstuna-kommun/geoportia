@@ -31,11 +31,13 @@ spec:
                   type: string
                   title: Status
                   enum:
+                    - 'Välj...'
+                    - Ska sättas
+                    - Raderad
+                    - Förslagen
                     - Godkänd
-                    - Utkast
-                    - Under granskning
-                    - Avvisad
-                  default: Godkänd
+                    - Ska avpubliceras
+                  default: 'Välj...'
                 layerName:
                   type: string
                   title: Lagernamn
@@ -66,24 +68,19 @@ spec:
                   type: boolean
                   title: Öppen data
                   default: false
-                  description: Datat har en skyddsklass som inte godkänner att det publiceras som öppna data
+                  description: Data som vem som helst fritt får använda, återanvända och distribuera med som största motprestation att ange källa eller krav på att dela data på samma sätt.
                 contactPerson:
-                  type: string
+                  type: array
                   title: Kontaktpersoner
-                suggestedOwnerEnhet:
-                  type: string
-                  title: Enhet
-                  enum:
-                    - 'Välj...'
-                    - 'GIS-enheten'
-                    - 'Kartenheten'
-                    - 'Annan'
-                  default: 'Välj...'
+                  items:
+                    type: string
             geoportiaMetadataUiSchema:
               summary:
                 'ui:widget': 'textarea'
                 'ui:options':
                   rows: 4
+              contactPerson:
+                'ui:widget': UserSearchWidget
     - title: Databas
       required:
         - databaseInfo
@@ -104,9 +101,6 @@ spec:
                 database:
                   type: string
                   title: Databas
-                  enum:
-                    - 'Välj...'
-                  default: 'Välj...'
                 dataType:
                   type: string
                   title: Datatyp
@@ -124,13 +118,14 @@ spec:
                 dataset:
                   type: string
                   title: Dataset
-                  enum:
-                    - 'Välj...'
-                  default: 'Välj...'
                 allowAttachments:
                   type: boolean
                   title: Tillåt bilagor
-            geoportiaMetadataUiSchema: {}
+            geoportiaMetadataUiSchema:
+              database:
+                'ui:widget': TableSelectWidget
+              dataset:
+                'ui:widget': DatasetSelectWidget
         attributes:
           title: Attributspecifikation
           type: object
@@ -211,17 +206,11 @@ spec:
                 - maintenanceFrequency
                 - subjectArea
                 - originHistory
-                - source
-                - quality
-                - dataCollectionMethod
-                - processingMethod
-                - boundingBoxType
-                - datasetStatus
               properties:
                 administrationRoutine:
                   type: string
                   title: Administrationsrutin
-                  description: Beskrivning av hur datasetet administreras, t.ex. processer för uppdatering, kvalitetskontroll och hantering av användarfeedback.
+                  description: Ansvarsfördelning för informationsmängden i relation till systemförvaltning på GIS-enheten.
                   enum:
                     - 'Välj...'
                     - 'Informationsägaren gör jobbet själv'
@@ -232,40 +221,49 @@ spec:
                 maintenanceFrequency:
                   type: string
                   title: Underhållsfrekvens
+                  description: Hur ofta kartlagret ajourhålls.
                   enum:
                     - 'Välj...'
-                    - 'ej definierad'
-                    - 'Ej planerat - det saknas planerad uppdatering'
-                    - 'Kontinuerligt'
-                    - 'Dagligen'
-                    - 'Veckovis'
-                    - 'Månadsvis'
-                    - 'Kvartalsvis'
-                    - 'Årligen'
-                    - 'Vid behov'
+                    - 'Okänt - uppdateringsfrekvens är ej känd'
+                    - 'Kontinuerlig - data uppdateras ofta och kontinuerligt'
+                    - 'Dagligen - data uppdateras dagligen'
+                    - 'Veckovis - data uppdateras veckovis'
+                    - 'Var 14:e dag - data uppdateras varannan vecka'
+                    - 'Månadsvis - data uppdateras varje månad'
+                    - 'Kvartalsvis - data uppdateras kvartalsvis'
+                    - 'Halvårsvis - data uppdateras halvårsvis'
+                    - 'Årligen - data uppdateras årligen'
+                    - 'Vid behov - data uppdateras vid behov'
+                    - 'Oregelbundet - data uppdateras med oregelbundna intervall'
+                    - 'Ej planerad - data uppdateras planerad uppdatering'
                   default: 'Välj...'
                 subjectArea:
-                  type: string
+                  type: array
                   title: Ämnesområde
-                  enum:
-                    - 'Välj...'
-                    - 'Befolkning'
-                    - 'Boende'
-                    - 'Ekonomi'
-                    - 'Energi'
-                    - 'Fritid'
-                    - 'Hälsa'
-                    - 'Infrastruktur'
-                    - 'Klimat'
-                    - 'Kultur'
-                    - 'Miljö'
-                    - 'Natur'
-                    - 'Politik'
-                    - 'Samhälle'
-                    - 'Säkerhet'
-                    - 'Trafik'
-                    - 'Utbildning'
-                  default: 'Välj...'
+                  uniqueItems: true
+                  items:
+                    type: string
+                    enum:
+                      - 'Administrativa gränser - offentligt bestämda avgränsningar av ett område'
+                      - 'Arealtäckande bilder och baskartor - arealtäckande bilder och topografiska kartor'
+                      - 'Areella näringar - skötsel av djur eller odling av grödor'
+                      - 'Atmosfär, klimatologi och meteorologi - processer och fenomen i atmosfären'
+                      - 'Biologi och ekologi - flora och fauna i naturlig miljö'
+                      - 'Byggnader och byggnadskonstruktioner - konstruktioner skapade av människohand'
+                      - 'Ekonomi - ekonomiska aktiviteter, förhållanden och sysselsättning'
+                      - 'Fastigheter och fysisk planering - fastighetsinformation och planinformation för framtida markanvändning'
+                      - 'Försvar - militär infrastruktur och aktiviteter'
+                      - 'Geovetenskap - geovetenskap'
+                      - 'Hälsa hälsa, sjuk- och hälsovård - human ekologi och säkerhet'
+                      - 'Höjddata - höjd över eller under havsytan'
+                      - 'Kust och hav - havs- och kustområden och dess egenskaper'
+                      - 'Miljö - miljöresurser, miljöskydd och bevarande'
+                      - 'Positionering - positionsbestämmande information och tjänster'
+                      - 'Samhälle och kultur - samhällsförhållanden och kultur'
+                      - 'Sjöar och vattendrag - insjövatten, dräneringssystem och deras egenskaper'
+                      - 'Tekniska försörjningssystem - energi-, vatten- och avloppssystem, och infrastruktur och tjänster för kommunikation'
+                      - 'Transporter - infrastruktur och hjälpmedel för att transportera människor och gods'
+                  default: []
                 originHistory:
                   type: string
                   title: Tillkomsthistorik
@@ -286,18 +284,27 @@ spec:
                   title: Boundingboxtyp
                   enum:
                     - 'Välj...'
-                    - 'Punkt'
-                    - 'Rektangel'
-                    - 'Polygon'
+                    - 'Ej definierad'
+                    - 'Minimal'
+                    - 'Malardalen'
+                    - 'Sodermanland'
+                    - 'Sverige'
+                    - 'Eskilstuna'
+                    - '4M'
                   default: 'Välj...'
                 datasetStatus:
                   type: string
                   title: Status datamängd
                   enum:
+                    - 'Välj...'
                     - 'Komplett. Uppdateras eller kompletteras inte längre.'
-                    - 'Under utveckling'
-                    - 'Pågående'
-                  default: 'Komplett. Uppdateras eller kompletteras inte längre.'
+                    - 'Planerad men ej tillgänglig för närvarande.'
+                    - 'Under utveckling men ej normal tillgänglig.'
+                    - 'Uppdateras eller kompletteras kontinuerligt.'
+                  default: 'Välj...'
+            geoportiaMetadataUiSchema:
+              subjectArea:
+                'ui:widget': 'checkboxes'
 
   
   steps:
@@ -312,7 +319,13 @@ spec:
       action: geoportia:metadata:store
       input:
         entityRef: metadataentry:default/${{ parameters.layerInfo.metadata.layerName | lower | replace(" ", "-") }}-metadata
-        schema: ${{ parameters.layerInfo.schema }}
+        schema:
+          type: object
+          properties:
+            layerInfo: ${{ parameters.layerInfo.schema }}
+            databaseInfo: ${{ parameters.databaseInfo.schema }}
+            attributes: ${{ parameters.attributes.schema }}
+            metadata: ${{ parameters.metadata.schema }}
         metadata:
           layerInfo: ${{ parameters.layerInfo.metadata }}
           databaseInfo: ${{ parameters.databaseInfo.metadata }}

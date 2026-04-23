@@ -5,6 +5,9 @@ import {
 import { catalogProcessingExtensionPoint } from '@backstage/plugin-catalog-node/alpha';
 import { MetadataEntryProvider } from './MetadataEntryProvider';
 import { MetadataEntryProcessor } from './MetadataEntryProcessor';
+import { AttributeProvider } from './AttributeProvider';
+import { AttributeProcessor } from './AttributeProcessor';
+import { DatasetProvider } from './DatasetProvider';
 
 const geoportiaMetadataBackendModule = createBackendModule({
   pluginId: 'catalog',
@@ -13,23 +16,38 @@ const geoportiaMetadataBackendModule = createBackendModule({
     env.registerInit({
       deps: {
         catalog: catalogProcessingExtensionPoint,
-        database: coreServices.database,
+        discovery: coreServices.discovery,
         scheduler: coreServices.scheduler,
         logger: coreServices.logger,
       },
-      async init({ catalog, database, scheduler, logger }) {
-        const client = await database.getClient();
-
-        const taskRunner = scheduler.createScheduledTaskRunner({
-          frequency: { minutes: 5 },
+      async init({ catalog, discovery, scheduler, logger }) {
+        const metadataTaskRunner = scheduler.createScheduledTaskRunner({
+          frequency: { seconds: 30 },
           timeout: { minutes: 5 },
         });
 
-        const provider = new MetadataEntryProvider(client, taskRunner, logger);
-        catalog.addEntityProvider(provider);
+        const attributeTaskRunner = scheduler.createScheduledTaskRunner({
+          frequency: { seconds: 30 },
+          timeout: { minutes: 5 },
+        });
 
-        // Register processor for bidirectional relation handling
+        const datasetTaskRunner = scheduler.createScheduledTaskRunner({
+          frequency: { seconds: 30 },
+          timeout: { minutes: 5 },
+        });
+
+        const metadataProvider = new MetadataEntryProvider(discovery, metadataTaskRunner, logger);
+        catalog.addEntityProvider(metadataProvider);
+
+        const attributeProvider = new AttributeProvider(discovery, attributeTaskRunner, logger);
+        catalog.addEntityProvider(attributeProvider);
+
+        const datasetProvider = new DatasetProvider(discovery, datasetTaskRunner, logger);
+        catalog.addEntityProvider(datasetProvider);
+
+        // Register processors for bidirectional relation handling
         catalog.addProcessor(new MetadataEntryProcessor());
+        catalog.addProcessor(new AttributeProcessor());
       },
     });
   },

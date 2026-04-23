@@ -2,12 +2,16 @@ import {
   AuthService,
   BackstageCredentials,
   BackstageUserPrincipal,
+  BackstageServicePrincipal,
   coreServices,
   createServiceFactory,
   createServiceRef,
 } from '@backstage/backend-plugin-api';
 import { JsonObject } from '@backstage/types';
 import { MetadataClient } from '@internal/geoportia-metadata-common';
+
+/** Credentials that can be either a user or service principal */
+export type AnyCredentials = BackstageCredentials<BackstageUserPrincipal | BackstageServicePrincipal>;
 
 export interface MetadataEntry {
   entityRef: string;
@@ -29,7 +33,7 @@ export interface MetadataService {
   createMetadataEntry(
     input: MetadataEntryCreate,
     options: {
-      credentials: BackstageCredentials<BackstageUserPrincipal>;
+      credentials: AnyCredentials;
     },
   ): Promise<MetadataEntry>;
 
@@ -37,7 +41,7 @@ export interface MetadataService {
   updateMetadataEntry(
     input: MetadataEntryUpdate,
     options: {
-      credentials: BackstageCredentials<BackstageUserPrincipal>;
+      credentials: AnyCredentials;
     },
   ): Promise<MetadataEntry>;
 
@@ -45,9 +49,12 @@ export interface MetadataService {
   deleteMetadataEntry(
     input: Pick<MetadataEntry, 'entityRef'>,
     options: {
-      credentials: BackstageCredentials<BackstageUserPrincipal>;
+      credentials: AnyCredentials;
     },
   ): Promise<void>;
+
+  /** Get all metadata entries (no authentication required). */
+  getMetadataEntriesPublic(): Promise<MetadataEntry[]>;
 }
 
 class MetadataServiceFacade implements MetadataService {
@@ -58,7 +65,7 @@ class MetadataServiceFacade implements MetadataService {
 
   async createMetadataEntry(
     input: MetadataEntryCreate,
-    options: { credentials: BackstageCredentials<BackstageUserPrincipal> },
+    options: { credentials: AnyCredentials },
   ): Promise<MetadataEntry> {
     const resp = await this.metadataApi.createMetadataEntry(
       { body: input },
@@ -77,7 +84,7 @@ class MetadataServiceFacade implements MetadataService {
 
   async updateMetadataEntry(
     input: MetadataEntryUpdate,
-    options: { credentials: BackstageCredentials<BackstageUserPrincipal> },
+    options: { credentials: AnyCredentials },
   ): Promise<MetadataEntry> {
     const resp = await this.metadataApi.updateMetadataEntry(
       {
@@ -99,7 +106,7 @@ class MetadataServiceFacade implements MetadataService {
 
   async deleteMetadataEntry(
     input: Pick<MetadataEntry, 'entityRef'>,
-    options: { credentials: BackstageCredentials<BackstageUserPrincipal> },
+    options: { credentials: AnyCredentials },
   ): Promise<void> {
     const resp = await this.metadataApi.deleteMetadataEntry(
       { path: { entityRef: input.entityRef } },
@@ -113,6 +120,10 @@ class MetadataServiceFacade implements MetadataService {
         `Request failed with code ${resp.status}: ${await resp.text()}`,
       );
     }
+  }
+
+  async getMetadataEntriesPublic(): Promise<MetadataEntry[]> {
+    throw new Error('getMetadataEntriesPublic is not supported in the facade - call the API directly');
   }
 }
 

@@ -3,6 +3,7 @@ import {
   EntityProviderConnection,
 } from '@backstage/plugin-catalog-node';
 import {
+  DiscoveryService,
   LoggerService,
   SchedulerServiceTaskRunner,
 } from '@backstage/backend-plugin-api';
@@ -13,17 +14,20 @@ import {
   parseEntityRef,
 } from '@backstage/catalog-model';
 import { JsonObject } from '@backstage/types';
-import { Knex } from 'knex';
-import { TableRow } from './database';
-import { convertNameToBackstageCompliant as toBackstageCompliantName } from '@internal/backstage-plugin-entity-name-common';
 
 const PROVIDER_NAME = 'geoportia-metadata-entry-provider';
+
+interface MetadataEntryApiResponse {
+  entityRef: string;
+  schema: JsonObject;
+  metadata: JsonObject;
+}
 
 export class MetadataEntryProvider implements EntityProvider {
   private connection?: EntityProviderConnection;
 
   constructor(
-    private readonly database: Knex,
+    private readonly discovery: DiscoveryService,
     private readonly taskRunner: SchedulerServiceTaskRunner,
     private readonly logger: LoggerService,
   ) {}
@@ -48,27 +52,27 @@ export class MetadataEntryProvider implements EntityProvider {
       throw new Error('MetadataEntryProvider not initialized');
     }
 
-    this.logger.info('MetadataEntryProvider: fetching metadata entries');
+    this.logger.info('MetadataEntryProvider: fetching metadata entries from API');
 
-    let rows: TableRow[] = [];
+    let entries: MetadataEntryApiResponse[] = [];
     try {
-      rows = await this.database<TableRow>('geoportia_metadata').select('*');
-    } catch (error: unknown) {
-      // Handle case where table doesn't exist yet (e.g., migrations haven't run)
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      if (
-        errorMessage.includes('no such table') ||
-        errorMessage.includes('does not exist')
-      ) {
-        this.logger.warn(
-          'MetadataEntryProvider: geoportia_metadata table does not exist yet, skipping',
-        );
-        return;
+      const baseUrl = await this.discovery.getBaseUrl('geoportia-metadata');
+      const response = await fetch(`${baseUrl}/metadata-entries`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch metadata entries: ${response.status}`);
       }
-      throw error;
+      
+      entries = await response.json();
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.warn(
+        `MetadataEntryProvider: failed to fetch metadata entries: ${errorMessage}`,
+      );
+      return;
     }
-    const entities: Entity[] = rows.map(row => this.rowToEntity(row));
+
+    const entities: Entity[] = entries.map(entry => this.entryToEntity(entry));
 
     this.logger.info(
       `MetadataEntryProvider: providing ${entities.length} MetadataEntry entities`,
@@ -83,76 +87,10 @@ export class MetadataEntryProvider implements EntityProvider {
     });
   }
 
-  async refresh(entityRef: string, deleted: boolean = false) {
-    if (!this.connection) {
-      this.logger.warn(
-        'MetadataEntryProvider: refresh called but provider not connected',
-      );
-      return;
-    }
-
-    if (deleted) {
-      // For deletions we need to provide the entity that was removed
-      const ref = parseEntityRef(entityRef);
-      const removedEntity: Entity = {
-        apiVersion: 'geoportia.se/v1alpha1',
-        kind: 'MetadataEntry',
-        metadata: {
-          name: toBackstageCompliantName(ref.name),
-          namespace: ref.namespace ?? 'default',
-          annotations: {
-            [ANNOTATION_LOCATION]: `geoportia-metadata:${entityRef}`,
-            [ANNOTATION_ORIGIN_LOCATION]: `geoportia-metadata:${entityRef}`,
-          },
-        },
-        spec: {},
-      };
-
-      await this.connection.applyMutation({
-        type: 'delta',
-        added: [],
-        removed: [
-          {
-            entity: removedEntity,
-            locationKey: this.getProviderName(),
-          },
-        ],
-      });
-      return;
-    }
-
-    // For creates/updates, fetch the row and convert to entity
-    const row = await this.database<TableRow>('geoportia_metadata')
-      .where({ entity_ref: entityRef })
-      .first();
-
-    if (!row) {
-      this.logger.warn(
-        `MetadataEntryProvider: refresh called for ${entityRef} but row not found`,
-      );
-      return;
-    }
-
-    const entity = this.rowToEntity(row);
-
-    // Apply a delta mutation to update the entity in the catalog
-    await this.connection.applyMutation({
-      type: 'delta',
-      added: [
-        {
-          entity,
-          locationKey: this.getProviderName(),
-        },
-      ],
-      removed: [],
-    });
-  }
-
-  // converts a database row into a Backstage catalog
-  private rowToEntity(row: TableRow): Entity {
-    const ref = parseEntityRef(row.entity_ref);
-    const metadataObj = (row.metadata ?? {}) as JsonObject;
-    const schemaObj = (row.schema ?? {}) as JsonObject;
+  private entryToEntity(entry: MetadataEntryApiResponse): Entity {
+    const ref = parseEntityRef(entry.entityRef);
+    const metadataObj = entry.metadata ?? {};
+    const schemaObj = entry.schema ?? {};
 
     // Extract title and description from metadata if present
     const title =
@@ -165,22 +103,23 @@ export class MetadataEntryProvider implements EntityProvider {
     // Determine the apiVersion of the described entity (e.g., table.geoportia.se/v1alpha1)
     const describedEntityApiVersion = `${ref.kind.toLowerCase()}.geoportia.se/v1alpha1`;
 
+    // Use the original name from the entityRef since it's already Backstage-compliant
     const entity: Entity = {
       apiVersion: 'geoportia.se/v1alpha1',
       kind: 'MetadataEntry',
       metadata: {
-        name: toBackstageCompliantName(ref.name),
+        name: ref.name,
         namespace: ref.namespace ?? 'default',
         title,
         description,
         annotations: {
-          [ANNOTATION_LOCATION]: `geoportia-metadata:${row.entity_ref}`,
-          [ANNOTATION_ORIGIN_LOCATION]: `geoportia-metadata:${row.entity_ref}`,
-          'geoportia.se/described-entity-ref': row.entity_ref,
+          [ANNOTATION_LOCATION]: `geoportia-metadata:${entry.entityRef}`,
+          [ANNOTATION_ORIGIN_LOCATION]: `geoportia-metadata:${entry.entityRef}`,
+          'geoportia.se/described-entity-ref': entry.entityRef,
         },
       },
       spec: {
-        describedEntityRef: row.entity_ref,
+        describedEntityRef: entry.entityRef,
         describedEntityKind: describedEntityApiVersion,
         schema: schemaObj,
         metadata: metadataObj,
