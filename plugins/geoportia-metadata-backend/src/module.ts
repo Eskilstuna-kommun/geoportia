@@ -1,13 +1,13 @@
 import {
   coreServices,
   createBackendModule,
+  resolvePackagePath,
 } from '@backstage/backend-plugin-api';
 import { catalogProcessingExtensionPoint } from '@backstage/plugin-catalog-node/alpha';
 import { MetadataEntryProvider } from './MetadataEntryProvider';
 import { MetadataEntryProcessor } from './MetadataEntryProcessor';
 import { AttributeProvider } from './AttributeProvider';
 import { AttributeProcessor } from './AttributeProcessor';
-import { DatasetProvider } from './DatasetProvider';
 
 const geoportiaMetadataBackendModule = createBackendModule({
   pluginId: 'catalog',
@@ -16,11 +16,24 @@ const geoportiaMetadataBackendModule = createBackendModule({
     env.registerInit({
       deps: {
         catalog: catalogProcessingExtensionPoint,
-        discovery: coreServices.discovery,
+        database: coreServices.database,
         scheduler: coreServices.scheduler,
         logger: coreServices.logger,
       },
-      async init({ catalog, discovery, scheduler, logger }) {
+      async init({ catalog, database, scheduler, logger }) {
+        const client = await database.getClient();
+        
+        // Run migrations if needed (use separate table to avoid conflicts with catalog migrations)
+        if (!database.migrations?.skip) {
+          await client.migrate.latest({
+            directory: resolvePackagePath(
+              '@internal/backstage-plugin-geoportia-metadata-backend',
+              'migrations',
+            ),
+            tableName: 'geoportia_metadata_knex_migrations',
+          });
+        }
+
         const metadataTaskRunner = scheduler.createScheduledTaskRunner({
           frequency: { seconds: 30 },
           timeout: { minutes: 5 },
@@ -31,19 +44,11 @@ const geoportiaMetadataBackendModule = createBackendModule({
           timeout: { minutes: 5 },
         });
 
-        const datasetTaskRunner = scheduler.createScheduledTaskRunner({
-          frequency: { seconds: 30 },
-          timeout: { minutes: 5 },
-        });
-
-        const metadataProvider = new MetadataEntryProvider(discovery, metadataTaskRunner, logger);
+        const metadataProvider = new MetadataEntryProvider(client, metadataTaskRunner, logger);
         catalog.addEntityProvider(metadataProvider);
 
-        const attributeProvider = new AttributeProvider(discovery, attributeTaskRunner, logger);
+        const attributeProvider = new AttributeProvider(client, attributeTaskRunner, logger);
         catalog.addEntityProvider(attributeProvider);
-
-        const datasetProvider = new DatasetProvider(discovery, datasetTaskRunner, logger);
-        catalog.addEntityProvider(datasetProvider);
 
         // Register processors for bidirectional relation handling
         catalog.addProcessor(new MetadataEntryProcessor());

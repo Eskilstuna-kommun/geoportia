@@ -19,7 +19,7 @@ import {
 } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import { makeStyles } from '@material-ui/core/styles';
-import { useApi, discoveryApiRef, fetchApiRef } from '@backstage/core-plugin-api';
+import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 
 const useStyles = makeStyles((theme) => ({
@@ -36,11 +36,11 @@ const useStyles = makeStyles((theme) => ({
     whiteSpace: 'nowrap',
     width: 'fit-content',
   },
-  buttonContainer:{
+  buttonContainer: {
     width: '100%',
     display: 'flex',
     flexDirection: 'row-reverse',
-  }
+  },
 }));
 
 interface Dataset {
@@ -53,8 +53,6 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
   const classes = useStyles();
 
   const catalogApi = useApi(catalogApiRef);
-  const discoveryApi = useApi(discoveryApiRef);
-  const fetchApi = useApi(fetchApiRef);
 
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,7 +64,7 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
   const [newDatasetStatus, setNewDatasetStatus] = useState('');
   const [creating, setCreating] = useState(false);
 
-  // Fetch datasets from the catalog
+  // Fetch datasets from the catalog (read from source database via entity providers)
   const fetchDatasets = useCallback(async () => {
     try {
       setLoading(true);
@@ -116,38 +114,9 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
     try {
       setCreating(true);
       
-      // Call the backend to create the dataset
-      const baseUrl = await discoveryApi.getBaseUrl('geoportia-metadata');
-      const response = await fetchApi.fetch(`${baseUrl}/datasets`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: newDatasetName.trim(),
-          summary: newDatasetSummary.trim() || undefined,
-          versioning: newDatasetVersioning,
-          allowZValues: newDatasetAllowZValues,
-          status: newDatasetStatus,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        if (response.status === 409 && errorData.dataset) {
-          // Dataset already exists, just select it
-          onChange(errorData.dataset.name);
-          handleCloseModal();
-          return;
-        }
-        throw new Error(`Failed to create dataset: ${response.status}`);
-      }
-
-      const createdDataset = await response.json();
-      
-      // Refresh and select the new dataset
-      await fetchDatasets();
-      onChange(createdDataset.name);
+      // TODO: Implement dataset creation in source database (ArcGIS SDE)
+      // For now, just close the modal
+      console.warn('Dataset creation not yet implemented - datasets should be created in the source database');
       handleCloseModal();
     } catch (err) {
       console.error('Error creating dataset:', err);

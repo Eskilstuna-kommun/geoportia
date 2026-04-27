@@ -43,17 +43,10 @@ export const geoportiaMetadataBackendPlugin = createBackendPlugin({
           allow: 'unauthenticated',
         });
 
-        // Allow unauthenticated access to GET /datasets (for entity providers)
-        httpRouter.addAuthPolicy({
-          path: '/datasets',
-          allow: 'unauthenticated',
-        });
-
         httpRouter.use(
           await createRouter({
             httpAuth,
             metadataService: metadata,
-            database: client,
           }),
         );
       },

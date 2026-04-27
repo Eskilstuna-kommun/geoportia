@@ -3,7 +3,6 @@ import type { WidgetProps, EnumOptionsType } from '@rjsf/utils';
 import { TextField, FormControl, Select, MenuItem } from '@material-ui/core';
 import { DatasetSelectWithModal } from './DatasetSelectWithModal';
 import { UserSearchWidget } from './UserSearchWidget';
-import { TableSelectWidget } from './TableSelectWidget';
 
 export const FullWidthTextWidget = (props: WidgetProps) => {
   const { id, readonly, disabled, value, onChange, onBlur, onFocus, uiSchema } = props;
@@ -55,5 +54,4 @@ export const customWidgets = {
   SelectWidget: FullWidthSelectWidget,
   DatasetSelectWidget: DatasetSelectWithModal,
   UserSearchWidget: UserSearchWidget,
-  TableSelectWidget: TableSelectWidget,
 };
