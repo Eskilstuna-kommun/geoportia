@@ -1,24 +1,20 @@
 import { createTemplateAction } from '@backstage/plugin-scaffolder-node';
 import { stringifyEntityRef, parseEntityRef } from '@backstage/catalog-model';
 import { InputError } from '@backstage/errors';
-import { AuthService, DiscoveryService } from '@backstage/backend-plugin-api';
+import { AuthService } from '@backstage/backend-plugin-api';
+import { MetadataService } from '../services/MetadataService/MetadataService';
+import { JsonObject } from '@backstage/types';
 
 /**
  * Input options for the geoportia:metadata:store action.
  */
 export interface StoreMetadataActionOptions {
-  discovery: DiscoveryService;
+  metadataService: MetadataService;
   auth?: AuthService;
 }
 
-/**
- * Creates the `geoportia:metadata:store` scaffolder action.
- *
- * This action stores metadata with its schema in the database,
- * creating a MetadataEntry entity that can be linked to a table or dataset.
- */
 export function createStoreMetadataAction(options: StoreMetadataActionOptions) {
-  const { discovery, auth } = options;
+  const { metadataService, auth } = options;
 
   return createTemplateAction({
     id: 'geoportia:metadata:store',
@@ -59,8 +55,8 @@ export function createStoreMetadataAction(options: StoreMetadataActionOptions) {
     },
     async handler(ctx) {
       const entityRef = ctx.input.entityRef as string;
-      const schema = ctx.input.schema as Record<string, unknown>;
-      const metadata = ctx.input.metadata as Record<string, unknown>;
+      const schema = ctx.input.schema as JsonObject;
+      const metadata = ctx.input.metadata as JsonObject;
 
       ctx.logger.info(`Storing metadata for entityRef: ${entityRef}`);
 
@@ -84,50 +80,33 @@ export function createStoreMetadataAction(options: StoreMetadataActionOptions) {
         throw new InputError('metadata must be a valid JSON object');
       }
 
-      const baseUrl = await discovery.getBaseUrl('geoportia-metadata');
+      // Get credentials for the operation
+      const credentials = auth 
+        ? await auth.getOwnServiceCredentials()
+        : { $$type: '@backstage/BackstageCredentials' as const, principal: { type: 'service' as const, subject: 'scaffolder' } };
 
-      let token: string | undefined;
-      if (auth) {
-        const tokenResponse = await auth.getPluginRequestToken({
-          onBehalfOf: await auth.getOwnServiceCredentials(),
-          targetPluginId: 'geoportia-metadata',
-        });
-        token = tokenResponse.token;
-      }
+      ctx.logger.info(`Storing metadata for ${normalizedRef}`);
 
-      ctx.logger.info(`Storing metadata via API for ${normalizedRef}`);
-
-      const encodedRef = encodeURIComponent(normalizedRef);
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
-      let response = await fetch(`${baseUrl}/${encodedRef}`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify({ schema, metadata }),
-      });
-
-      if (response.status === 404) {
-        ctx.logger.info(`Creating new metadata entry for ${normalizedRef}`);
-        response = await fetch(`${baseUrl}/`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ entityRef: normalizedRef, schema, metadata }),
-        });
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new InputError(
-          `Failed to store metadata: ${response.status} ${errorText}`,
+      try {
+        // Try to update first
+        await metadataService.updateMetadataEntry(
+          { entityRef: normalizedRef, schema, metadata },
+          { credentials: credentials },
         );
+        ctx.logger.info(`Updated existing metadata for ${normalizedRef}`);
+      } catch (error) {
+        // If not found, create new
+        if (error instanceof Error && error.message.includes('not found')) {
+          ctx.logger.info(`Creating new metadata entry for ${normalizedRef}`);
+          await metadataService.createMetadataEntry(
+            { entityRef: normalizedRef, schema, metadata },
+            { credentials: credentials },
+          );
+          ctx.logger.info(`Created new metadata for ${normalizedRef}`);
+        } else {
+          throw error;
+        }
       }
-
-      ctx.logger.info(`Successfully stored metadata for ${normalizedRef}`);
 
       ctx.output('entityRef', normalizedRef);
     },
