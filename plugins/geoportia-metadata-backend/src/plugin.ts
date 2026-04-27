@@ -7,11 +7,6 @@ import { createRouter } from './router';
 import { MetadataService } from './services/MetadataService/MetadataService';
 import { CatalogClient } from '@backstage/catalog-client';
 
-/**
- * geoportiaMetadataBackendPlugin backend plugin
- *
- * @public
- */
 export const geoportiaMetadataBackendPlugin = createBackendPlugin({
   pluginId: 'geoportia-metadata',
   register(env) {
@@ -36,12 +31,6 @@ export const geoportiaMetadataBackendPlugin = createBackendPlugin({
 
         const catalogClient = new CatalogClient({ discoveryApi: discovery });
         const metadata = new MetadataService(client, catalogClient, auth);
-
-        // Allow unauthenticated access to GET /metadata-entries (for entity providers)
-        httpRouter.addAuthPolicy({
-          path: '/metadata-entries',
-          allow: 'unauthenticated',
-        });
 
         httpRouter.use(
           await createRouter({

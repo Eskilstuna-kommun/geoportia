@@ -19,6 +19,7 @@ spec:
           ui:field: GeoPortiaMetadataField
           ui:options:
             headerTitle: Lagerinformation
+            showSidebar: true
             geoportiaMetadataSchema:
               required:
                 - status
@@ -92,6 +93,7 @@ spec:
           ui:field: GeoPortiaMetadataField
           ui:options:
             headerTitle: Databas
+            showSidebar: true
             geoportiaMetadataSchema:
               required:
                 - database
@@ -198,6 +200,7 @@ spec:
           ui:field: GeoPortiaMetadataField
           ui:options:
             headerTitle: Metadata
+            showSidebar: true
             geoportiaMetadataSchema:
               required: 
                 - administrationRoutine
@@ -302,7 +305,7 @@ spec:
                   default: 'Välj...'
             geoportiaMetadataUiSchema:
               subjectArea:
-                'ui:widget': 'checkboxes'
+                'ui:widget': 'MultiSelectWidget'
 
   
   steps:

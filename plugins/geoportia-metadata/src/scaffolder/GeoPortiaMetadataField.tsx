@@ -3,12 +3,13 @@ import { FieldExtensionComponentProps } from '@backstage/plugin-scaffolder-react
 import Form from '@rjsf/material-ui';
 import validator from '@rjsf/validator-ajv8';
 import type { RJSFSchema, UiSchema as RJSFUiSchema, ArrayFieldTemplateProps } from '@rjsf/utils';
-import { Typography, Box } from '@material-ui/core';
+import { Typography, Box, Grid } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 
 import { customWidgets } from './widgets';
 import { createCustomTemplates } from './templates';
 import { TableArrayFieldTemplate } from './TableArrayFieldTemplate';
+import { MetadataInfoPanel } from './MetadataInfoPanel';
 import type { GeoPortiaMetadataFieldValue, GeoPortiaMetadataFieldUiOptions } from './types';
 
 export type { GeoPortiaMetadataFieldValue, GeoPortiaMetadataFieldUiOptions };
@@ -26,11 +27,17 @@ export const GeoPortiaMetadataField = (
 ) => {
   const { onChange, formData, uiSchema } = props;
 
+  // TODO: Implement proper state management for sidebar data
+  const panelData = { uuid: undefined, createdAt: undefined, createdBy: undefined, attachedFiles: [] as { name: string }[], adminComment: '' };
+  const updateFiles = () => {};
+  const updateComment = () => {};
+  
   const uiOptions = uiSchema?.['ui:options'] as GeoPortiaMetadataFieldUiOptions | undefined;
   const rawMetadataSchema = uiOptions?.geoportiaMetadataSchema;
   const metadataUiSchema = uiOptions?.geoportiaMetadataUiSchema;
   const headerTitle = uiOptions?.headerTitle;
   const headerDescription = uiOptions?.headerDescription;
+  const showSidebar = uiOptions?.showSidebar ?? false;
 
   const isArraySchema = rawMetadataSchema?.type === 'array';
 
@@ -122,45 +129,9 @@ export const GeoPortiaMetadataField = (
 
   const currentMetadata = formData?.metadata ?? (isArraySchema ? [] : {});
 
-  // For array schemas at root level, render the table directly
-  if (isArraySchema) {
-    return (
-      <Box>
-        {headerTitle && (
-          <Box display="flex" alignItems="center" mb={2}>
-            <Typography variant="h6" style={{ fontWeight: 500 }}>
-              {headerTitle}
-            </Typography>
-            <HelpOutlineIcon fontSize="small" style={{ marginLeft: 8, color: '#888' }} />
-          </Box>
-        )}
-        {headerDescription && (
-          <Typography variant="body2" color="textSecondary" style={{ marginBottom: 16 }}>
-            {headerDescription}
-          </Typography>
-        )}
-        <Form
-          schema={metadataSchema}
-          uiSchema={mergedUiSchema}
-          validator={validator}
-          formData={currentMetadata}
-          onChange={handleChange}
-          idPrefix="geoportia-metadata"
-          templates={templates}
-          widgets={customWidgets}
-          formContext={formContext}
-          liveValidate
-          showErrorList={false}
-        >
-          <></>
-        </Form>
-      </Box>
-    );
-  }
-
-  // Form view mode
-  return (
-    <Box>
+  // Render the form content
+  const renderFormContent = () => (
+    <>
       {headerTitle && (
         <Box display="flex" alignItems="center" mb={2}>
           <Typography variant="h6" style={{ fontWeight: 500 }}>
@@ -189,6 +160,52 @@ export const GeoPortiaMetadataField = (
       >
         <></>
       </Form>
-    </Box>
+    </>
   );
+
+  const renderSidebar = () => (
+    <MetadataInfoPanel
+      uuid={panelData.uuid}
+      createdAt={panelData.createdAt}
+      createdBy={panelData.createdBy}
+      attachedFiles={panelData.attachedFiles}
+      adminComment={panelData.adminComment}
+      onFilesChange={updateFiles}
+      onCommentChange={updateComment}
+    />
+  );
+
+  // For array schemas at root level, render the table directly
+  if (isArraySchema) {
+    if (showSidebar) {
+      return (
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={8}>
+            {renderFormContent()}
+          </Grid>
+          <Grid item xs={12} md={4}>
+            {renderSidebar()}
+          </Grid>
+        </Grid>
+      );
+    }
+
+    return <Box>{renderFormContent()}</Box>;
+  }
+
+  // Form view mode
+  if (showSidebar) {
+    return (
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={8}>
+          {renderFormContent()}
+        </Grid>
+        <Grid item xs={12} md={4}>
+          {renderSidebar()}
+        </Grid>
+      </Grid>
+    );
+  }
+
+  return <Box>{renderFormContent()}</Box>;
 };

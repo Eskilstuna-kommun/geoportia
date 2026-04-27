@@ -118,60 +118,6 @@ components:
         metadata:
           type: object
           additionalProperties: true
-    Dataset:
-      type: object
-      required: [id, name, status]
-      additionalProperties: false
-      properties:
-        id:
-          type: string
-          description: "Unique dataset identifier"
-        name:
-          type: string
-          description: "Display name of the dataset"
-        summary:
-          type: string
-          description: "Brief description of the dataset"
-        versioning:
-          type: string
-          enum: ["Ej versionerad", "Versionerad"]
-          description: "Versioning mode"
-        allowZValues:
-          type: boolean
-          description: "Whether Z-values are allowed"
-        status:
-          type: string
-          enum: ["Godkänd", "Utkast", "Under granskning", "Avvisad"]
-          description: "Dataset status"
-        createdAt:
-          type: string
-          format: date-time
-          description: "When the dataset was created"
-        createdBy:
-          type: string
-          description: "User who created the dataset"
-    DatasetCreate:
-      type: object
-      required: [name, status]
-      additionalProperties: false
-      properties:
-        name:
-          type: string
-          description: "Display name of the dataset"
-        summary:
-          type: string
-          description: "Brief description of the dataset"
-        versioning:
-          type: string
-          enum: ["Ej versionerad", "Versionerad"]
-          default: "Ej versionerad"
-        allowZValues:
-          type: boolean
-          default: false
-        status:
-          type: string
-          enum: ["Godkänd", "Utkast", "Under granskning", "Avvisad"]
-          default: "Godkänd"
     Error:
       type: object
       properties:
