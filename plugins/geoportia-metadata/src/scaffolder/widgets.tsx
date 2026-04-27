@@ -1,8 +1,24 @@
 import React from 'react';
 import type { WidgetProps, EnumOptionsType } from '@rjsf/utils';
-import { TextField, FormControl, Select, MenuItem } from '@material-ui/core';
+import { TextField, FormControl, Select, MenuItem, Checkbox, ListItemText, Chip, Box } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
 import { DatasetSelectWithModal } from './DatasetSelectWithModal';
 import { UserSearchWidget } from './UserSearchWidget';
+
+const useMultiSelectStyles = makeStyles((theme) => ({
+  chips: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: theme.spacing(0.5),
+  },
+  chip: {
+    maxWidth: '100%',
+  },
+  menuItem: {
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
+  },
+}));
 
 export const FullWidthTextWidget = (props: WidgetProps) => {
   const { id, readonly, disabled, value, onChange, onBlur, onFocus, uiSchema } = props;
@@ -48,10 +64,83 @@ export const FullWidthSelectWidget = (props: WidgetProps) => {
   );
 };
 
+export const MultiSelectWidget = (props: WidgetProps) => {
+  const classes = useMultiSelectStyles();
+  const { id, readonly, disabled, value, onChange, options, placeholder } = props;
+  const enumOptions = (options.enumOptions || []) as EnumOptionsType[];
+  const selectedValues = Array.isArray(value) ? value : [];
+
+  // Create a map for quick lookup of labels
+  const labelMap = new Map<string, string>();
+  enumOptions.forEach((opt) => {
+    labelMap.set(String(opt.value), String(opt.label));
+  });
+
+  // Get short label (text before " - ")
+  const getShortLabel = (label: string) => {
+    const dashIndex = label.indexOf(' - ');
+    return dashIndex > 0 ? label.substring(0, dashIndex) : label;
+  };
+
+  return (
+    <FormControl fullWidth variant="outlined" size="small" disabled={disabled || readonly}>
+      <Select
+        id={id}
+        multiple
+        value={selectedValues}
+        onChange={(e) => onChange(e.target.value as string[])}
+        displayEmpty
+        renderValue={(selected) => {
+          const selectedArray = selected as string[];
+          if (selectedArray.length === 0) {
+            return <em>{placeholder || 'Välj...'}</em>;
+          }
+          return (
+            <Box className={classes.chips}>
+              {selectedArray.map((val) => (
+                <Chip
+                  key={val}
+                  label={getShortLabel(labelMap.get(val) || val)}
+                  size="small"
+                  className={classes.chip}
+                />
+              ))}
+            </Box>
+          );
+        }}
+        MenuProps={{
+          PaperProps: {
+            style: {
+              maxHeight: 400,
+            },
+          },
+          anchorOrigin: {
+            vertical: 'bottom',
+            horizontal: 'left',
+          },
+          transformOrigin: {
+            vertical: 'top',
+            horizontal: 'left',
+          },
+          getContentAnchorEl: null,
+        }}
+      >
+        {enumOptions.map((opt: EnumOptionsType) => (
+          <MenuItem key={String(opt.value)} value={opt.value} className={classes.menuItem}>
+            <Checkbox checked={selectedValues.includes(opt.value as string)} />
+            <ListItemText primary={opt.label} />
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
+};
+
 export const customWidgets = {
   TextWidget: FullWidthTextWidget,
   TextareaWidget: FullWidthTextWidget,
   SelectWidget: FullWidthSelectWidget,
+  MultiSelectWidget: MultiSelectWidget,
   DatasetSelectWidget: DatasetSelectWithModal,
   UserSearchWidget: UserSearchWidget,
 };

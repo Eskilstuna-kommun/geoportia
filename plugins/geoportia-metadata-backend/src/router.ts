@@ -1,5 +1,5 @@
 import { HttpAuthService } from '@backstage/backend-plugin-api';
-import express, { Router, Request, Response, NextFunction } from 'express';
+import express, { Router } from 'express';
 import { createOpenApiRouter } from './schema/openapi';
 import {
   MetadataEntryCreate,
@@ -17,16 +17,6 @@ export async function createRouter({
 }): Promise<express.Router> {
   const parentRouter = Router();
   parentRouter.use(express.json());
-
-  // Metadata entries list endpoint (for entity providers)
-  parentRouter.get('/metadata-entries', async (_req: Request, res: Response, next: NextFunction) => {
-    try {
-      const entries = await metadataService.getMetadataEntriesPublic();
-      res.json(entries);
-    } catch (error) {
-      next(error);
-    }
-  });
 
   const openApiRouter = await createOpenApiRouter();
 
