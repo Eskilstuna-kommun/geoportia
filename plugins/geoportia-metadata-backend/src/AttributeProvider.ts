@@ -3,7 +3,6 @@ import {
   EntityProviderConnection,
 } from '@backstage/plugin-catalog-node';
 import {
-  DiscoveryService,
   LoggerService,
   SchedulerServiceTaskRunner,
 } from '@backstage/backend-plugin-api';
@@ -16,10 +15,12 @@ import {
 } from '@backstage/catalog-model';
 import { JsonObject } from '@backstage/types';
 import { convertNameToBackstageCompliant as toBackstageCompliantName } from '@internal/backstage-plugin-entity-name-common';
+import { Knex } from 'knex';
+import { TableRow } from './database';
 
 const PROVIDER_NAME = 'geoportia-attribute-provider';
 
-interface MetadataEntryApiResponse {
+interface MetadataEntryData {
   entityRef: string;
   schema: JsonObject;
   metadata: JsonObject;
@@ -40,7 +41,7 @@ export class AttributeProvider implements EntityProvider {
   private connection?: EntityProviderConnection;
 
   constructor(
-    private readonly discovery: DiscoveryService,
+    private readonly database: Knex,
     private readonly taskRunner: SchedulerServiceTaskRunner,
     private readonly logger: LoggerService,
   ) {}
@@ -65,18 +66,19 @@ export class AttributeProvider implements EntityProvider {
       throw new Error('AttributeProvider not initialized');
     }
 
-    this.logger.info('AttributeProvider: fetching metadata entries from API');
+    this.logger.info('AttributeProvider: fetching metadata entries from database');
 
-    let entries: MetadataEntryApiResponse[] = [];
+    let entries: MetadataEntryData[] = [];
     try {
-      const baseUrl = await this.discovery.getBaseUrl('geoportia-metadata');
-      const response = await fetch(`${baseUrl}/metadata-entries`);
+      const rows = await this.database<TableRow>('geoportia_metadata')
+        .select('*')
+        .orderBy('entity_ref', 'asc');
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch metadata entries: ${response.status}`);
-      }
-
-      entries = await response.json();
+      entries = rows.map(row => ({
+        entityRef: row.entity_ref,
+        schema: (typeof row.schema === 'string' ? JSON.parse(row.schema) : row.schema) as JsonObject,
+        metadata: (typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata) as JsonObject,
+      }));
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.logger.warn(
@@ -105,7 +107,7 @@ export class AttributeProvider implements EntityProvider {
     });
   }
 
-  private extractAttributeEntities(entry: MetadataEntryApiResponse): Entity[] {
+  private extractAttributeEntities(entry: MetadataEntryData): Entity[] {
     const metadataObj = entry.metadata ?? {};
     
     // Define the expected structure of metadata with attributes

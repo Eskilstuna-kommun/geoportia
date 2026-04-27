@@ -122,8 +122,6 @@ spec:
                   type: boolean
                   title: Tillåt bilagor
             geoportiaMetadataUiSchema:
-              database:
-                'ui:widget': TableSelectWidget
               dataset:
                 'ui:widget': DatasetSelectWidget
         attributes:
