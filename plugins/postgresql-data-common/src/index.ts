@@ -15,6 +15,13 @@ export interface PostgreSQLViewEntity extends Entity {
     dependencyOf: CompoundEntityRef[];
   } & JsonObject;
 }
+export interface PostgreSQLSchemaEntity extends Entity {
+  apiVersion: 'geoportia.se/v1alpha1';
+  kind: 'Schema';
+  spec: {
+    dependencyOf: CompoundEntityRef[];
+  } & JsonObject;
+}
 
 export const postgresqlTableEntityValidator: KindValidator = {
   async check(_data: Entity) {
@@ -22,6 +29,11 @@ export const postgresqlTableEntityValidator: KindValidator = {
   },
 };
 export const postgresqlViewEntityValidator: KindValidator = {
+  async check(_data: Entity) {
+    return true;
+  },
+};
+export const postgresqlSchemaEntityValidator: KindValidator = {
   async check(_data: Entity) {
     return true;
   },
@@ -35,3 +47,8 @@ export const isPostgreSQLViewEntity = (
   data: Entity,
 ): data is PostgreSQLViewEntity =>
   data.apiVersion === 'geoportia.se/v1alpha1' && data.kind === 'View';
+
+export const isPostgreSQLSchemaEntity = (
+  data: Entity,
+): data is PostgreSQLSchemaEntity =>
+  data.apiVersion === 'geoportia.se/v1alpha1' && data.kind === 'Schema';

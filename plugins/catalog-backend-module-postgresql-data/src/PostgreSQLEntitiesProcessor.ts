@@ -10,6 +10,7 @@ import {
   RELATION_DEPENDS_ON,
 } from '@backstage/catalog-model';
 import {
+  postgresqlSchemaEntityValidator,
   postgresqlTableEntityValidator,
   postgresqlViewEntityValidator,
 } from '@internal/postgresql-data-common';
@@ -27,6 +28,8 @@ export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
       return await postgresqlTableEntityValidator.check(entity);
     } else if (entity.kind === 'View') {
       return await postgresqlViewEntityValidator.check(entity);
+    } else if (entity.kind === 'Schema') {
+      return await postgresqlSchemaEntityValidator.check(entity);
     }
     return false;
   }
@@ -36,7 +39,7 @@ export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
     _location: LocationSpec,
     emit: CatalogProcessorEmit,
   ) {
-    if (entity.kind === 'View') {
+    if (entity.kind === 'View' || entity.kind === 'Table' || entity.kind === 'Schema') {
       if (!entity.spec) {
         throw new Error("View entity must have 'spec' defined");
       }
