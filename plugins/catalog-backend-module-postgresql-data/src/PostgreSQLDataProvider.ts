@@ -13,7 +13,12 @@ import {
   Entity,
 } from '@backstage/catalog-model';
 import { convertNameToBackstageCompliant as toBackstageCompliantName } from '@internal/backstage-plugin-entity-name-common';
-import { PostgreSQLSchemaEntity, PostgreSQLTableEntity, PostgreSQLViewEntity } from '@internal/postgresql-data-common';
+import {
+  PostgreSQLSchemaEntity,
+  PostgreSQLTableEntity,
+  PostgreSQLViewEntity,
+} from '@internal/postgresql-data-common';
+import { PostgreSQLSchemasProvider } from './PostgreSQLSchemasProvider';
 
 export class PostgreSQLDataProvider implements EntityProvider {
   private connection?: EntityProviderConnection;
@@ -141,6 +146,9 @@ export class PostgreSQLDataProvider implements EntityProvider {
 
     const extracted = await extractSchemas(this.uri);
 
+    const postgresSchemasProvider = new PostgreSQLSchemasProvider(this.uri);
+    const schemasMap = await postgresSchemasProvider.getSchemasMap();
+
     const viewTableMap = new Map<string, string>();
 
     const defaultNamespace = 'default';
@@ -153,6 +161,7 @@ export class PostgreSQLDataProvider implements EntityProvider {
           metadata: {
             name: toBackstageCompliantName(schemaName),
             namespace: defaultNamespace,
+            owner: schemasMap.get(schemaName) || undefined,
             title: schemaName,
             annotations: {
               [ANNOTATION_LOCATION]: this.uri,
