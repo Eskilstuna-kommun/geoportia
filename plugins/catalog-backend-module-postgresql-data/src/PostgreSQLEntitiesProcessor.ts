@@ -6,20 +6,13 @@ import { LocationSpec } from '@backstage/plugin-catalog-common';
 import {
   Entity,
   getCompoundEntityRef,
+  RELATION_DEPENDENCY_OF,
   RELATION_DEPENDS_ON,
 } from '@backstage/catalog-model';
 import {
   postgresqlTableEntityValidator,
   postgresqlViewEntityValidator,
 } from '@internal/postgresql-data-common';
-
-interface ViewColumn {
-  source: {
-    schema: string;
-    table: string;
-    namespace?: string;
-  };
-}
 
 export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
   getProcessorName() {
@@ -48,44 +41,24 @@ export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
         throw new Error("View entity must have 'spec' defined");
       }
 
-      const seen = new Set<string>();
       // @ts-ignore
-      const dependencies: ViewColumn[] = entity.spec.columns
-        // @ts-ignore
-        .filter(
-          (column: ViewColumn) =>
-            column.source && column.source.schema && column.source.table,
-        )
-        .filter((column: ViewColumn) => {
-          const key = `${column.source.schema}.${column.source.table}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
+      const dependencies: CompoundEntityRef[] = entity.spec.dependencyOf;
 
       for (const dependency of dependencies) {
         emit({
           type: 'relation',
           relation: {
-            type: RELATION_DEPENDS_ON,
+            type: RELATION_DEPENDENCY_OF,
             source: getCompoundEntityRef(entity),
-            target: {
-              kind: 'Table',
-              namespace: `${dependency.source.namespace || 'default'}`,
-              name: `${dependency.source.schema}.${dependency.source.table}`,
-            },
+            target: dependency,
           },
         });
         emit({
           type: 'relation',
           relation: {
-            type: 'dependencyOf',
+            type: RELATION_DEPENDS_ON,
             target: getCompoundEntityRef(entity),
-            source: {
-              kind: 'Table',
-              namespace: `${dependency.source.namespace || 'default'}`,
-              name: `${dependency.source.schema}.${dependency.source.table}`,
-            },
+            source: dependency,
           },
         });
       }
