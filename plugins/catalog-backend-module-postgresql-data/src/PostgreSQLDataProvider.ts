@@ -6,13 +6,14 @@ import {
   LoggerService,
   SchedulerServiceTaskRunner,
 } from '@backstage/backend-plugin-api';
-import { extractSchemas } from 'extract-pg-schema';
+import { extractSchemas, ViewColumn } from 'extract-pg-schema';
 import {
   ANNOTATION_LOCATION,
   ANNOTATION_ORIGIN_LOCATION,
   Entity,
 } from '@backstage/catalog-model';
 import { convertNameToBackstageCompliant as toBackstageCompliantName } from '@internal/backstage-plugin-entity-name-common';
+import { PostgreSQLTableEntity, PostgreSQLViewEntity } from '@internal/postgresql-data-common';
 
 export class PostgreSQLDataProvider implements EntityProvider {
   private connection?: EntityProviderConnection;
@@ -140,10 +141,12 @@ export class PostgreSQLDataProvider implements EntityProvider {
 
     const extracted = await extractSchemas(this.uri);
 
+    const viewTableMap = new Map<string, string>();
+
     const entities = Object.entries(extracted).flatMap(
       ([schemaName, schema]) => [
         ...schema.tables.map(
-          (table): Entity => ({
+          (table): PostgreSQLTableEntity => ({
             apiVersion: 'geoportia.se/v1alpha1',
             kind: 'Table',
             metadata: {
@@ -157,11 +160,13 @@ export class PostgreSQLDataProvider implements EntityProvider {
                 [ANNOTATION_ORIGIN_LOCATION]: this.uri,
               },
             },
-            spec: table as any,
+            spec: {
+              dependencyOf: [],
+            },
           }),
         ),
         ...schema.views.map(
-          (view): Entity => ({
+          (view): PostgreSQLViewEntity => ({
             apiVersion: 'geoportia.se/v1alpha1',
             kind: 'View',
             metadata: {
@@ -173,7 +178,37 @@ export class PostgreSQLDataProvider implements EntityProvider {
                 [ANNOTATION_ORIGIN_LOCATION]: this.uri,
               },
             },
-            spec: view as any,
+            spec: {
+              dependencyOf: view.columns
+                // @ts-ignore
+                .filter((column: ViewColumn) => {
+                  // Filter out every table dependency that has already been added to the map, to avoid duplicate dependencies. 
+                  // This is needed because some views can have multiple columns depending on the same table, and we only want to add one dependency per table.
+                  if (
+                    column.source &&
+                    column.source.schema &&
+                    column.source.table &&
+                    viewTableMap.get(
+                      toBackstageCompliantName(`${schemaName}.${view.name}`),
+                    ) === undefined
+                  ) {
+                    viewTableMap.set(
+                      toBackstageCompliantName(`${schemaName}.${view.name}`),
+                      toBackstageCompliantName(
+                        `${column.source.schema}.${column.source.table}`,
+                      ),
+                    );
+                    return true;
+                  }
+                  return false;
+                })
+                .map((column: ViewColumn) => ({
+                  kind: 'Table',
+                  namespace: 'default',
+                  // @ts-ignore
+                  name: toBackstageCompliantName(`${column.source.schema}.${column.source.table}`),
+                })),
+            },
           }),
         ),
       ],

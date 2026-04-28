@@ -1,16 +1,19 @@
-import { Entity, KindValidator } from '@backstage/catalog-model';
-import { TableDetails, ViewDetails } from 'extract-pg-schema';
+import { CompoundEntityRef, Entity, KindValidator } from '@backstage/catalog-model';
 import { JsonObject } from '@backstage/types';
 
 export interface PostgreSQLTableEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
   kind: 'Table';
-  spec: TableDetails & JsonObject;
+  spec: {
+    dependencyOf: CompoundEntityRef[];
+  } & JsonObject;
 }
 export interface PostgreSQLViewEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
   kind: 'View';
-  spec: ViewDetails & JsonObject;
+  spec: {
+    dependencyOf: CompoundEntityRef[];
+  } & JsonObject;
 }
 
 export const postgresqlTableEntityValidator: KindValidator = {
