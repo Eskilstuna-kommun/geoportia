@@ -169,6 +169,7 @@ export class PostgreSQLDataProvider implements EntityProvider {
             },
           },
           spec: {
+            dialect: 'postgresql',
             dependencyOf: [
               ...schema.tables.map(table => ({
                 kind: 'Table',
@@ -201,6 +202,7 @@ export class PostgreSQLDataProvider implements EntityProvider {
               },
             },
             spec: {
+              dialect: 'postgresql',
               dependencyOf: [],
             },
           }),
@@ -220,6 +222,7 @@ export class PostgreSQLDataProvider implements EntityProvider {
               },
             },
             spec: {
+              dialect: 'postgresql',
               dependencyOf: view.columns
                 .filter((column: ViewColumn) => {
                   // Filter out every table dependency that has already been added to the map, to avoid duplicate dependencies.
