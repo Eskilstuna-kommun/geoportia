@@ -220,7 +220,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
         if (dataSet.name !== 'root') {
           const ArcGISDataSetEntity: ArcGISSDEDataSetEntity = {
             apiVersion: 'geoportia.se/v1alpha1',
-            kind: 'DataSet',
+            kind: 'Schema',
             metadata: {
               name: this.convertNameToBackstageCompliant(
                 `${dataSetName}`,

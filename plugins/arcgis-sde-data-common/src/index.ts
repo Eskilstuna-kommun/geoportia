@@ -67,7 +67,7 @@ export interface ArcGISSDEDomainValueEntity extends Entity {
 
 export interface ArcGISSDEDataSetEntity extends Entity {
   apiVersion: 'geoportia.se/v1alpha1';
-  kind: 'DataSet';
+  kind: 'Schema';
   spec: {
     dialect: 'arcgis';
     dependencyOf: CompoundEntityRef[];
@@ -152,5 +152,5 @@ export const isArcGISSDEFeatureClassFieldEntity = (
     data: Entity,
   ): data is ArcGISSDEDataSetEntity =>
     data.apiVersion === 'geoportia.se/v1alpha1' &&
-    data.kind === 'DataSet' &&
+    data.kind === 'Schema' &&
     data.spec?.dialect === 'arcgis';
