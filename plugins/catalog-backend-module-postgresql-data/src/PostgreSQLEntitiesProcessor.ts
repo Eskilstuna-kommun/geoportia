@@ -21,17 +21,11 @@ export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
   }
 
   async validateEntityKind(entity: Entity) {
-    if (entity.apiVersion !== 'geoportia.se/v1alpha1') {
-      return false;
-    }
-    if (entity.kind === 'Table') {
-      return await postgresqlTableEntityValidator.check(entity);
-    } else if (entity.kind === 'View') {
-      return await postgresqlViewEntityValidator.check(entity);
-    } else if (entity.kind === 'Schema') {
-      return await postgresqlSchemaEntityValidator.check(entity);
-    }
-    return false;
+    return (
+      postgresqlSchemaEntityValidator.check(entity) ||
+      postgresqlTableEntityValidator.check(entity) ||
+      postgresqlViewEntityValidator.check(entity)
+    );
   }
 
   async postProcessEntity(
@@ -39,9 +33,9 @@ export class PostgreSQLEntitiesProcessor implements CatalogProcessor {
     _location: LocationSpec,
     emit: CatalogProcessorEmit,
   ) {
-    if (entity.kind === 'View' || entity.kind === 'Table' || entity.kind === 'Schema') {
+    if (entity.spec?.dialect === 'postgresql') {
       if (!entity.spec) {
-        throw new Error("View entity must have 'spec' defined");
+        throw new Error("PostgreSQL entity must have 'spec' defined");
       }
 
       // @ts-ignore
