@@ -13,3 +13,16 @@ export {
   datasetEntityValidator,
   isDatasetEntity,
 } from './dataset';
+ 
+export { RESOURCE_TYPE_METADATA_ENTRY,
+  metadataEntryReadPermission,
+  metadataEntryCreatePermission,
+  metadataEntryUpdatePermission,
+  metadataEntryDeletePermission,
+  metadataEntrySuggestPermission,
+  metadataSensitiveReadPermission,
+  metadataDelegateRolePermission,
+  geoportiaMetadataPermissions,
+  GEOPORTIA_ROLES,
+  type GeoportiaRole,
+} from './permissions';

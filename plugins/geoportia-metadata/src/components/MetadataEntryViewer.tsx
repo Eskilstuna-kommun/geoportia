@@ -2,6 +2,7 @@ import React, { useMemo, useState, useCallback, useRef } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi, fetchApiRef, discoveryApiRef } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
+import { usePermission } from '@backstage/plugin-permission-react';
 import {
   InfoCard,
   Progress,
@@ -20,22 +21,11 @@ import CancelIcon from '@material-ui/icons/Cancel';
 import { customWidgets } from '../scaffolder/widgets';
 import { createCustomTemplates } from '../scaffolder/templates';
 import { TableArrayFieldTemplate } from '../scaffolder/TableArrayFieldTemplate';
+import { metadataEntryUpdatePermission } from '@internal/backstage-plugin-geoportia-metadata-common';
 
 export interface MetadataEntryViewerProps {
-  /**
-   * The entity reference of the MetadataEntry entity to display.
-   * Example: "metadataentry:default/my-table"
-   */
   entityRef: string;
-
-  /**
-   * Optional title for the card. Defaults to "Metadata".
-   */
   title?: string;
-
-  /**
-   * Whether the form is editable. Defaults to true (editable).
-   */
   editable?: boolean;
 }
 
@@ -49,9 +39,6 @@ function isMetadataEntry(entity: Entity): boolean {
   );
 }
 
-/**
- * Smart ArrayFieldTemplate that uses TableArrayFieldTemplate for arrays with object items
- */
 const SmartArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   if (
     props.schema?.items &&
@@ -63,11 +50,6 @@ const SmartArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   return null;
 };
 
-/**
- * A component that displays metadata from a MetadataEntry entity.
- * This component is reusable and can be used in different contexts
- * (Table entities, Views, etc.) by passing the metadata entity reference.
- */
 export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
   entityRef,
   title = 'Metadata',
@@ -77,7 +59,15 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
   const fetchApi = useApi(fetchApiRef);
   const discoveryApi = useApi(discoveryApiRef);
 
-  // Edit mode state
+  // Check if user has permission to update metadata
+  const { allowed: canUpdate, loading: permissionLoading } = usePermission({
+    permission: metadataEntryUpdatePermission,
+    resourceRef: entityRef,
+  });
+
+  // User can edit if both the prop allows it AND they have permission
+  const canEdit = editable && canUpdate;
+
   const [isEditing, setIsEditing] = useState(false);
   const [editedMetadata, setEditedMetadata] = useState<Record<string, unknown> | unknown[]>({});
   const [saving, setSaving] = useState(false);
@@ -235,7 +225,7 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
     setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
-  if (loading) {
+  if (loading || permissionLoading) {
     return (
       <InfoCard title={title}>
         <Progress />
@@ -272,7 +262,7 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
   }
 
   // Card actions - edit/save/cancel buttons
-  const cardAction = editable ? (
+  const cardAction = canEdit ? (
     <Box display="flex" gridGap={8}>
       {isEditing ? (
         <>

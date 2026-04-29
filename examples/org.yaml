@@ -60,7 +60,7 @@ kind: User
 metadata:
   name: sweco-se1c8x
 spec:
-  memberOf: [users]
+  memberOf: [users, GG-U-Roll-GeoPortia-Moderator]
 ---
 # https://backstage.io/docs/features/software-catalog/descriptor-format#kind-group
 apiVersion: backstage.io/v1alpha1
@@ -69,4 +69,32 @@ metadata:
   name: users
 spec:
   type: team
+  children: []
+---
+# GeoPortia Role Groups
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: GG-U-Roll-GeoPortia-SuperAdmin
+  description: Full access including sensitive data
+spec:
+  type: role
+  children: []
+---
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: GG-U-Roll-GeoPortia-Admin
+  description: Full access except sensitive data
+spec:
+  type: role
+  children: []
+---
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: GG-U-Roll-GeoPortia-Moderator
+  description: Read all, edit main geodata only (no delete)
+spec:
+  type: role
   children: []

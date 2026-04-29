@@ -17,8 +17,9 @@ export const geoportiaMetadataBackendPlugin = createBackendPlugin({
         httpRouter: coreServices.httpRouter,
         database: coreServices.database,
         discovery: coreServices.discovery,
+        permissions: coreServices.permissions,
       },
-      async init({ httpAuth, httpRouter, database, auth, discovery }) {
+      async init({ httpAuth, httpRouter, database, auth, discovery, permissions }) {
         const client = await database.getClient();
         if (!database.migrations?.skip) {
           await client.migrate.latest({
@@ -36,6 +37,7 @@ export const geoportiaMetadataBackendPlugin = createBackendPlugin({
           await createRouter({
             httpAuth,
             metadataService: metadata,
+            permissions,
           }),
         );
       },
