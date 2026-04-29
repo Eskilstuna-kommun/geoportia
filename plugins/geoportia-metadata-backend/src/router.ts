@@ -1,67 +1,118 @@
-import { HttpAuthService } from '@backstage/backend-plugin-api';
 import express, { Router } from 'express';
+import { HttpAuthService, PermissionsService } from '@backstage/backend-plugin-api';
+import { AuthorizeResult } from '@backstage/plugin-permission-common';
 import { createOpenApiRouter } from './schema/openapi';
 import {
   MetadataEntryCreate,
   MetadataEntryUpdate,
   MetadataService,
 } from './services/MetadataService/types';
+import {
+  metadataEntryCreatePermission,
+  metadataEntryUpdatePermission,
+  metadataEntryDeletePermission,
+} from '@internal/backstage-plugin-geoportia-metadata-common';
 import { z } from 'zod';
 
 export async function createRouter({
   httpAuth,
   metadataService,
+  permissions,
 }: {
   httpAuth: HttpAuthService;
   metadataService: MetadataService;
+  permissions: PermissionsService;
 }): Promise<express.Router> {
   const parentRouter = Router();
   parentRouter.use(express.json());
 
   const openApiRouter = await createOpenApiRouter();
 
-  openApiRouter.post('/', async (req, res) => {
-    const credentials = await httpAuth.credentials(req, { allow: ['user', 'service'] });
+  openApiRouter.post('/', async (req, res, next) => {
+    try {
+      const credentials = await httpAuth.credentials(req, { allow: ['user'] });
 
-    const body = z
-      .object({
-        entityRef: z.string().min(1),
-        schema: z.unknown(),
-        metadata: z.unknown(),
-      })
-      .parse(req.body) as MetadataEntryCreate;
+      // Check create permission
+      const decision = await permissions.authorize(
+        [{ permission: metadataEntryCreatePermission }],
+        { credentials },
+      );
+      if (decision[0].result !== AuthorizeResult.ALLOW) {
+        res.status(403).send();
+        return;
+      }
 
-    const result = await metadataService.createMetadataEntry(body, {
-      credentials,
-    });
+      const body = z
+        .object({
+          entityRef: z.string().min(1),
+          schema: z.unknown(),
+          metadata: z.unknown(),
+        })
+        .parse(req.body) as MetadataEntryCreate;
 
-    res.status(201).json(result);
+      const result = await metadataService.createMetadataEntry(body, {
+        credentials,
+      });
+
+      res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
   });
 
-  openApiRouter.put('/:entityRef', async (req, res) => {
-    const credentials = await httpAuth.credentials(req, { allow: ['user', 'service'] });
-    const entityRef = decodeURIComponent(req.params.entityRef);
+  openApiRouter.put('/:entityRef', async (req, res, next) => {
+    try {
+      const credentials = await httpAuth.credentials(req, { allow: ['user'] });
+      const entityRef = decodeURIComponent(req.params.entityRef);
 
-    const body = z
-      .object({
-        schema: z.unknown(),
-        metadata: z.unknown(),
-      })
-      .parse(req.body) as Omit<MetadataEntryUpdate, 'entityRef'>;
+      // Check update permission (resource-based)
+      const decision = await permissions.authorize(
+        [{ permission: metadataEntryUpdatePermission, resourceRef: entityRef }],
+        { credentials },
+      );
+      if (decision[0].result !== AuthorizeResult.ALLOW) {
+        res.status(403).send();
+        return;
+      }
 
-    const result = await metadataService.updateMetadataEntry(
-      { entityRef, ...body },
-      { credentials },
-    );
+      const body = z
+        .object({
+          schema: z.unknown(),
+          metadata: z.unknown(),
+        })
+        .parse(req.body) as Omit<MetadataEntryUpdate, 'entityRef'>;
 
-    res.json(result);
+      const result = await metadataService.updateMetadataEntry(
+        { entityRef, ...body },
+        { credentials },
+      );
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
   });
 
-  openApiRouter.delete('/:entityRef', async (req, res) => {
-    const credentials = await httpAuth.credentials(req, { allow: ['user'] });
-    const entityRef = decodeURIComponent(req.params.entityRef);
-    await metadataService.deleteMetadataEntry({ entityRef }, { credentials });
-    res.status(204).send();
+  openApiRouter.delete('/:entityRef', async (req, res, next) => {
+    try {
+      const credentials = await httpAuth.credentials(req, { allow: ['user'] });
+      const entityRef = decodeURIComponent(req.params.entityRef);
+
+      // Check delete permission (resource-based)
+      const decision = await permissions.authorize(
+        [{ permission: metadataEntryDeletePermission, resourceRef: entityRef }],
+        { credentials },
+      );
+      if (decision[0].result !== AuthorizeResult.ALLOW) {
+        res.status(403).send();
+        return;
+      }
+
+      await metadataService.deleteMetadataEntry({ entityRef }, { credentials });
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
   });
 
   // Mount the OpenAPI router under the parent router

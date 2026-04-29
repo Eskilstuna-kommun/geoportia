@@ -31,6 +31,7 @@
     "dist"
   ],
   "dependencies": {
+    "@backstage/plugin-permission-common": "^0.9.0",
     "@internal/backstage-plugin-geoportia-metadata-common": "file:",
     "cross-fetch": "^4.1.0",
     "uri-template": "^2.0.0"

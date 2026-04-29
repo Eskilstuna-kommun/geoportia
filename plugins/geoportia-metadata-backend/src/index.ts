@@ -5,6 +5,12 @@ export { MetadataEntryProcessor } from './MetadataEntryProcessor';
 export { AttributeProcessor, RELATION_ATTRIBUTE_OF, RELATION_HAS_ATTRIBUTE } from './AttributeProcessor';
 export { createStoreMetadataAction } from './actions';
 export type { StoreMetadataActionOptions } from './actions';
+export { geoportiaPermissionPolicyModule } from './permission-policy-module';
+export {
+  metadataPermissionRules,
+  createMetadataConditions,
+  type MetadataEntryResource,
+} from './permissions';
 export {
   RELATION_DESCRIBES,
   RELATION_DESCRIBED_BY,

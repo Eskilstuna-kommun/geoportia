@@ -16,6 +16,7 @@ import { createBackend } from '@backstage/backend-defaults';
 import {
   geoportiaMetadataBackendModule,
   scaffolderModuleGeoportiaMetadata,
+  geoportiaPermissionPolicyModule,
 } from '@internal/backstage-plugin-geoportia-metadata-backend';
 
 const backend = createBackend();
@@ -44,10 +45,7 @@ backend.add(import('@backstage/plugin-catalog-backend-module-logs'));
 
 // permission plugin
 backend.add(import('@backstage/plugin-permission-backend'));
-// See https://backstage.io/docs/permissions/getting-started for how to create your own permission policy
-backend.add(
-  import('@backstage/plugin-permission-backend-module-allow-all-policy'),
-);
+backend.add(geoportiaPermissionPolicyModule);
 
 // search plugin
 backend.add(import('@backstage/plugin-search-backend'));
