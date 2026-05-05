@@ -5,6 +5,14 @@ export { MetadataEntryProcessor } from './MetadataEntryProcessor';
 export { AttributeProcessor, RELATION_ATTRIBUTE_OF, RELATION_HAS_ATTRIBUTE } from './AttributeProcessor';
 export { createStoreMetadataAction } from './actions';
 export type { StoreMetadataActionOptions } from './actions';
+export {
+  createCreatePostgresSchemaAction,
+  createCreateArcgisSdeDatasetAction,
+} from './actions';
+export type {
+  CreatePostgresSchemaActionOptions,
+  CreateArcgisSdeDatasetActionOptions,
+} from './actions';
 export { geoportiaPermissionPolicyModule } from './permission-policy-module';
 export {
   metadataPermissionRules,

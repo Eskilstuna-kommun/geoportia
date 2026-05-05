@@ -335,5 +335,82 @@ def getDomains():
         return jsonify(success=success, message=return_message, domains=formatedDomains)
 
 
+@app.post("/create-dataset")
+def create_dataset():
+    """
+    Creates a new feature dataset in the given SDE database.
+
+    Expected JSON body:
+    {
+        "database": "<sde database name>",
+        "datasetName": "<name of dataset to create>",
+        "adminUser": "<sde admin user>",
+        "adminPassword": "<sde admin password>",
+        "spatialReferenceWkid": <optional integer WKID, e.g. 3006>
+    }
+    """
+    data: Any | None = request.json
+
+    if data is None:
+        return jsonify(success=False, message="Inga data skickades")
+
+    expected_fields = {
+        "database": "Databas saknas",
+        "datasetName": "Datasetnamn saknas",
+        "adminUser": "Admin-användarnamn saknas",
+        "adminPassword": "Admin-lösenord saknas",
+    }
+
+    for expected_field in expected_fields:
+        if not data.get(expected_field):
+            return jsonify(success=False, message=expected_fields[expected_field])
+
+    success = False
+    return_message = ""
+
+    database = data.get("database")
+    dataset_name = data.get("datasetName")
+    database_user = data.get("adminUser")
+    password = data.get("adminPassword")
+    spatial_reference_wkid = data.get("spatialReferenceWkid")
+
+    try:
+        connection_file_name = create_connection_file(database, database_user, password)
+        arcpy.env.workspace = connection_file_name
+        arcpy.management.ClearWorkspaceCache()
+
+        # If the dataset already exists, treat as a no-op success.
+        existing = arcpy.ListDatasets(dataset_name, "Feature") or []
+        already_exists = any(
+            ds.split(".")[-1].lower() == dataset_name.lower() for ds in existing
+        )
+
+        if already_exists:
+            return_message = (
+                f"Dataset '{dataset_name}' finns redan i databasen '{database}'."
+            )
+        else:
+            spatial_reference = (
+                arcpy.SpatialReference(int(spatial_reference_wkid))
+                if spatial_reference_wkid is not None
+                else None
+            )
+            arcpy.management.CreateFeatureDataset(
+                connection_file_name, dataset_name, spatial_reference
+            )
+            return_message = (
+                f"Dataset '{dataset_name}' skapad i databasen '{database}'."
+            )
+
+        success = True
+    except Exception as ex:
+        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+        return_message = template.format(type(ex).__name__, ex.args)
+        success = False
+    finally:
+        delete_connection_file(database, database_user)
+        return jsonify(success=success, message=return_message)
+
+
 if __name__ == "__main__":
     serve(app, host="127.0.0.1", port=8045, threads=512)
