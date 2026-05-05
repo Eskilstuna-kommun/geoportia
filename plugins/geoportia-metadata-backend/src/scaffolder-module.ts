@@ -4,7 +4,11 @@ import {
   resolvePackagePath,
 } from '@backstage/backend-plugin-api';
 import { scaffolderActionsExtensionPoint } from '@backstage/plugin-scaffolder-node/alpha';
-import { createStoreMetadataAction } from './actions';
+import {
+  createStoreMetadataAction,
+  createCreatePostgresSchemaAction,
+  createCreateArcgisSdeDatasetAction,
+} from './actions';
 import { MetadataService } from './services/MetadataService/MetadataService';
 import { CatalogClient } from '@backstage/catalog-client';
 
@@ -18,10 +22,11 @@ export const scaffolderModuleGeoportiaMetadata = createBackendModule({
         database: coreServices.database,
         discovery: coreServices.discovery,
         auth: coreServices.auth,
+        rootConfig: coreServices.rootConfig,
       },
-      async init({ scaffolder, database, discovery, auth }) {
+      async init({ scaffolder, database, discovery, auth, rootConfig }) {
         const client = await database.getClient();
-        
+
         // Run migrations if needed (use separate table to avoid conflicts)
         if (!database.migrations?.skip) {
           await client.migrate.latest({
@@ -42,6 +47,42 @@ export const scaffolderModuleGeoportiaMetadata = createBackendModule({
             auth,
           }),
         );
+
+        const postgresUri = rootConfig.getOptionalString(
+          'catalog.providers.postgresql.uri',
+        );
+        if (postgresUri) {
+          scaffolder.addActions(
+            createCreatePostgresSchemaAction({ baseUri: postgresUri }),
+          );
+        }
+
+        const arcgisProxyUri = rootConfig.getOptionalString(
+          'catalog.providers.arcgissde.proxyUri',
+        );
+        const arcgisAdminUser = rootConfig.getOptionalString(
+          'catalog.providers.arcgissde.adminUser',
+        );
+        const arcgisAdminPassword = rootConfig.getOptionalString(
+          'catalog.providers.arcgissde.adminPassword',
+        );
+        const arcgisDefaultDatabase = rootConfig.getOptionalString(
+          'catalog.providers.arcgissde.database',
+        );
+        const arcgisDefaultWkid = rootConfig.getOptionalNumber(
+          'catalog.providers.arcgissde.defaultSpatialReferenceWkid',
+        );
+        if (arcgisProxyUri && arcgisAdminUser && arcgisAdminPassword) {
+          scaffolder.addActions(
+            createCreateArcgisSdeDatasetAction({
+              proxyUri: arcgisProxyUri,
+              adminUser: arcgisAdminUser,
+              adminPassword: arcgisAdminPassword,
+              defaultDatabase: arcgisDefaultDatabase,
+              defaultSpatialReferenceWkid: arcgisDefaultWkid,
+            }),
+          );
+        }
       },
     });
   },
