@@ -1,8 +1,12 @@
 import React from 'react';
-import type { FieldTemplateProps } from '@rjsf/utils';
+import type { FieldTemplateProps, DescriptionFieldProps } from '@rjsf/utils';
 import { Box, Tooltip, Button, Typography } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import AddIcon from '@material-ui/icons/Add';
+
+export const CustomDescriptionFieldTemplate = (_props: DescriptionFieldProps) => {
+  return null;
+};
 
 export const CustomFieldTemplate = (props: FieldTemplateProps) => {
   const { children, schema, rawDescription, classNames, hidden, label, required } = props;
@@ -40,6 +44,7 @@ export const CustomFieldTemplate = (props: FieldTemplateProps) => {
 
 export const createCustomTemplates = (addButtonText: string) => ({
   FieldTemplate: CustomFieldTemplate,
+  DescriptionFieldTemplate: CustomDescriptionFieldTemplate,
   ButtonTemplates: {
     AddButton: (buttonProps: any) => (
       <Button

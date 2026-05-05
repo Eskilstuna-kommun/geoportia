@@ -111,6 +111,10 @@ class GeoportiaPermissionPolicy implements PermissionPolicy {
       return { result: AuthorizeResult.ALLOW };
     }
 
+    if (permission.name.startsWith('scaffolder.')) {
+      return { result: AuthorizeResult.ALLOW };
+    }
+
     return { result: AuthorizeResult.DENY };
   }
 }

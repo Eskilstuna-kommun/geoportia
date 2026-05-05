@@ -2,7 +2,7 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: geoportia-metadata-template
-  title: Ändra databasspecifikation
+  title: Skapa databasspecifikation
   description: En mall för att samla in och hantera metadata för GeoPortia-lager
 spec:
   owner: user:guest
@@ -190,6 +190,58 @@ spec:
                   'ui:widget': 'textarea'
                   'ui:options':
                     rows: 3
+
+    - title: Ägare
+      required:
+        - owner
+      properties:
+        owner:
+          title: Ägare
+          type: object
+          ui:field: GeoPortiaMetadataField
+          ui:options:
+            headerTitle: Ägare
+            showSidebar: true
+            geoportiaMetadataSchema:
+              required:
+                - eskilstunaKommun
+                - organization
+                - databaseUser
+                - allowOneTimeSignature
+              properties:
+                eskilstunaKommun:
+                  type: boolean
+                  title: Eskilstuna kommun
+                  default: false
+                organization:
+                  type: string
+                  title: Organisation
+                  enum:
+                    - 'Välj...'
+                    - 'Databas'
+                    - 'GIS'
+                    - 'Karta'
+                    - 'Plan'
+                    - 'Miljö'
+                  default: 'Välj...'
+                databaseUser: 
+                  type: string
+                  title: Databaseanvändare
+                  enum:
+                    - 'Välj...'
+                    - 'Databas'
+                    - 'GIS'
+                    - 'Karta'
+                    - 'Plan'
+                    - 'Miljö'
+                  default: 'Välj...'
+                allowOneTimeSignature:
+                  type: boolean
+                  title: Tillåt Engångssignatur
+                  default: false
+                  description: Specifikationen kommer exkluderas från den årliga kontroll som sker. Detta innebär att specifikationen endast kommer att behöva signeras en gång. OBS. Vid byte av dataägare återställs detta värde.
+            geoportiaMetadataUiSchema: {}
+
     - title: Metadata
       required:
         - metadata
