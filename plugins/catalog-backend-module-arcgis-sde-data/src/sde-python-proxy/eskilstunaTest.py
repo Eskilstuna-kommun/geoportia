@@ -272,5 +272,64 @@ def getDomains():
         return jsonify(success=success, message=return_message, domains=formatedDomains)
 
 
+@app.post("/create-dataset")
+def create_dataset():
+    data: Any | None = request.json
+
+    if data is None:
+        return jsonify(success=False, message="Inga data skickades")
+
+    expected_fields = {
+        "database": "Databas saknas",
+        "datasetName": "Datasetnamn saknas",
+        "adminUser": "Admin-användarnamn saknas",
+        "adminPassword": "Admin-lösenord saknas",
+    }
+
+    for expected_field in expected_fields:
+        if not data.get(expected_field):
+            return jsonify(success=False, message=expected_fields[expected_field])
+
+    success = False
+    return_message = ""
+    try:
+        database = data.get("database")
+        dataset_name = data.get("datasetName")
+        spatial_reference_wkid = data.get("spatialReferenceWkid")
+
+        arcpy.env.workspace = workspace_path
+        arcpy.management.ClearWorkspaceCache()
+
+        existing = arcpy.ListDatasets(dataset_name, "Feature") or []
+        already_exists = any(
+            ds.split(".")[-1].lower() == dataset_name.lower() for ds in existing
+        )
+
+        if already_exists:
+            return_message = (
+                f"Dataset '{dataset_name}' finns redan i databasen '{database}'."
+            )
+        else:
+            spatial_reference = (
+                arcpy.SpatialReference(int(spatial_reference_wkid))
+                if spatial_reference_wkid is not None
+                else None
+            )
+            arcpy.management.CreateFeatureDataset(
+                workspace_path, dataset_name, spatial_reference
+            )
+            return_message = (
+                f"Dataset '{dataset_name}' skapad i databasen '{database}'."
+            )
+
+        success = True
+    except Exception as ex:
+        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+        return_message = template.format(type(ex).__name__, ex.args)
+        success = False
+    finally:
+        return jsonify(success=success, message=return_message)
+
+
 if __name__ == "__main__":
     serve(app, host="127.0.0.1", port=8045, threads=512)

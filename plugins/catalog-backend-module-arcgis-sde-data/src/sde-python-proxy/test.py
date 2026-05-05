@@ -239,5 +239,32 @@ def getDomains():
     return jsonify(success=True, message="", domains=formatedDomains)
 
 
+@app.post("/create-dataset")
+def create_dataset():
+    data: Any | None = request.json
+
+    if data is None:
+        return jsonify(success=False, message="Inga data skickades")
+
+    expected_fields: dict[str, str] = {
+        "database": "Databas saknas",
+        "datasetName": "Datasetnamn saknas",
+        "adminUser": "Admin-användarnamn saknas",
+        "adminPassword": "Admin-lösenord saknas",
+    }
+
+    for expected_field in expected_fields:
+        if not data.get(expected_field):
+            return jsonify(success=False, message=expected_fields[expected_field])
+
+    database = data.get("database")
+    dataset_name = data.get("datasetName")
+
+    return jsonify(
+        success=True,
+        message=f"Dataset '{dataset_name}' skapad i databasen '{database}'.",
+    )
+
+
 if __name__ == "__main__":
     serve(app, host="0.0.0.0", port=8045, threads=512)
