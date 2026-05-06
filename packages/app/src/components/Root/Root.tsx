@@ -34,7 +34,7 @@ import {
 
 const useSidebarLogoStyles = makeStyles({
   root: {
-    width: sidebarConfig.drawerWidthClosed,
+    width: '100%',
     height: 3 * sidebarConfig.logoHeight,
     display: 'flex',
     flexFlow: 'row nowrap',
@@ -89,6 +89,11 @@ const useExpandableStyles = makeStyles<Theme>(theme => ({
     fontSize: '0.875rem',
     fontWeight: 600,
     color: theme.palette.navigation?.color,
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+  },
+  itemTextHidden: {
+    display: 'none',
   },
   expandIcon: {
     alignItems: 'center',
@@ -98,6 +103,9 @@ const useExpandableStyles = makeStyles<Theme>(theme => ({
     width: '24px',
     color: theme.palette.navigation?.color,
     transition: 'transform 200ms',
+  },
+  expandIconHidden: {
+    display: 'none',
   },
   expandIconExpanded: {
     transform: 'rotate(180deg)',
@@ -147,17 +155,25 @@ const ExpandableItem: React.FC<ExpandableItemProps> = ({
   const classes = useExpandableStyles();
   const [isExpanded, setIsExpanded] = useState(false);
   const location = useLocation();
+  const { isOpen } = useSidebarOpenState();
 
   const isAnySubmenuActive = items.some(item =>
     location.pathname.includes(item.to),
   );
+
+  // Close submenu when sidebar closes
+  React.useEffect(() => {
+    if (!isOpen) {
+      setIsExpanded(false);
+    }
+  }, [isOpen]);
 
   return (
     <>
       <ListItem
         button
         disableGutters
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => isOpen && setIsExpanded(!isExpanded)}
         style={{ padding: 0 }}
         classes={{ root: classes.listItemRoot }}
       >
@@ -168,21 +184,23 @@ const ExpandableItem: React.FC<ExpandableItemProps> = ({
           <div
             className={`${classes.itemText} ${
               isAnySubmenuActive ? classes.itemTextActive : ''
-            }`}
+            } ${!isOpen ? classes.itemTextHidden : ''}`}
           >
             {text}
           </div>
           <div
             className={`${classes.expandIcon} ${
               isExpanded ? classes.expandIconExpanded : ''
-            } ${isAnySubmenuActive ? classes.expandIconActive : ''}`}
+            } ${isAnySubmenuActive ? classes.expandIconActive : ''} ${
+              !isOpen ? classes.expandIconHidden : ''
+            }`}
           >
             <ExpandMoreIcon />
           </div>
         </div>
       </ListItem>
       <Collapse
-        in={isExpanded}
+        in={isExpanded && isOpen}
         timeout="auto"
         unmountOnExit
         style={{ width: '100%' }}
@@ -236,14 +254,23 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
         <SidebarItem icon={ControllpanelIcon} to="/" text="Min sida" />
         <ExpandableItem
           icon={DatabaseIcon}
-          text="Databashantering"
+          text="Huvudgeodatamängd"
           items={[
-            { to: 'table', text: 'Tables' },
-            { to: 'views', text: 'Views' },
-            { to: 'field', text: 'Fields' },
+            { to: 'listView', text: 'Listvy' },
+            { to: 'permissionGroups', text: 'Behörighetsgrupper' },
           ]}
         />
 
+          <ExpandableItem
+            icon={DatabaseIcon}
+            text="Databashantering"
+            items={[
+              { to: 'database', text: 'Databaser' },
+              { to: 'databaseUsers', text: 'Databasanvändare' },
+              { to: 'roles', text: 'Roller' },
+              { to: 'dataset', text: 'Dataset (ESRI)' },
+            ]}
+          />
         <ExpandableItem
           icon={GeoserverIcon}
           text="Geoserver"
