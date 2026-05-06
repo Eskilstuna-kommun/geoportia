@@ -1,0 +1,12 @@
+{
+  "searchBar.title": "Sök",
+  "searchBar.placeholder": "Sök i {{org}}",
+  "searchFilter.allOptionTitle": "Alla",
+  "searchPagination.limitLabel": "Resultat per sida:",
+  "searchPagination.limitText": "av {{num}}",
+  "noResultsDescription": "Tyvärr hittades inga resultat",
+  "searchResultGroup.linkTitle": "Visa alla",
+  "searchResultGroup.addFilterButtonTitle": "Lägg till filter",
+  "searchResultPager.previous": "Föregående",
+  "searchResultPager.next": "Nästa"
+}

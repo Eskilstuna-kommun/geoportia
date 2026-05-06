@@ -7,6 +7,7 @@ import {
   OverflowTooltip,
 } from '@backstage/core-components';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import {
   CatalogTable,
   CatalogTableColumnsFunc,
@@ -19,6 +20,7 @@ import {
 } from '@backstage/plugin-catalog-react';
 import React, { useState } from 'react';
 import { useGeoportiaOpenStyles } from '../../theme/geoportiaopen';
+import { geoportiaTranslationRef } from '../../translations';
 
 import Box from '@mui/material/Box';
 import Menu from '@mui/material/Menu';
@@ -42,6 +44,7 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
   const orgName =
     useApi(configApiRef).getOptionalString('organization.name') ?? 'Backstage';
 
+  const { t } = useTranslationRef(geoportiaTranslationRef);
   const geoportiaOpenStyles = useGeoportiaOpenStyles();
 
   const [columnOptionAnchorEl, setColumnOptionAnchorEl] =
@@ -65,15 +68,15 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
   };
 
   const columnOptions = [
-    { key: 'Name', label: 'Name', binary: false },
-    { key: 'System', label: 'System', binary: false },
-    { key: 'Owner', label: 'Owner', binary: false },
-    { key: 'Type', label: 'Type', binary: false },
-    { key: 'Lifecycle', label: 'Lifecycle', binary: false },
-    { key: 'Description', label: 'Description', binary: false },
-    { key: 'Tags', label: 'Tags', binary: false },
-    { key: 'evenName', label: 'Even', binary: true },
-    { key: 'longName', label: 'Long', binary: true },
+    { key: 'Name', label: t('customIndexPage.columns.name'), binary: false },
+    { key: 'System', label: t('customIndexPage.columns.system'), binary: false },
+    { key: 'Owner', label: t('customIndexPage.columns.owner'), binary: false },
+    { key: 'Type', label: t('customIndexPage.columns.type'), binary: false },
+    { key: 'Lifecycle', label: t('customIndexPage.columns.lifecycle'), binary: false },
+    { key: 'Description', label: t('customIndexPage.columns.description'), binary: false },
+    { key: 'Tags', label: t('customIndexPage.columns.tags'), binary: false },
+    { key: 'evenName', label: t('customIndexPage.columns.even'), binary: true },
+    { key: 'longName', label: t('customIndexPage.columns.long'), binary: true },
   ];
 
   const [filteredColumns, setFilteredColumns] = useState<
@@ -113,14 +116,14 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
   };
 
   const filterOptions = [
-    { label: 'Do not filter', value: 'none' },
-    { label: 'Filter on true', value: 'true' },
-    { label: 'Filter on false', value: 'false' },
+    { label: t('customIndexPage.filterOptions.none'), value: 'none' },
+    { label: t('customIndexPage.filterOptions.true'), value: 'true' },
+    { label: t('customIndexPage.filterOptions.false'), value: 'false' },
   ];
 
   // Adds a column that shows if the entity name has an even number of characters; for demo purposes
   const createEntityNameIsEvenColumn = (): TableColumn<CatalogTableRow> => ({
-    title: 'Even',
+    title: t('customIndexPage.columns.even'),
     render: ({ entity }) => (
       <OverflowTooltip
         // @ts-ignore
@@ -132,7 +135,7 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
 
   // Adds a column that shows if the entity name is longer than 5 letters; for demo purposes
   const createEntityNameIsLongColumn = (): TableColumn<CatalogTableRow> => ({
-    title: 'Long',
+    title: t('customIndexPage.columns.long'),
     render: ({ entity }) => (
       <OverflowTooltip
         // @ts-ignore
@@ -161,7 +164,7 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
     <PageWithHeader title={orgName} themeId="home">
       <Content>
         <ContentHeader title="">
-          <SupportButton>All your software catalog entities</SupportButton>
+          <SupportButton>{t('customIndexPage.supportButtonContent')}</SupportButton>
         </ContentHeader>
         <div className={geoportiaOpenStyles.catalogFilterContainer}>
           <div className={geoportiaOpenStyles.catalogMenuContainer}>
@@ -175,7 +178,7 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
                       textAlign: 'center',
                     }}
                   >
-                    <Tooltip title="Select filters to apply">
+                    <Tooltip title={t('customIndexPage.filterTooltip')}>
                       <Button
                         className={geoportiaOpenStyles.filterMenuButton}
                         onClick={handleFilterButtonClick}
@@ -187,7 +190,7 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
                         aria-expanded={filterMenuOpen ? 'true' : undefined}
                       >
                         <FilterAltOutlinedIcon />
-                        Filter
+                        {t('customIndexPage.filterButton')}
                       </Button>
                     </Tooltip>
                   </Box>
@@ -260,7 +263,7 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
                       textAlign: 'center',
                     }}
                   >
-                    <Tooltip title="Select columns to display">
+                    <Tooltip title={t('customIndexPage.columnsTooltip')}>
                       <Button
                         className={geoportiaOpenStyles.columnMenuButton}
                         onClick={handleColumnButtonClick}
@@ -272,7 +275,7 @@ export const CustomIndexPage = ({ kind }: { kind: string }) => {
                         aria-expanded={columnMenuOpen ? 'true' : undefined}
                       >
                         <TableRowsOutlinedIcon />
-                        Columns
+                        {t('customIndexPage.columnsButton')}
                       </Button>
                     </Tooltip>
                   </Box>

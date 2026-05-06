@@ -44,6 +44,7 @@ import { UnifiedThemeProvider } from '@backstage/theme';
 import { eskilstunaTheme } from './theme/eskilstuna';
 import WbSunny from '@material-ui/icons/WbSunny';
 import { CustomIndexPage } from './components/custompage/CustomIndexPage';
+import { allSwedishTranslations } from './translations';
 
 const app = createApp({
   apis,
@@ -91,6 +92,11 @@ const app = createApp({
       ),
     },
   ],
+  __experimentalTranslations: {
+    availableLanguages: ['en', 'sv'],
+    defaultLanguage: 'sv',
+    resources: allSwedishTranslations,
+  },
 });
 
 const routes = (

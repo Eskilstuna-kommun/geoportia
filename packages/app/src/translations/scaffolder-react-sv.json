@@ -1,0 +1,20 @@
+{
+  "passwordWidget.content": "Denna widget är osäker. Använd [`ui:field: Secret`](https://backstage.io/docs/features/software-templates/writing-templates/#using-secrets) istället för `ui:widget: password`",
+  "scaffolderPageContextMenu.moreLabel": "mer",
+  "scaffolderPageContextMenu.createLabel": "Skapa",
+  "scaffolderPageContextMenu.editorLabel": "Hantera mallar",
+  "scaffolderPageContextMenu.actionsLabel": "Installerade åtgärder",
+  "scaffolderPageContextMenu.tasksLabel": "Uppgiftslista",
+  "scaffolderPageContextMenu.templatingExtensionsLabel": "Mallutökningar",
+  "stepper.backButtonText": "Tillbaka",
+  "stepper.createButtonText": "Skapa",
+  "stepper.reviewButtonText": "Granska",
+  "stepper.stepIndexLabel": "Steg {{index, number}}",
+  "stepper.nextButtonText": "Nästa",
+  "templateCategoryPicker.title": "Kategorier",
+  "templateCard.noDescription": "Ingen beskrivning",
+  "templateCard.chooseButtonText": "Välj",
+  "cardHeader.detailBtnTitle": "Visa malldetaljer",
+  "templateOutputs.title": "Textutdata",
+  "workflow.noDescription": "Ingen beskrivning"
+}
