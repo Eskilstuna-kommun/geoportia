@@ -8714,6 +8714,31 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@internal/backstage-plugin-catalog-frontend@workspace:^, @internal/backstage-plugin-catalog-frontend@workspace:plugins/catalog-frontend":
+  version: 0.0.0-use.local
+  resolution: "@internal/backstage-plugin-catalog-frontend@workspace:plugins/catalog-frontend"
+  dependencies:
+    "@backstage/cli": "npm:^0.32.1"
+    "@backstage/core-app-api": "npm:^1.17.0"
+    "@backstage/core-components": "npm:^0.17.2"
+    "@backstage/core-plugin-api": "npm:^1.10.7"
+    "@backstage/dev-utils": "npm:^1.1.10"
+    "@backstage/test-utils": "npm:^1.7.8"
+    "@backstage/theme": "npm:^0.6.6"
+    "@material-ui/core": "npm:^4.9.13"
+    "@material-ui/icons": "npm:^4.9.1"
+    "@material-ui/lab": "npm:^4.0.0-alpha.61"
+    "@testing-library/jest-dom": "npm:^6.0.0"
+    "@testing-library/react": "npm:^14.0.0"
+    "@testing-library/user-event": "npm:^14.0.0"
+    msw: "npm:^1.0.0"
+    react: "npm:^16.13.1 || ^17.0.0 || ^18.0.0"
+    react-use: "npm:^17.2.4"
+  peerDependencies:
+    react: ^16.13.1 || ^17.0.0 || ^18.0.0
+  languageName: unknown
+  linkType: soft
+
 "@internal/backstage-plugin-database-common@workspace:plugins/database-common":
   version: 0.0.0-use.local
   resolution: "@internal/backstage-plugin-database-common@workspace:plugins/database-common"
@@ -8899,6 +8924,15 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@internal/geoportia-metadata-common@link:../geoportia-metadata-common::locator=%40internal%2Fbackstage-plugin-geoportia-metadata-backend%40workspace%3Aplugins%2Fgeoportia-metadata-backend"
   languageName: node
+  linkType: soft
+
+"@internal/geoportia-ui@workspace:packages/geoportia-ui":
+  version: 0.0.0-use.local
+  resolution: "@internal/geoportia-ui@workspace:packages/geoportia-ui"
+  dependencies:
+    "@backstage/cli": "npm:^0.32.1"
+    "@testing-library/jest-dom": "npm:^6.0.0"
+  languageName: unknown
   linkType: soft
 
 "@internal/geoserver-data-common@link:../geoserver-data-common::locator=%40internal%2Fbackstage-plugin-catalog-backend-module-geoserver%40workspace%3Aplugins%2Fcatalog-backend-module-geoserver":
@@ -18521,6 +18555,7 @@ __metadata:
     "@backstage/plugin-user-settings": "npm:^0.8.22"
     "@backstage/test-utils": "npm:^1.7.8"
     "@backstage/theme": "npm:^0.6.6"
+    "@internal/backstage-plugin-catalog-frontend": "workspace:^"
     "@internal/backstage-plugin-geoportia-metadata": "npm:^0.1.0"
     "@material-ui/core": "npm:^4.12.2"
     "@material-ui/icons": "npm:^4.9.1"
