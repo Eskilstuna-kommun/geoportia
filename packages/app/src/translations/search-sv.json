@@ -1,0 +1,9 @@
+{
+  "searchModal.viewFullResults": "Visa fullständiga resultat",
+  "searchType.allResults": "Alla resultat",
+  "searchType.tabs.allTitle": "Alla",
+  "searchType.accordion.allTitle": "Alla",
+  "searchType.accordion.collapse": "Fäll ihop",
+  "searchType.accordion.numberOfResults": "{{number}} resultat",
+  "sidebarSearchModal.title": "Sök"
+}

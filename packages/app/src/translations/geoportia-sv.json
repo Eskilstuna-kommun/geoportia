@@ -1,0 +1,19 @@
+{
+  "customIndexPage.supportButtonContent": "Alla dina entiteter i katalogen",
+  "customIndexPage.filterButton": "Filter",
+  "customIndexPage.filterTooltip": "Välj filter att tillämpa",
+  "customIndexPage.columnsButton": "Kolumner",
+  "customIndexPage.columnsTooltip": "Välj kolumner att visa",
+  "customIndexPage.filterOptions.none": "Filtrera inte",
+  "customIndexPage.filterOptions.true": "Filtrera på sant",
+  "customIndexPage.filterOptions.false": "Filtrera på falskt",
+  "customIndexPage.columns.name": "Namn",
+  "customIndexPage.columns.system": "System",
+  "customIndexPage.columns.owner": "Ägare",
+  "customIndexPage.columns.type": "Typ",
+  "customIndexPage.columns.lifecycle": "Livscykel",
+  "customIndexPage.columns.description": "Beskrivning",
+  "customIndexPage.columns.tags": "Taggar",
+  "customIndexPage.columns.even": "Jämn",
+  "customIndexPage.columns.long": "Lång"
+}
