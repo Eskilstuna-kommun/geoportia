@@ -5,6 +5,7 @@ import {
 } from '@backstage/backend-plugin-api';
 import { createRouter } from './router';
 import { MetadataService } from './services/MetadataService/MetadataService';
+import { SuggestionService } from './services/SuggestionService/SuggestionService';
 import { CatalogClient } from '@backstage/catalog-client';
 
 export const geoportiaMetadataBackendPlugin = createBackendPlugin({
@@ -32,11 +33,13 @@ export const geoportiaMetadataBackendPlugin = createBackendPlugin({
 
         const catalogClient = new CatalogClient({ discoveryApi: discovery });
         const metadata = new MetadataService(client, catalogClient, auth);
+        const suggestion = new SuggestionService(client, catalogClient, auth);
 
         httpRouter.use(
           await createRouter({
             httpAuth,
             metadataService: metadata,
+            suggestionService: suggestion,
             permissions,
           }),
         );
