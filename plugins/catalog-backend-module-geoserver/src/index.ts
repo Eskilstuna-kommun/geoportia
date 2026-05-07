@@ -6,3 +6,4 @@
  */
 
 export { catalogModuleGeoserver as default } from './module';
+export { scaffolderModuleGeoserver } from './scaffolderModule';
