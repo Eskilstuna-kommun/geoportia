@@ -2,10 +2,10 @@ import { LoggerService } from '@backstage/backend-plugin-api';
 import { GeoServerRestClient } from 'geoserver-rest-client';
 
 export enum GeoserverStoreType {
-  Datastore = 'datastore',
-  CoverageStore = 'coveragestore',
-  WMSStore = 'wmsstore',
-  WMTSStore = 'wmtsstore',
+  Datastore = 'DataStore',
+  CoverageStore = 'CoverageStore',
+  WMSStore = 'WMSStore',
+  WMTSStore = 'WMTSStore',
 }
 
 export interface GeoserverLayer {
