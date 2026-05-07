@@ -37,10 +37,10 @@ export class GeoserverService {
       this.geoserverUsername,
       this.geoserverPassword,
     );
-
-    switch (storeType) {
-      case GeoserverStoreType.Datastore:
-        try {
+    
+    try {
+      switch (storeType) {
+        case GeoserverStoreType.Datastore:
           await geoserverRestClient.layers.publishFeatureType(
             layer.workspace,
             layer.datastore,
@@ -52,20 +52,9 @@ export class GeoserverService {
             layer.abstract,
             layer.nativeBoundingBox,
           );
-        } catch (error) {
-          this.logger.error(
-            `Failed to publish feature type layer ${layer.name} in workspace ${
-              layer.workspace
-            } and datastore ${layer.datastore}: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
-          );
-          throw error;
-        }
 
-        break;
-      case GeoserverStoreType.CoverageStore:
-        try {
+          break;
+        case GeoserverStoreType.CoverageStore:
           await geoserverRestClient.layers.publishDbRaster(
             layer.workspace,
             layer.datastore,
@@ -76,19 +65,9 @@ export class GeoserverService {
             layer.enabled,
             layer.abstract,
           );
-        } catch (error) {
-          this.logger.error(
-            `Failed to publish coverage layer ${layer.name} in workspace ${
-              layer.workspace
-            } and datastore ${layer.datastore}: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
-          );
-          throw error;
-        }
-        break;
-      case GeoserverStoreType.WMSStore:
-        try {
+
+          break;
+        case GeoserverStoreType.WMSStore:
           await geoserverRestClient.layers.publishWmsLayer(
             layer.workspace,
             layer.datastore,
@@ -99,30 +78,19 @@ export class GeoserverService {
             layer.enabled,
             layer.abstract,
           );
-        } catch (error) {
-          this.logger.error(
-            `Failed to publish WMS layer ${layer.name} in workspace ${
-              layer.workspace
-            } and datastore ${layer.datastore}: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
-          );
-          throw error;
-        }
-        break;
-      case GeoserverStoreType.WMTSStore:
-        const body = {
-          wmtssLayer: {
-            name: layer.name || layer.nativeName,
-            nativeName: layer.nativeName,
-            title: layer.title || layer.name || layer.nativeName,
-            srs: layer.srs || 'EPSG:4326',
-            enabled: layer.enabled,
-            abstract: layer.abstract || '',
-          },
-        };
+          break;
+        case GeoserverStoreType.WMTSStore:
+          const body = {
+            wmtssLayer: {
+              name: layer.name || layer.nativeName,
+              nativeName: layer.nativeName,
+              title: layer.title || layer.name || layer.nativeName,
+              srs: layer.srs || 'EPSG:4326',
+              enabled: layer.enabled,
+              abstract: layer.abstract || '',
+            },
+          };
 
-        try {
           await fetch(
             this.geoserverUri +
               '/workspaces/' +
@@ -144,21 +112,21 @@ export class GeoserverService {
               body: JSON.stringify(body),
             },
           );
-        } catch (error) {
-          this.logger.error(
-            `Failed to publish WMTS layer ${layer.name} in workspace ${
-              layer.workspace
-            } and datastore ${layer.datastore}: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
-          );
-          throw error;
-        }
 
-        break;
+          break;
 
-      default:
-        throw new Error(`Unsupported store type: ${storeType}`);
+        default:
+          throw new Error(`Unsupported store type: ${storeType}`);
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to publish feature type layer ${layer.name} in workspace ${
+          layer.workspace
+        } and datastore ${layer.datastore}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      throw error;
     }
   }
 }
