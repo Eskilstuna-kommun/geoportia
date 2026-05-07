@@ -8,8 +8,10 @@ import {
   createStoreMetadataAction,
   createCreatePostgresSchemaAction,
   createCreateArcgisSdeDatasetAction,
+  createMetadataChangeSuggestionAction,
 } from './actions';
 import { MetadataService } from './services/MetadataService/MetadataService';
+import { SuggestionService } from './services/SuggestionService/SuggestionService';
 import { CatalogClient } from '@backstage/catalog-client';
 
 export const scaffolderModuleGeoportiaMetadata = createBackendModule({
@@ -45,6 +47,13 @@ export const scaffolderModuleGeoportiaMetadata = createBackendModule({
           createStoreMetadataAction({
             metadataService,
             auth,
+          }),
+        );
+
+        const suggestionService = new SuggestionService(client, catalogClient, auth);
+        scaffolder.addActions(
+          createMetadataChangeSuggestionAction({
+            suggestionService,
           }),
         );
 

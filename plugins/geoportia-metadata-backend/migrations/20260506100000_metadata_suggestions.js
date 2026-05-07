@@ -1,8 +1,3 @@
-// @ts-check
-
-/**
- * @param {import('knex').Knex} knex
- */
 exports.up = async function up(knex) {
   await knex.schema.createTable('geoportia_metadata_suggestions', table => {
     table.increments('id');
@@ -23,9 +18,6 @@ exports.up = async function up(knex) {
   });
 };
 
-/**
- * @param {import('knex').Knex} knex
- */
 exports.down = async function down(knex) {
   await knex.schema.dropTable('geoportia_metadata_suggestions');
 };

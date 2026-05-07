@@ -8,10 +8,12 @@ export type { StoreMetadataActionOptions } from './actions';
 export {
   createCreatePostgresSchemaAction,
   createCreateArcgisSdeDatasetAction,
+  createMetadataChangeSuggestionAction,
 } from './actions';
 export type {
   CreatePostgresSchemaActionOptions,
   CreateArcgisSdeDatasetActionOptions,
+  CreateMetadataChangeSuggestionActionOptions,
 } from './actions';
 export { geoportiaPermissionPolicyModule } from './permission-policy-module';
 export {
