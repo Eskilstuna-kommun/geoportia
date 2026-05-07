@@ -18,6 +18,13 @@ export interface MetadataSuggestion {
 }
 
 export interface SuggestionService {
+  /** Create a new suggestion for a metadata entry. */
+  createSuggestion(
+    entityRef: string,
+    metadata: JsonObject,
+    suggestedBy: string,
+  ): Promise<{ id: number }>;
+
   /** Get all suggestions for a given entity ref. */
   getSuggestions(
     entityRef: string,

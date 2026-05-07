@@ -35,6 +35,35 @@ export class SuggestionService implements ISuggestionService {
     }
   }
 
+  async createSuggestion(
+    entityRef: string,
+    metadata: JsonObject,
+    suggestedBy: string,
+  ): Promise<{ id: number }> {
+    if (!entityRef) {
+      throw new InputError('entityRef is required');
+    }
+
+    // Find existing metadata entry
+    const existing = await this.database<TableRow>('geoportia_metadata')
+      .where({ entity_ref: entityRef })
+      .first();
+
+    if (!existing) {
+      throw new NotFoundError(`Metadata entry not found for entityRef: ${entityRef}`);
+    }
+
+    const [inserted] = await this.database<SuggestionTableRow>('geoportia_metadata_suggestions')
+      .insert({
+        metadata_id: existing.id,
+        metadata: JSON.stringify(metadata),
+        suggested_by: suggestedBy,
+      })
+      .returning('id');
+
+    return { id: typeof inserted === 'object' ? inserted.id : inserted };
+  }
+
   async getSuggestions(
     entityRef: string,
     _options: {
