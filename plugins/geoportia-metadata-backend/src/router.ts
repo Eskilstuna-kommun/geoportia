@@ -7,6 +7,7 @@ import {
   MetadataEntryUpdate,
   MetadataService,
 } from './services/MetadataService/types';
+import { SuggestionService } from './services/SuggestionService/types';
 import {
   metadataEntryCreatePermission,
   metadataEntryUpdatePermission,
@@ -17,10 +18,12 @@ import { z } from 'zod';
 export async function createRouter({
   httpAuth,
   metadataService,
+  suggestionService,
   permissions,
 }: {
   httpAuth: HttpAuthService;
   metadataService: MetadataService;
+  suggestionService: SuggestionService;
   permissions: PermissionsService;
 }): Promise<express.Router> {
   const parentRouter = Router();
@@ -115,7 +118,50 @@ export async function createRouter({
     }
   });
 
-  // Mount the OpenAPI router under the parent router
+  openApiRouter.get('/:entityRef/suggestions', async (req, res, next) => {
+    try {
+      const credentials = await httpAuth.credentials(req, { allow: ['user'] });
+      const entityRef = decodeURIComponent(req.params.entityRef);
+
+      const suggestions = await suggestionService.getSuggestions(entityRef, {
+        credentials,
+      });
+
+      res.json(suggestions.map(s => ({
+        ...s,
+        createdAt: new Date(s.createdAt),
+      })));
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  openApiRouter.post('/:entityRef/suggestions/:id/accept', async (req, res, next) => {
+    try {
+      const credentials = await httpAuth.credentials(req, { allow: ['user'] });
+      const entityRef = decodeURIComponent(req.params.entityRef);
+      const suggestionId = req.params.id;
+
+      // Check update permission (resource-based) since accepting a suggestion updates the metadata
+      const decision = await permissions.authorize(
+        [{ permission: metadataEntryUpdatePermission, resourceRef: entityRef }],
+        { credentials },
+      );
+      if (decision[0].result !== AuthorizeResult.ALLOW) {
+        res.status(403).send();
+        return;
+      }
+
+      const result = await suggestionService.acceptSuggestion(suggestionId, {
+        credentials,
+      });
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  });
+
   parentRouter.use(openApiRouter);
 
   return parentRouter;

@@ -74,6 +74,63 @@ paths:
           description: "Metadata entry deleted"
         default:
           $ref: '#/components/responses/ErrorResponse'
+
+  /{entityRef}/suggestions:
+    get:
+      operationId: "GetSuggestions"
+      description: "Get all suggestions for a metadata entry identified by entityRef."
+      security:
+        - {}
+        - JWT: []
+      parameters:
+        - in: "path"
+          name: "entityRef"
+          required: true
+          schema:
+            type: "string"
+          description: "URL-encoded Backstage entityRef"
+      responses:
+        200:
+          description: "List of suggestions"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MetadataSuggestion"
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /{entityRef}/suggestions/{id}/accept:
+    post:
+      operationId: "AcceptSuggestion"
+      description: "Accept a suggestion and update the metadata entry."
+      security:
+        - {}
+        - JWT: []
+      parameters:
+        - in: "path"
+          name: "entityRef"
+          required: true
+          schema:
+            type: "string"
+          description: "URL-encoded Backstage entityRef"
+        - in: "path"
+          name: "id"
+          required: true
+          schema:
+            type: "integer"
+          description: "Suggestion ID"
+      responses:
+        200:
+          description: "Suggestion accepted, metadata entry updated"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetadataEntry"
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
 components:
   securitySchemes:
     JWT:
@@ -118,6 +175,28 @@ components:
         metadata:
           type: object
           additionalProperties: true
+    MetadataSuggestion:
+      type: object
+      required: [id, entityRef, metadata, createdAt, suggestedBy]
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          description: "Unique suggestion identifier"
+        entityRef:
+          type: string
+          description: "Backstage string reference of the metadata entry"
+        metadata:
+          type: object
+          description: "Suggested metadata payload"
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+          description: "When the suggestion was created"
+        suggestedBy:
+          type: string
+          description: "User who created the suggestion"
     Error:
       type: object
       properties:

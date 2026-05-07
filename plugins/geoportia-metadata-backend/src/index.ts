@@ -23,3 +23,5 @@ export {
   RELATION_DESCRIBES,
   RELATION_DESCRIBED_BY,
 } from '@internal/geoportia-metadata-common';
+export type { MetadataSuggestion } from './services/SuggestionService/types';
+export { SuggestionService } from './services/SuggestionService/SuggestionService';
