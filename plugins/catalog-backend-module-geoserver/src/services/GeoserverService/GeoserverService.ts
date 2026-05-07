@@ -37,7 +37,7 @@ export class GeoserverService {
       this.geoserverUsername,
       this.geoserverPassword,
     );
-    
+
     try {
       switch (storeType) {
         case GeoserverStoreType.Datastore:
@@ -78,6 +78,7 @@ export class GeoserverService {
             layer.enabled,
             layer.abstract,
           );
+
           break;
         case GeoserverStoreType.WMTSStore:
           const body = {
@@ -122,7 +123,7 @@ export class GeoserverService {
       this.logger.error(
         `Failed to publish feature type layer ${layer.name} in workspace ${
           layer.workspace
-        } and datastore ${layer.datastore}: ${
+        } and datastore ${layer.datastore} of type ${storeType}: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
