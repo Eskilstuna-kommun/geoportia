@@ -26,4 +26,5 @@ export interface GeoPortiaMetadataFieldUiOptions {
   headerTitle?: string;
   headerDescription?: string;
   showSidebar?: boolean;
+  prefillFromEntity?: string;
 }
