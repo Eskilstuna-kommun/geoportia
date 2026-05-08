@@ -3,9 +3,11 @@ import { FieldExtensionComponentProps } from '@backstage/plugin-scaffolder-react
 import Form from '@rjsf/material-ui';
 import validator from '@rjsf/validator-ajv8';
 import type { RJSFSchema, UiSchema as RJSFUiSchema, ArrayFieldTemplateProps } from '@rjsf/utils';
-import { Typography, Box, Grid, CircularProgress } from '@material-ui/core';
+import { Typography, Box, Grid, CircularProgress, Paper, Chip } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
-import { useApi, discoveryApiRef, fetchApiRef } from '@backstage/core-plugin-api';
+import PersonIcon from '@material-ui/icons/Person';
+import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
+import { useApi, discoveryApiRef, fetchApiRef, identityApiRef } from '@backstage/core-plugin-api';
 
 import { customWidgets } from './widgets';
 import { createCustomTemplates } from './templates';
@@ -30,11 +32,26 @@ export const GeoPortiaMetadataField = (
 
   const discoveryApi = useApi(discoveryApiRef);
   const fetchApi = useApi(fetchApiRef);
+  const identityApi = useApi(identityApiRef);
 
   // State for pre-filled data loading
   const [isLoadingPrefill, setIsLoadingPrefill] = useState(false);
   const [prefillError, setPrefillError] = useState<string | null>(null);
   const [lastFetchedEntityRef, setLastFetchedEntityRef] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
+
+  // Fetch current user identity
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const identity = await identityApi.getBackstageIdentity();
+        setCurrentUser(identity.userEntityRef || null);
+      } catch {
+        setCurrentUser(null);
+      }
+    };
+    fetchUser();
+  }, [identityApi]);
 
   // TODO: Implement proper state management for sidebar data
   const panelData = { uuid: undefined, createdAt: undefined, createdBy: undefined, attachedFiles: [] as { name: string }[], adminComment: '' };
@@ -199,7 +216,29 @@ export const GeoPortiaMetadataField = (
     return <div style={{ color: 'red' }}>Error: No geoportiaMetadataSchema defined in ui:options</div>;
   }
 
+  // Show disabled state if no entity is selected yet
+  if (!effectiveEntityRef) {
+    return (
+      <Paper variant="outlined" style={{ padding: 24, backgroundColor: '#f5f5f5' }}>
+        <Box display="flex" alignItems="center" justifyContent="center" flexDirection="column" py={4}>
+          <InfoOutlinedIcon style={{ fontSize: 48, color: '#9e9e9e', marginBottom: 16 }} />
+          <Typography variant="body1" color="textSecondary" align="center">
+            Välj en metadatapost ovan för att se och redigera dess metadata
+          </Typography>
+        </Box>
+      </Paper>
+    );
+  }
+
   const currentMetadata = formData?.metadata ?? (isArraySchema ? [] : {});
+
+  // Format user display name from entity ref
+  const formatUserName = (userRef: string | null) => {
+    if (!userRef) return 'Okänd användare';
+    // Extract name from user:default/username format
+    const match = userRef.match(/user:[^/]+\/(.+)/);
+    return match ? match[1] : userRef;
+  };
 
   // Render the form content
   const renderFormContent = () => (
@@ -216,6 +255,17 @@ export const GeoPortiaMetadataField = (
         <Typography variant="body2" color="textSecondary" style={{ marginBottom: 16 }}>
           {headerDescription}
         </Typography>
+      )}
+      {currentUser && (
+        <Box mb={2}>
+          <Chip
+            icon={<PersonIcon />}
+            label={`Föreslås av: ${formatUserName(currentUser)}`}
+            variant="outlined"
+            size="small"
+            color="primary"
+          />
+        </Box>
       )}
       <Form
         schema={metadataSchema}
