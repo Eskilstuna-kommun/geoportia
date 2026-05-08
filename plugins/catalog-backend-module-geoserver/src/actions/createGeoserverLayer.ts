@@ -81,32 +81,11 @@ export function createCreateGeoserverLayerAction(
       },
     },
     async handler(ctx) {
-      const {
-        name,
-        workspace,
-        datastore,
-        nativeName,
-        title,
-        srs,
-        enabled,
-        abstract,
-        nativeBoundingBox,
-        storeType,
-      } = ctx.input;
+      const { storeType, ...layerData } = ctx.input;
 
       try {
         await options.geoserverService.createLayer(
-          {
-            name,
-            workspace,
-            datastore,
-            nativeName,
-            title,
-            srs,
-            enabled,
-            abstract,
-            nativeBoundingBox,
-          } as GeoserverLayer,
+          layerData as unknown as GeoserverLayer,
           storeType as GeoserverStoreType,
         );
       } catch (error) {
@@ -118,9 +97,9 @@ export function createCreateGeoserverLayerAction(
         throw error;
       }
 
-      ctx.logger.info(`Successfully created GeoServer layer "${name}"`);
+      ctx.logger.info(`Successfully created GeoServer layer "${layerData.name}"`);
 
-      ctx.output('layer', name);
+      ctx.output('layer', layerData.name);
     },
   });
 }
