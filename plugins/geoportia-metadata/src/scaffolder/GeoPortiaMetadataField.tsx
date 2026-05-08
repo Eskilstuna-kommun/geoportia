@@ -1,10 +1,11 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, useEffect, useState } from 'react';
 import { FieldExtensionComponentProps } from '@backstage/plugin-scaffolder-react';
 import Form from '@rjsf/material-ui';
 import validator from '@rjsf/validator-ajv8';
 import type { RJSFSchema, UiSchema as RJSFUiSchema, ArrayFieldTemplateProps } from '@rjsf/utils';
-import { Typography, Box, Grid } from '@material-ui/core';
+import { Typography, Box, Grid, CircularProgress } from '@material-ui/core';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
+import { useApi, discoveryApiRef, fetchApiRef } from '@backstage/core-plugin-api';
 
 import { customWidgets } from './widgets';
 import { createCustomTemplates } from './templates';
@@ -25,7 +26,15 @@ const SmartArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
 export const GeoPortiaMetadataField = (
   props: FieldExtensionComponentProps<GeoPortiaMetadataFieldValue>,
 ) => {
-  const { onChange, formData, uiSchema } = props;
+  const { onChange, formData, uiSchema, formContext } = props;
+
+  const discoveryApi = useApi(discoveryApiRef);
+  const fetchApi = useApi(fetchApiRef);
+
+  // State for pre-filled data loading
+  const [isLoadingPrefill, setIsLoadingPrefill] = useState(false);
+  const [prefillError, setPrefillError] = useState<string | null>(null);
+  const [lastFetchedEntityRef, setLastFetchedEntityRef] = useState<string | null>(null);
 
   // TODO: Implement proper state management for sidebar data
   const panelData = { uuid: undefined, createdAt: undefined, createdBy: undefined, attachedFiles: [] as { name: string }[], adminComment: '' };
@@ -38,6 +47,48 @@ export const GeoPortiaMetadataField = (
   const headerTitle = uiOptions?.headerTitle;
   const headerDescription = uiOptions?.headerDescription;
   const showSidebar = uiOptions?.showSidebar ?? false;
+  const prefillFromEntity = uiOptions?.prefillFromEntity;
+
+  // Get entity ref from formContext (sibling field in same form step)
+  const entityRefFromContext = formContext?.formData?.entityRef as string | undefined;
+  const effectiveEntityRef = prefillFromEntity || entityRefFromContext;
+
+  // Fetch and pre-fill metadata when entityRef changes
+  useEffect(() => {
+    // Skip if no entity ref or already fetched this entity
+    if (!effectiveEntityRef || effectiveEntityRef === lastFetchedEntityRef) {
+      return;
+    }
+
+    const fetchMetadata = async () => {
+      setIsLoadingPrefill(true);
+      setPrefillError(null);
+      setLastFetchedEntityRef(effectiveEntityRef);
+      try {
+        const baseUrl = await discoveryApi.getBaseUrl('geoportia-metadata');
+        const encodedRef = encodeURIComponent(effectiveEntityRef);
+        const response = await fetchApi.fetch(`${baseUrl}/${encodedRef}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data?.metadata && rawMetadataSchema) {
+            onChange({ 
+              schema: { type: 'object', ...rawMetadataSchema }, 
+              metadata: data.metadata 
+            });
+          }
+        } else if (response.status !== 404) {
+          setPrefillError('Kunde inte hämta befintlig metadata');
+        }
+      } catch (e) {
+        setPrefillError('Fel vid hämtning av metadata');
+      } finally {
+        setIsLoadingPrefill(false);
+      }
+    };
+
+    fetchMetadata();
+  }, [effectiveEntityRef, lastFetchedEntityRef, discoveryApi, fetchApi, onChange, rawMetadataSchema]);
 
   const isArraySchema = rawMetadataSchema?.type === 'array';
 
@@ -117,11 +168,32 @@ export const GeoPortiaMetadataField = (
   }, [metadataSchema, isArraySchema, onChange]);
 
   // Form context to pass callbacks to nested components
-  const formContext = useMemo(() => ({
+  const rjsfFormContext = useMemo(() => ({
     addArrayItem: isArraySchema ? addArrayItem : undefined,
     updateArrayItem: isArraySchema ? updateArrayItem : undefined,
     deleteArrayItem: isArraySchema ? deleteArrayItem : undefined,
   }), [isArraySchema, addArrayItem, updateArrayItem, deleteArrayItem]);
+
+  if (isLoadingPrefill) {
+    return (
+      <Box display="flex" alignItems="center" justifyContent="center" p={4}>
+        <CircularProgress size={24} />
+        <Typography variant="body2" style={{ marginLeft: 8 }}>
+          Laddar befintlig metadata...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (prefillError) {
+    return (
+      <Box p={2}>
+        <Typography variant="body2" color="error">
+          {prefillError}
+        </Typography>
+      </Box>
+    );
+  }
 
   if (!metadataSchema) {
     return <div style={{ color: 'red' }}>Error: No geoportiaMetadataSchema defined in ui:options</div>;
@@ -154,7 +226,7 @@ export const GeoPortiaMetadataField = (
         idPrefix="geoportia-metadata"
         templates={templates}
         widgets={customWidgets}
-        formContext={formContext}
+        formContext={rjsfFormContext}
         liveValidate
         showErrorList={false}
       >

@@ -1,0 +1,157 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: suggest-metadata-change
+  title: Föreslå metadataändring
+  description: Föreslå ändringar till en befintlig metadatapost
+spec:
+  owner: group:default/geoportia-team
+  type: metadata-suggestion
+
+  parameters:
+    - title: Föreslå metadataändring
+      required:
+        - entityRef
+        - metadata
+      properties:
+        entityRef:
+          title: Metadatapost
+          type: string
+          description: Välj den metadatapost du vill föreslå ändringar för
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              kind: MetadataEntry
+            defaultKind: MetadataEntry
+        metadata:
+          title: Föreslagen metadata
+          type: object
+          ui:field: GeoPortiaMetadataField
+          ui:options:
+            headerTitle: Föreslagen metadata
+            headerDescription: Redigera fälten nedan för att föreslå ändringar
+            showSidebar: true
+            geoportiaMetadataSchema:
+              required:
+                - administrationRoutine
+                - maintenanceFrequency
+                - subjectArea
+                - originHistory
+              properties:
+                administrationRoutine:
+                  type: string
+                  title: Administrationsrutin
+                  description: Ansvarsfördelning för informationsmängden i relation till systemförvaltning på GIS-enheten.
+                  enum:
+                    - 'Välj...'
+                    - 'Informationsägaren gör jobbet själv'
+                    - 'Informationsägaren får stöd av kontaktperson på Projekt- och GIS-avdelningen som står för teknisk kvalitetssäkring'
+                    - 'Informationsägaren ger hela uppdraget till Projekt- och GIS-avdelningen'
+                    - 'Information om förvaltningsprocessen saknas'
+                  default: 'Välj...'
+                maintenanceFrequency:
+                  type: string
+                  title: Underhållsfrekvens
+                  description: Hur ofta kartlagret ajourhålls.
+                  enum:
+                    - 'Välj...'
+                    - 'Okänt - uppdateringsfrekvens är ej känd'
+                    - 'Kontinuerlig - data uppdateras ofta och kontinuerligt'
+                    - 'Dagligen - data uppdateras dagligen'
+                    - 'Veckovis - data uppdateras veckovis'
+                    - 'Var 14:e dag - data uppdateras varannan vecka'
+                    - 'Månadsvis - data uppdateras varje månad'
+                    - 'Kvartalsvis - data uppdateras kvartalsvis'
+                    - 'Halvårsvis - data uppdateras halvårsvis'
+                    - 'Årligen - data uppdateras årligen'
+                    - 'Vid behov - data uppdateras vid behov'
+                    - 'Oregelbundet - data uppdateras med oregelbundna intervall'
+                    - 'Ej planerad - data uppdateras planerad uppdatering'
+                  default: 'Välj...'
+                subjectArea:
+                  type: array
+                  title: Ämnesområde
+                  uniqueItems: true
+                  items:
+                    type: string
+                    enum:
+                      - 'Administrativa gränser - offentligt bestämda avgränsningar av ett område'
+                      - 'Arealtäckande bilder och baskartor - arealtäckande bilder och topografiska kartor'
+                      - 'Areella näringar - skötsel av djur eller odling av grödor'
+                      - 'Atmosfär, klimatologi och meteorologi - processer och fenomen i atmosfären'
+                      - 'Biologi och ekologi - flora och fauna i naturlig miljö'
+                      - 'Byggnader och byggnadskonstruktioner - konstruktioner skapade av människohand'
+                      - 'Ekonomi - ekonomiska aktiviteter, förhållanden och sysselsättning'
+                      - 'Fastigheter och fysisk planering - fastighetsinformation och planinformation för framtida markanvändning'
+                      - 'Försvar - militär infrastruktur och aktiviteter'
+                      - 'Geovetenskap - geovetenskap'
+                      - 'Hälsa hälsa, sjuk- och hälsovård - human ekologi och säkerhet'
+                      - 'Höjddata - höjd över eller under havsytan'
+                      - 'Kust och hav - havs- och kustområden och dess egenskaper'
+                      - 'Miljö - miljöresurser, miljöskydd och bevarande'
+                      - 'Positionering - positionsbestämmande information och tjänster'
+                      - 'Samhälle och kultur - samhällsförhållanden och kultur'
+                      - 'Sjöar och vattendrag - insjövatten, dräneringssystem och deras egenskaper'
+                      - 'Tekniska försörjningssystem - energi-, vatten- och avloppssystem, och infrastruktur och tjänster för kommunikation'
+                      - 'Transporter - infrastruktur och hjälpmedel för att transportera människor och gods'
+                  default: []
+                originHistory:
+                  type: string
+                  title: Tillkomsthistorik
+                source:
+                  type: string
+                  title: Källa
+                quality:
+                  type: string
+                  title: Kvalitet
+                dataCollectionMethod:
+                  type: string
+                  title: Datainsamlingsmetod
+                processingMethod:
+                  type: string
+                  title: Bearbetningsmetod
+                boundingBoxType:
+                  type: string
+                  title: Boundingboxtyp
+                  enum:
+                    - 'Välj...'
+                    - 'Ej definierad'
+                    - 'Minimal'
+                    - 'Malardalen'
+                    - 'Sodermanland'
+                    - 'Sverige'
+                    - 'Eskilstuna'
+                    - '4M'
+                  default: 'Välj...'
+                datasetStatus:
+                  type: string
+                  title: Status datamängd
+                  enum:
+                    - 'Välj...'
+                    - 'Komplett. Uppdateras eller kompletteras inte längre.'
+                    - 'Planerad men ej tillgänglig för närvarande.'
+                    - 'Under utveckling men ej normal tillgänglig.'
+                    - 'Uppdateras eller kompletteras kontinuerligt.'
+                  default: 'Välj...'
+            geoportiaMetadataUiSchema:
+              subjectArea:
+                'ui:widget': 'MultiSelectWidget'
+
+  steps:
+    - id: create-suggestion
+      name: Skapa ändringsförslag
+      action: geoportia:metadata:suggestion:create
+      input:
+        entityRef: ${{ parameters.entityRef }}
+        metadata: ${{ parameters.metadata.metadata }}
+
+  output:
+    links:
+      - title: Visa metadatapost
+        icon: catalog
+        entityRef: ${{ parameters.entityRef }}
+    text:
+      - title: Förslag skapat
+        content: |
+          Ditt ändringsförslag (ID: ${{ steps['create-suggestion'].output.suggestionId }}) har skapats.
+          En administratör kommer att granska och godkänna eller avvisa förslaget.
