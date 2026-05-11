@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useCallback, useRef } from 'react';
 import { Entity } from '@backstage/catalog-model';
 import { useApi, fetchApiRef, discoveryApiRef } from '@backstage/core-plugin-api';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { usePermission } from '@backstage/plugin-permission-react';
 import {
@@ -22,6 +23,9 @@ import { customWidgets } from '../scaffolder/widgets';
 import { createCustomTemplates } from '../scaffolder/templates';
 import { TableArrayFieldTemplate } from '../scaffolder/TableArrayFieldTemplate';
 import { metadataEntryUpdatePermission } from '@internal/backstage-plugin-geoportia-metadata-common';
+import { SuggestionsTable, MetadataSuggestion } from './SuggestionsTable';
+import { SuggestionDetailDrawer } from './SuggestionDetailDrawer';
+import { geoportiaMetadataTranslationRef } from '../translation';
 
 export interface MetadataEntryViewerProps {
   entityRef: string;
@@ -58,6 +62,7 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
   const catalogApi = useApi(catalogApiRef);
   const fetchApi = useApi(fetchApiRef);
   const discoveryApi = useApi(discoveryApiRef);
+  const { t } = useTranslationRef(geoportiaMetadataTranslationRef);
 
   // Check if user has permission to update metadata
   const { allowed: canUpdate, loading: permissionLoading } = usePermission({
@@ -77,6 +82,10 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
     severity: 'success',
   });
 
+  // Suggestion drawer state
+  const [selectedSuggestion, setSelectedSuggestion] = useState<MetadataSuggestion | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
   // Fetch the MetadataEntry entity
   const {
     value: entity,
@@ -88,13 +97,49 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
     return response;
   }, [entityRef]);
 
+  // Fetch suggestions for this metadata entry
+  const {
+    value: suggestions = [],
+    loading: suggestionsLoading,
+    retry: retrySuggestions,
+  } = useAsyncRetry(async () => {
+    const baseUrl = await discoveryApi.getBaseUrl('geoportia-metadata');
+    const response = await fetchApi.fetch(
+      `${baseUrl}/${encodeURIComponent(entityRef)}/suggestions`
+    );
+    if (!response.ok) {
+      if (response.status === 404) return [];
+      throw new Error(`Failed to fetch suggestions: ${response.statusText}`);
+    }
+    return (await response.json()) as MetadataSuggestion[];
+  }, [entityRef, discoveryApi, fetchApi]);
+
+  // Handle suggestion row click
+  const handleSuggestionClick = useCallback((suggestion: MetadataSuggestion) => {
+    setSelectedSuggestion(suggestion);
+    setDrawerOpen(true);
+  }, []);
+
+  // Handle drawer close
+  const handleDrawerClose = useCallback(() => {
+    setDrawerOpen(false);
+    setSelectedSuggestion(null);
+  }, []);
+
+  // Handle suggestion accepted
+  const handleSuggestionAccepted = useCallback(() => {
+    setSnackbar({ open: true, message: t('suggestionDetail.acceptSuccess'), severity: 'success' });
+    retry();
+    retrySuggestions();
+  }, [retry, retrySuggestions, t]);
+
   // Memoize form templates - must be before any conditional returns
   const templates = useMemo(
     () => ({
-      ...createCustomTemplates('Lägg till'),
+      ...createCustomTemplates(t('metadataViewer.addItem')),
       ArrayFieldTemplate: SmartArrayFieldTemplate,
     }),
-    [],
+    [t],
   );
 
   // Extract schema and metadata from the entity spec
@@ -203,16 +248,16 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
       );
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.error?.message || `Fel: ${response.statusText}`);
+        throw new Error(errorData?.error?.message || `${t('common.error')}: ${response.statusText}`);
       }
-      setSnackbar({ open: true, message: 'Metadata sparad!', severity: 'success' });
+      setSnackbar({ open: true, message: t('metadataViewer.saved'), severity: 'success' });
       setIsEditing(false);
       // Refresh the entity data
       retry();
     } catch (err: any) {
       setSnackbar({ 
         open: true, 
-        message: err?.message || 'Ett fel uppstod vid sparning', 
+        message: err?.message || t('metadataViewer.saveError'), 
         severity: 'error' 
       });
     } finally {
@@ -273,7 +318,7 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
             onClick={handleCancel}
             disabled={saving}
           >
-            Avbryt
+            {t('metadataViewer.buttons.cancel')}
           </Button>
           <Button
             variant="contained"
@@ -282,7 +327,7 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
             onClick={handleSave}
             disabled={saving}
           >
-            Spara
+            {t('metadataViewer.buttons.save')}
           </Button>
         </>
       ) : (
@@ -292,7 +337,7 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
           startIcon={<EditIcon />}
           onClick={handleStartEdit}
         >
-          Redigera
+          {t('metadataViewer.buttons.edit')}
         </Button>
       )}
     </Box>
@@ -320,7 +365,26 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
           {/* Empty children to hide submit button */}
           <></>
         </Form>
+        
+        {/* Suggestions section */}
+        <SuggestionsTable
+          suggestions={suggestions}
+          loading={suggestionsLoading}
+          onRowClick={handleSuggestionClick}
+        />
       </InfoCard>
+
+      {/* Suggestion detail drawer */}
+      <SuggestionDetailDrawer
+        open={drawerOpen}
+        onClose={handleDrawerClose}
+        suggestion={selectedSuggestion}
+        currentMetadata={metadata as Record<string, unknown>}
+        schema={schema as Record<string, unknown>}
+        entityRef={entityRef}
+        onAccepted={handleSuggestionAccepted}
+      />
+
       <Snackbar 
         open={snackbar.open} 
         autoHideDuration={5000} 

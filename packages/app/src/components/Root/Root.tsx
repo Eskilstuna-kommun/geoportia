@@ -287,7 +287,7 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
             { to: 'domain', text: 'Domains' },
             { to: 'value', text: 'Values' },
             { to: 'dataset', text: 'Data Sets' },
-            { to: 'tables', text: 'Tables' },
+            { to: 'table', text: 'Tables' },
             { to: 'field', text: 'Fields' },
           ]}
         />

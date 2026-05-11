@@ -14,3 +14,5 @@ export {
   type GeoPortiaMetadataFieldValue,
   type GeoPortiaMetadataFieldUiOptions,
 } from './scaffolder';
+
+export { geoportiaMetadataTranslationRef } from './translation';
