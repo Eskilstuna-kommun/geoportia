@@ -8,6 +8,7 @@ import { searchReactTranslationRef } from '@backstage/plugin-search-react/alpha'
 import { userSettingsTranslationRef } from '@backstage/plugin-user-settings/alpha';
 import { apiDocsTranslationRef } from '@backstage/plugin-api-docs/alpha';
 import { createTranslationResource } from '@backstage/core-plugin-api/alpha';
+import { geoportiaMetadataTranslationRef } from '@internal/backstage-plugin-geoportia-metadata';
 
 import catalogSv from './catalog-sv.json';
 import catalogReactSv from './catalog-react-sv.json';
@@ -19,6 +20,7 @@ import searchReactSv from './search-react-sv.json';
 import userSettingsSv from './user-settings-sv.json';
 import apiDocsSv from './api-docs-sv.json';
 import geoportiaSv from './geoportia-sv.json';
+import geoportiaMetadataSv from './geoportia-metadata-sv.json';
 
 import { geoportiaTranslationRef } from './geoportia-translation';
 
@@ -74,6 +76,11 @@ export const geoportiaTranslationsSv = createTranslationResource({
   translations: { sv: () => Promise.resolve({ default: geoportiaSv }) },
 });
 
+export const geoportiaMetadataTranslationsSv = createTranslationResource({
+  ref: geoportiaMetadataTranslationRef,
+  translations: { sv: () => Promise.resolve({ default: geoportiaMetadataSv }) },
+});
+
 export const allSwedishTranslations = [
   catalogTranslationsSv,
   catalogReactTranslationsSv,
@@ -85,5 +92,6 @@ export const allSwedishTranslations = [
   userSettingsTranslationsSv,
   apiDocsTranslationsSv,
   geoportiaTranslationsSv,
+  geoportiaMetadataTranslationsSv,
 ];
 
