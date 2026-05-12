@@ -8,21 +8,13 @@ export interface ViewTable {
 
 export class PostgreSQLDatabaseService {
   constructor(
-    private host: string,
-    private port: number,
-    private database: string,
-    private user: string,
-    private password: string,
+    private uri: string,
     private logger: LoggerService,
   ) {}
 
   private createPool(): Pool {
     return new Pool({
-      user: this.user,
-      host: this.host,
-      database: this.database,
-      password: this.password,
-      port: this.port,
+      connectionString: this.uri,
     });
   }
 
