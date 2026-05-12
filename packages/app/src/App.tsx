@@ -45,6 +45,7 @@ import { eskilstunaTheme } from './theme/eskilstuna';
 import WbSunny from '@material-ui/icons/WbSunny';
 import { CustomIndexPage } from './components/custompage/CustomIndexPage';
 import { allSwedishTranslations } from './translations';
+import { GeoDatasetManagementPage } from '@internal/backstage-plugin-geodataset-management';
 
 const app = createApp({
   apis,
@@ -107,6 +108,10 @@ const routes = (
       path="/table"
       element={<CustomIndexPage key="table" kind="table" />}
     ></Route>
+    <Route
+      path="/listView"
+      element={<GeoDatasetManagementPage />}
+    />
     <Route
       path="/views"
       element={<CustomIndexPage key="view" kind="view" />}

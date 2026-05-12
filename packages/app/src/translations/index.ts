@@ -19,8 +19,10 @@ import searchReactSv from './search-react-sv.json';
 import userSettingsSv from './user-settings-sv.json';
 import apiDocsSv from './api-docs-sv.json';
 import geoportiaSv from './geoportia-sv.json';
+import geodatasetManagementSv from './geodataset-management-sv.json';
 
 import { geoportiaTranslationRef } from './geoportia-translation';
+import { geodatasetManagementTranslationRef } from '@internal/backstage-plugin-geodataset-management';
 
 export { geoportiaTranslationRef } from './geoportia-translation';
 
@@ -74,6 +76,11 @@ export const geoportiaTranslationsSv = createTranslationResource({
   translations: { sv: () => Promise.resolve({ default: geoportiaSv }) },
 });
 
+export const geodatasetManagementTranslationsSv = createTranslationResource({
+  ref: geodatasetManagementTranslationRef,
+  translations: { sv: () => Promise.resolve({ default: geodatasetManagementSv }) },
+});
+
 export const allSwedishTranslations = [
   catalogTranslationsSv,
   catalogReactTranslationsSv,
@@ -85,5 +92,6 @@ export const allSwedishTranslations = [
   userSettingsTranslationsSv,
   apiDocsTranslationsSv,
   geoportiaTranslationsSv,
+  geodatasetManagementTranslationsSv,
 ];
 
