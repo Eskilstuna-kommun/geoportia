@@ -23,29 +23,13 @@ export const postgresqlDbHandlerPlugin = createBackendPlugin({
         rootConfig: coreServices.rootConfig,
       },
       async init({ logger, httpAuth, httpRouter, catalog, rootConfig }) {
-        const postgresUser = rootConfig.getString(
-          'catalog.providers.postgresql.user',
-        );
-        const postgresPassword = rootConfig.getString(
-          'catalog.providers.postgresql.password',
-        );
-        const postgresDatabase = rootConfig.getString(
-          'catalog.providers.postgresql.database',
-        );
-        const postgresPort = Number(rootConfig.getString(
-          'catalog.providers.postgresql.port',
-        ));
-        const postgresUrl = rootConfig.getString(
-          'catalog.providers.postgresql.url',
+        const postgresUri = rootConfig.getString(
+          'catalog.providers.postgresql.uri',
         );
 
         const dbService = new PostgreSQLDatabaseService(
-          postgresUrl,
-          postgresPort,
-          postgresDatabase,
-          postgresUser,
-          postgresPassword,
-          logger,
+          postgresUri,
+          logger
         );
 
         httpRouter.use(
