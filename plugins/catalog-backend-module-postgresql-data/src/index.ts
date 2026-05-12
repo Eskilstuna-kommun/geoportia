@@ -6,3 +6,4 @@
  */
 
 export { catalogModulePostgresqlData as default } from './module';
+export { scaffolderModulePostgreSQL } from './scaffolderModule';
