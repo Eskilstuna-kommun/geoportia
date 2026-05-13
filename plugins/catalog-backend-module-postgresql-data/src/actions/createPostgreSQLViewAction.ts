@@ -2,7 +2,7 @@ import { createTemplateAction } from '@backstage/plugin-scaffolder-node';
 import {
   PostgreSQLDatabaseService,
   ViewTable,
-} from '@internal/backstage-plugin-postgresql-db-handler-backend/src/services/PostgreSQLDatabaseService';
+} from '../services/PostgreSQLDatabaseService';
 
 export interface CreatePostgreSQLViewActionOptions {
   connectionString: string;
