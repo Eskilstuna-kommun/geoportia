@@ -31,6 +31,29 @@ export async function createRouter({
 
   const openApiRouter = await createOpenApiRouter();
 
+  parentRouter.get('/:entityRef', async (req, res, next) => {
+    if (req.params.entityRef?.includes('/')) {
+      return next();
+    }
+    try {
+      const credentials = await httpAuth.credentials(req, { allow: ['user'] });
+      const entityRef = decodeURIComponent(req.params.entityRef);
+
+      const result = await metadataService.getMetadataEntry(entityRef, {
+        credentials,
+      });
+
+      if (!result) {
+        res.status(404).json({ error: 'Metadata entry not found' });
+        return;
+      }
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  });
+
   openApiRouter.post('/', async (req, res, next) => {
     try {
       const credentials = await httpAuth.credentials(req, { allow: ['user'] });

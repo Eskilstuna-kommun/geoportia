@@ -88,6 +88,27 @@ export class MetadataService implements IMetadataService {
     }
   }
 
+  async getMetadataEntry(
+    entityRef: string,
+    _options: {
+      credentials: AnyCredentials;
+    },
+  ): Promise<MetadataEntry | null> {
+    const row = await this.database<TableRow>('geoportia_metadata')
+      .where({ entity_ref: entityRef })
+      .first();
+
+    if (!row) {
+      return null;
+    }
+
+    return {
+      entityRef: row.entity_ref,
+      schema: (typeof row.schema === 'string' ? JSON.parse(row.schema) : row.schema) as JsonObject,
+      metadata: (typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata) as JsonObject,
+    };
+  }
+
   async createMetadataEntry(
     input: MetadataEntryCreate,
     _options: {

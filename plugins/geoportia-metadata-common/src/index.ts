@@ -5,7 +5,7 @@
  * @packageDocumentation
  */
 
-export { type MetadataApi, MetadataClient } from './api';
+export { type MetadataApi, MetadataClient, type MetadataEntry } from './api';
 export { RELATION_DESCRIBES, RELATION_DESCRIBED_BY } from './relations';
 export {
   type DatasetEntity,

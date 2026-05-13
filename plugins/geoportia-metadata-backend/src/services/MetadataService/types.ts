@@ -24,6 +24,14 @@ export interface MetadataEntryUpdate {
 
 export interface MetadataService {
 
+  /** Get a single metadata entry by entityRef. Returns null if not found. */
+  getMetadataEntry(
+    entityRef: string,
+    options: {
+      credentials: AnyCredentials;
+    },
+  ): Promise<MetadataEntry | null>;
+
   /** Create a new metadata entry identified by its entityRef. */
   createMetadataEntry(
     input: MetadataEntryCreate,

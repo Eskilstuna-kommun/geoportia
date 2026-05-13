@@ -6,8 +6,7 @@ import {
 } from '@backstage/core-plugin-api';
 
 import { rootRouteRef } from './routes';
-import { metadataApiRef } from './client';
-import { MetadataClient } from '@internal/geoportia-metadata-common';
+import { metadataApiRef, ExtendedMetadataClient } from './client';
 
 export const geoportiaMetadataPlugin = createPlugin({
   id: 'geoportia-metadata',
@@ -22,7 +21,7 @@ export const geoportiaMetadataPlugin = createPlugin({
         fetchApi: fetchApiRef,
       },
       factory: ({ discoveryApi, fetchApi }) =>
-        new MetadataClient({ discoveryApi, fetchApi }),
+        new ExtendedMetadataClient({ discoveryApi, fetchApi }),
     }),
   ],
 });
