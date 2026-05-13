@@ -7,13 +7,12 @@ export interface ViewTable {
 }
 
 export class PostgreSQLDatabaseService {
+  private pool: Pool;
   constructor(
     private uri: string,
     private logger: LoggerService,
-  ) {}
-
-  private createPool(): Pool {
-    return new Pool({
+  ) {
+    this.pool = new Pool({
       connectionString: this.uri,
     });
   }
@@ -33,8 +32,6 @@ export class PostgreSQLDatabaseService {
       return;
     }
 
-    const pool = this.createPool();
-
     const tableList = tables
       .map((t, i) => `${schemaName}.${t.name} t${i}`)
       .join(', ');
@@ -46,13 +43,11 @@ export class PostgreSQLDatabaseService {
     const query = `CREATE VIEW ${schemaName}.${viewName} AS SELECT ${columnsList} FROM ${tableList};`;
 
     try {
-      await pool.query(query);
+      await this.pool.query(query);
       this.logger.info(`View ${schemaName}.${viewName} created successfully.`);
     } catch (err) {
       this.logger.error(`Error creating view: ${err}`);
     }
-
-    await pool.end();
   }
 
   /**
@@ -63,21 +58,17 @@ export class PostgreSQLDatabaseService {
    * @returns A promise that resolves to an array of column names.
    */
   private async getViewColumns(viewName: string, schemaName: string) {
-    const pool = this.createPool();
-
     const query = `SELECT column_name
     FROM information_schema.columns
     WHERE table_schema = '${schemaName}'
     AND table_name = '${viewName}';`;
 
     try {
-      const res = await pool.query(query);
+      const res = await this.pool.query(query);
       return res.rows;
     } catch (err) {
       this.logger.error(`Error fetching view columns: ${err}`);
       return [];
-    } finally {
-      await pool.end();
     }
   }
 
@@ -88,21 +79,18 @@ export class PostgreSQLDatabaseService {
    * @returns A promise that resolves to an array of view names.
    */
   async getViews(schemaName: string) {
-    const pool = this.createPool();
     const query = `SELECT table_name
     FROM information_schema.views
     WHERE table_schema = '${schemaName}'
     AND table_name NOT IN ('geography_columns', 'geometry_columns');`;
 
     try {
-      const res = await pool.query(query);
+      const res = await this.pool.query(query);
       return res.rows.map(row => row.table_name);
     } catch (err) {
       this.logger.error(`Error fetching views: ${err}`);
       return [];
-    } finally {
-      await pool.end();
-    }
+    } 
   }
 
   /**
@@ -112,18 +100,14 @@ export class PostgreSQLDatabaseService {
    * @param schemaName The schema where the view is located.
    */
   async deleteView(viewName: string, schemaName: string) {
-    const pool = this.createPool();
-
     const query = `DROP VIEW IF EXISTS ${schemaName}.${viewName}`;
 
     try {
-      await pool.query(query);
+      await this.pool.query(query);
       this.logger.info(`View ${schemaName}.${viewName} deleted successfully.`);
     } catch (err) {
       this.logger.error(`Error deleting view: ${err}`);
     }
-
-    await pool.end();
   }
 
   /**
@@ -133,8 +117,6 @@ export class PostgreSQLDatabaseService {
    * @returns A promise that resolves to an array of table names.
    */
   async getTables(schemaName: string) {
-    const pool = this.createPool();
-
     const query = `SELECT table_name
     FROM information_schema.tables
     WHERE table_schema = '${schemaName}'
@@ -142,13 +124,11 @@ export class PostgreSQLDatabaseService {
     AND table_name != 'spatial_ref_sys';`;
 
     try {
-      const res = await pool.query(query);
+      const res = await this.pool.query(query);
       return res.rows.map(row => row.table_name);
     } catch (err) {
       this.logger.error(`Error fetching tables: ${err}`);
       return [];
-    } finally {
-      await pool.end();
     }
   }
 
@@ -160,21 +140,17 @@ export class PostgreSQLDatabaseService {
    * @returns A promise that resolves to an array of column names.
    */
   async getTableColumns(tableName: string, schemaName: string) {
-    const pool = this.createPool();
-
     const query = `SELECT column_name
     FROM information_schema.columns
     WHERE table_schema = '${tableName}'
     AND table_name = '${schemaName}';`;
 
     try {
-      const res = await pool.query(query);
+      const res = await this.pool.query(query);
       return res.rows.map(row => row.column_name);
     } catch (err) {
       this.logger.error(`Error fetching table columns: ${err}`);
       return [];
-    } finally {
-      await pool.end();
     }
   }
 }
