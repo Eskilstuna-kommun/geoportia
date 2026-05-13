@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useEffect, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useEffect } from 'react';
 import { FieldExtensionComponentProps } from '@backstage/plugin-scaffolder-react';
 import Form from '@rjsf/material-ui';
 import validator from '@rjsf/validator-ajv8';
@@ -7,8 +7,10 @@ import { Typography, Box, Grid, CircularProgress, Paper, Chip } from '@material-
 import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import PersonIcon from '@material-ui/icons/Person';
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
-import { useApi, discoveryApiRef, fetchApiRef, identityApiRef } from '@backstage/core-plugin-api';
+import { useApi, identityApiRef } from '@backstage/core-plugin-api';
+import { useAsync } from 'react-use';
 
+import { metadataApiRef } from '../client';
 import { customWidgets } from './widgets';
 import { createCustomTemplates } from './templates';
 import { TableArrayFieldTemplate } from './TableArrayFieldTemplate';
@@ -30,27 +32,12 @@ export const GeoPortiaMetadataField = (
 ) => {
   const { onChange, formData, uiSchema, formContext } = props;
 
-  const discoveryApi = useApi(discoveryApiRef);
-  const fetchApi = useApi(fetchApiRef);
+  const metadataApi = useApi(metadataApiRef);
   const identityApi = useApi(identityApiRef);
 
-  // State for pre-filled data loading
-  const [isLoadingPrefill, setIsLoadingPrefill] = useState(false);
-  const [prefillError, setPrefillError] = useState<string | null>(null);
-  const [lastFetchedEntityRef, setLastFetchedEntityRef] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
-
-  // Fetch current user identity
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const identity = await identityApi.getBackstageIdentity();
-        setCurrentUser(identity.userEntityRef || null);
-      } catch {
-        setCurrentUser(null);
-      }
-    };
-    fetchUser();
+  const { value: currentUser } = useAsync(async () => {
+    const identity = await identityApi.getBackstageIdentity();
+    return identity.userEntityRef || null;
   }, [identityApi]);
 
   // TODO: Implement proper state management for sidebar data
@@ -70,42 +57,33 @@ export const GeoPortiaMetadataField = (
   const entityRefFromContext = formContext?.formData?.entityRef as string | undefined;
   const effectiveEntityRef = prefillFromEntity || entityRefFromContext;
 
-  // Fetch and pre-fill metadata when entityRef changes
-  useEffect(() => {
-    // Skip if no entity ref or already fetched this entity
-    if (!effectiveEntityRef || effectiveEntityRef === lastFetchedEntityRef) {
-      return;
+  const prefillAppliedRef = useRef<string | null>(null);
+
+  const {
+    value: prefillData,
+    loading: isLoadingPrefill,
+    error: prefillError,
+  } = useAsync(async () => {
+    if (!effectiveEntityRef) {
+      return null;
     }
+    return metadataApi.getMetadataEntry(effectiveEntityRef);
+  }, [effectiveEntityRef, metadataApi]);
 
-    const fetchMetadata = async () => {
-      setIsLoadingPrefill(true);
-      setPrefillError(null);
-      setLastFetchedEntityRef(effectiveEntityRef);
-      try {
-        const baseUrl = await discoveryApi.getBaseUrl('geoportia-metadata');
-        const encodedRef = encodeURIComponent(effectiveEntityRef);
-        const response = await fetchApi.fetch(`${baseUrl}/${encodedRef}`);
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data?.metadata && rawMetadataSchema) {
-            onChange({ 
-              schema: { type: 'object', ...rawMetadataSchema }, 
-              metadata: data.metadata 
-            });
-          }
-        } else if (response.status !== 404) {
-          setPrefillError('Kunde inte hämta befintlig metadata');
-        }
-      } catch (e) {
-        setPrefillError('Fel vid hämtning av metadata');
-      } finally {
-        setIsLoadingPrefill(false);
-      }
-    };
-
-    fetchMetadata();
-  }, [effectiveEntityRef, lastFetchedEntityRef, discoveryApi, fetchApi, onChange, rawMetadataSchema]);
+  useEffect(() => {
+    if (
+      prefillData?.metadata &&
+      rawMetadataSchema &&
+      effectiveEntityRef &&
+      prefillAppliedRef.current !== effectiveEntityRef
+    ) {
+      prefillAppliedRef.current = effectiveEntityRef;
+      onChange({
+        schema: { type: 'object', ...rawMetadataSchema },
+        metadata: prefillData.metadata,
+      });
+    }
+  }, [prefillData, rawMetadataSchema, effectiveEntityRef, onChange]);
 
   const isArraySchema = rawMetadataSchema?.type === 'array';
 
@@ -206,7 +184,7 @@ export const GeoPortiaMetadataField = (
     return (
       <Box p={2}>
         <Typography variant="body2" color="error">
-          {prefillError}
+          {prefillError.message || 'Fel vid hämtning av metadata'}
         </Typography>
       </Box>
     );
