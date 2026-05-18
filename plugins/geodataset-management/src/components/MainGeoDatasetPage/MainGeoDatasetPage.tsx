@@ -1,22 +1,50 @@
-import { Content, PageWithHeader } from '@backstage/core-components';
+import { Content, PageWithHeader, Progress } from '@backstage/core-components';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { Box, Tab, Tabs, Typography } from '@material-ui/core';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { geodatasetManagementTranslationRef } from '../../translation';
-import { sampleDatasetEntries, DatasetEntry } from '../../data';
+import { DatasetEntry } from '../../data';
 import { useMainGeoDatasetStyles } from './styles';
 import { DatasetToolbar } from './DatasetToolbar';
 import { DatasetPaginationInfo } from './DatasetPaginationInfo';
 import { DatasetTable } from './DatasetTable';
 
-const TOTAL_ROWS = 1162;
+// Map security class to color
+const mapSecurityClass = (securityClass?: string): 'green' | 'yellow' | 'red' => {
+  switch (securityClass) {
+    case 'Öppen data':
+      return 'green';
+    case 'Begränsad åtkomst':
+      return 'yellow';
+    case 'Skyddad':
+      return 'red';
+    default:
+      return 'green';
+  }
+};
+
+// Map status to badge status
+const mapStatus = (status?: string): 'error' | 'warning' | 'success' => {
+  switch (status) {
+    case 'Godkänd':
+      return 'success';
+    case 'Utkast':
+      return 'warning';
+    case 'Under granskning':
+      return 'error';
+    default:
+      return 'warning';
+  }
+};
 
 export const MainGeoDatasetPage = () => {
   const classes = useMainGeoDatasetStyles();
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
-  const orgName =
-    useApi(configApiRef).getOptionalString('organization.name') ?? 'Backstage';
+  const configApi = useApi(configApiRef);
+  const catalogApi = useApi(catalogApiRef);
+  const orgName = configApi.getOptionalString('organization.name') ?? 'Backstage';
 
   const [activeTab, setActiveTab] = useState(0);
   const [searchText, setSearchText] = useState('');
@@ -24,6 +52,43 @@ export const MainGeoDatasetPage = () => {
   const [showDeleted, setShowDeleted] = useState(false);
   const [pageSize, setPageSize] = useState(25);
   const [selectedRows, setSelectedRows] = useState<DatasetEntry[]>([]);
+  const [datasetEntries, setDatasetEntries] = useState<DatasetEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch real data from catalog - MetadataEntry entities contain all the metadata
+  const fetchDatasets = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await catalogApi.getEntities({
+        filter: { kind: 'MetadataEntry' },
+      });
+
+      const entries: DatasetEntry[] = response.items.map((entity, index) => {
+        const metadata = (entity.spec?.metadata as Record<string, unknown>) ?? {};
+        const securityClass = metadata.securityClass as string | undefined;
+
+        return {
+          id: entity.metadata.name ?? String(index),
+          signaturstatus: mapStatus(metadata.status as string | undefined),
+          titel: (metadata.title as string) ?? entity.metadata.title ?? entity.metadata.name ?? 'Untitled',
+          skyddsklass: mapSecurityClass(securityClass),
+          sammanfattning: (metadata.summary as string) ?? (metadata.description as string) ?? '',
+          oppenData: securityClass === 'Öppen data',
+        };
+      });
+
+      setDatasetEntries(entries);
+    } catch (err) {
+      console.error('Error fetching dataset entries:', err);
+      setDatasetEntries([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [catalogApi]);
+
+  useEffect(() => {
+    fetchDatasets();
+  }, [fetchDatasets]);
 
   const handleTabChange = (_event: React.ChangeEvent<{}>, newValue: number) => {
     setActiveTab(newValue);
@@ -72,17 +137,21 @@ export const MainGeoDatasetPage = () => {
               <DatasetPaginationInfo
                 pageSize={pageSize}
                 onPageSizeChange={setPageSize}
-                totalRows={TOTAL_ROWS}
+                totalRows={datasetEntries.length}
                 selectedCount={selectedRows.length}
                 showDeleted={showDeleted}
                 onShowDeletedChange={setShowDeleted}
               />
 
-              <DatasetTable
-                data={sampleDatasetEntries}
-                pageSize={pageSize}
-                onSelectionChange={setSelectedRows}
-              />
+              {loading ? (
+                <Progress />
+              ) : (
+                <DatasetTable
+                  data={datasetEntries}
+                  pageSize={pageSize}
+                  onSelectionChange={setSelectedRows}
+                />
+              )}
             </>
           )}
           {activeTab === 1 && <div>{t('content.contactPerson')}</div>}
