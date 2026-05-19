@@ -30,21 +30,56 @@ export const catalogModulePostgresqlData = createBackendModule({
         catalog.addEntityProvider(provider);
         catalog.addProcessor(new PostgreSQLEntitiesProcessor());
 
-        // Performs a full refresh from the PostgreSQL database
-        const updateFunction = async (updateType: string, entityType: string, entityName: string, schemaName: string, comment?: string) => {
-          try {
-            await provider.update(updateType, entityType, entityName, schemaName, comment);
-          } catch (error) {
-            logger.error('Error running PostgreSQL data provider: ' + error);
-          }
-        };
+        for (const databaseName of providersConfig.keys()) {
+          const postgresUri = providersConfig.getString(databaseName);
 
-        const notificationService = new PostgresNotificationService(
-          postgresUri,
-          updateFunction,
-          logger,
-        );
-        notificationService.start();
+          const taskRunner = scheduler.createScheduledTaskRunner({
+            frequency: { minutes: 5 },
+            timeout: { minutes: 5 },
+          });
+
+          logger.info(
+            `Registering PostgreSQL data provider for database resource "${databaseName}".`,
+          );
+
+          const provider = new PostgreSQLDataProvider(
+            postgresUri,
+            taskRunner,
+            logger,
+            databaseName,
+          );
+          catalog.addEntityProvider(provider);
+
+          // Performs a full refresh from the PostgreSQL database
+          const updateFunction = async (
+            updateType: string,
+            entityType: string,
+            entityName: string,
+            schemaName: string,
+            comment?: string,
+          ) => {
+            try {
+              await provider.update(
+                updateType,
+                entityType,
+                entityName,
+                schemaName,
+                comment,
+              );
+            } catch (error) {
+              logger.error(
+                `Error running PostgreSQL data provider for "${databaseName}": ${error}`,
+              );
+            }
+          };
+
+          const notificationService = new PostgresNotificationService(
+            postgresUri,
+            updateFunction,
+            logger,
+          );
+          notificationService.start();
+        }
       },
     });
   },

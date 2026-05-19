@@ -3,7 +3,7 @@ import { InputError } from '@backstage/errors';
 import { Knex, knex as createKnex } from 'knex';
 
 export interface CreatePostgresSchemaActionOptions {
-  baseUri: string;
+  databases: Record<string, string>;
 }
 
 const IDENTIFIER_REGEX = /^[A-Za-z_][A-Za-z0-9_]{0,62}$/;
@@ -17,24 +17,10 @@ function assertIdentifier(name: string, what: string): void {
   }
 }
 
-function buildConnectionUri(baseUri: string, database: string): string {
-  let url: URL;
-  try {
-    url = new URL(baseUri);
-  } catch {
-    throw new Error(
-      'Configured PostgreSQL base URI is not a valid URL. ' +
-        'Expected something like postgresql://user:pass@host:port/db.',
-    );
-  }
-  url.pathname = `/${encodeURIComponent(database)}`;
-  return url.toString();
-}
-
 export function createCreatePostgresSchemaAction(
   options: CreatePostgresSchemaActionOptions,
 ) {
-  const { baseUri } = options;
+  const { databases } = options;
 
   return createTemplateAction({
     id: 'geoportia:postgres:create-schema',
@@ -48,7 +34,8 @@ export function createCreatePostgresSchemaAction(
           database: {
             type: 'string',
             title: 'Database',
-            description: 'Name of the PostgreSQL database to create the schema in.',
+            description:
+              'metadata.name of the PostgreSQL Resource entity to create the schema in.',
           },
           schemaName: {
             type: 'string',
@@ -75,10 +62,15 @@ export function createCreatePostgresSchemaAction(
       const database = (ctx.input.database as string).trim();
       const schemaName = (ctx.input.schemaName as string).trim();
 
-      assertIdentifier(database, 'database');
       assertIdentifier(schemaName, 'schemaName');
 
-      const connectionString = buildConnectionUri(baseUri, database);
+      const connectionString = databases[database];
+      if (!connectionString) {
+        throw new InputError(
+          `No PostgreSQL database resource configured with name "${database}". ` +
+            `Configured: [${Object.keys(databases).join(', ')}]`,
+        );
+      }
 
       ctx.logger.info(
         `Creating PostgreSQL schema "${schemaName}" in database "${database}"`,

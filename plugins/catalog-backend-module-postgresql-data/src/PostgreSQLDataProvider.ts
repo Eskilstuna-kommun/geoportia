@@ -27,10 +27,11 @@ export class PostgreSQLDataProvider implements EntityProvider {
     private uri: string,
     private taskRunner: SchedulerServiceTaskRunner,
     private loggerService: LoggerService,
+    private databaseName: string,
   ) {}
 
   getProviderName(): string {
-    return `postgresql-data-${this.uri}`;
+    return `postgresql-data-${this.databaseName}`;
   }
 
   async connect(connection: EntityProviderConnection) {
@@ -170,6 +171,8 @@ export class PostgreSQLDataProvider implements EntityProvider {
           },
           spec: {
             dialect: 'postgresql',
+            database: this.databaseName,
+            dependsOn: [`resource:default/${this.databaseName}`],
             dependencyOf: [
               ...schema.tables.map(table => ({
                 kind: 'Table',
