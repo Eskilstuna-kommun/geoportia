@@ -104,6 +104,11 @@ catalog:
       rules:
         - allow: [Template]
 
+    - type: file
+      target: ../../plugins/geoportia-metadata/templates/create-layer-spec.yaml
+      rules:
+        - allow: [Template]
+
     # Local example organizational data
     - type: file
       target: ../../examples/org.yaml
