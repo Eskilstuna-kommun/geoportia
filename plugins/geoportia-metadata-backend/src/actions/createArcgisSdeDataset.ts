@@ -1,12 +1,16 @@
 import { createTemplateAction } from '@backstage/plugin-scaffolder-node';
 import { InputError } from '@backstage/errors';
 
-export interface CreateArcgisSdeDatasetActionOptions {
+export interface ArcgisSdeDatabaseConfig {
   proxyUri: string;
-  defaultDatabase?: string;
+  database: string;
   adminUser: string;
   adminPassword: string;
   defaultSpatialReferenceWkid?: number;
+}
+
+export interface CreateArcgisSdeDatasetActionOptions {
+  databases: Record<string, ArcgisSdeDatabaseConfig>;
 }
 
 interface CreateDatasetResponse {
@@ -28,13 +32,7 @@ function assertName(name: string, what: string): void {
 export function createCreateArcgisSdeDatasetAction(
   options: CreateArcgisSdeDatasetActionOptions,
 ) {
-  const {
-    proxyUri,
-    defaultDatabase,
-    adminUser,
-    adminPassword,
-    defaultSpatialReferenceWkid,
-  } = options;
+  const { databases } = options;
 
   return createTemplateAction({
     id: 'geoportia:arcgis-sde:create-dataset',
@@ -43,13 +41,13 @@ export function createCreateArcgisSdeDatasetAction(
     schema: {
       input: {
         type: 'object',
-        required: ['datasetName'],
+        required: ['database', 'datasetName'],
         properties: {
           database: {
             type: 'string',
             title: 'Database',
             description:
-              'Name of the ArcGIS SDE database. Defaults to the configured database.',
+              'metadata.name of the ArcGIS SDE Resource entity to create the dataset in.',
           },
           datasetName: {
             type: 'string',
@@ -73,23 +71,34 @@ export function createCreateArcgisSdeDatasetAction(
       },
     },
     async handler(ctx) {
+      const databaseResourceName = (ctx.input.database as string).trim();
       const datasetName = (ctx.input.datasetName as string).trim();
-      const database = ((ctx.input.database as string | undefined) ?? defaultDatabase)?.trim();
+
+      const dbConfig = databases[databaseResourceName];
+      if (!dbConfig) {
+        throw new InputError(
+          `No ArcGIS SDE database resource configured with name "${databaseResourceName}". ` +
+            `Configured: [${Object.keys(databases).join(', ')}]`,
+        );
+      }
+
+      const {
+        proxyUri,
+        database: sdeDatabase,
+        adminUser,
+        adminPassword,
+        defaultSpatialReferenceWkid,
+      } = dbConfig;
+
       const spatialReferenceWkid =
         (ctx.input.spatialReferenceWkid as number | undefined) ??
         defaultSpatialReferenceWkid;
 
-      if (!database) {
-        throw new InputError(
-          'No database supplied and no default database configured for the ArcGIS SDE action.',
-        );
-      }
-
-      assertName(database, 'database');
+      assertName(sdeDatabase, 'database');
       assertName(datasetName, 'datasetName');
 
       ctx.logger.info(
-        `Creating ArcGIS SDE dataset "${datasetName}" in database "${database}"`,
+        `Creating ArcGIS SDE dataset "${datasetName}" in database resource "${databaseResourceName}" (SDE db: "${sdeDatabase}")`,
       );
 
       const url = `${proxyUri.replace(/\/$/, '')}/create-dataset`;
@@ -97,7 +106,7 @@ export function createCreateArcgisSdeDatasetAction(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          database,
+          database: sdeDatabase,
           datasetName,
           spatialReferenceWkid,
           adminUser,
@@ -115,17 +124,17 @@ export function createCreateArcgisSdeDatasetAction(
       const body = (await response.json()) as CreateDatasetResponse;
       if (!body.success) {
         throw new Error(
-          `Failed to create ArcGIS SDE dataset "${datasetName}" in "${database}": ${
+          `Failed to create ArcGIS SDE dataset "${datasetName}" in "${sdeDatabase}": ${
             body.message ?? 'unknown error'
           }`,
         );
       }
 
       ctx.logger.info(
-        `Created ArcGIS SDE dataset "${datasetName}" in database "${database}".`,
+        `Created ArcGIS SDE dataset "${datasetName}" in database "${sdeDatabase}".`,
       );
 
-      ctx.output('database', database);
+      ctx.output('database', databaseResourceName);
       ctx.output('datasetName', datasetName);
     },
   });

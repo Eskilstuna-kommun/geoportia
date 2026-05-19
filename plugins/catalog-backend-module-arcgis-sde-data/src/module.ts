@@ -19,32 +19,50 @@ export const catalogModuleArcGISData = createBackendModule({
         rootConfig: coreServices.rootConfig,
       },
       async init({ catalog, scheduler, rootConfig, logger }) {
-        const taskRunner = scheduler.createScheduledTaskRunner({
-          frequency: { minutes: 5 },
-          timeout: { minutes: 5 },
-        });
-        const arcGISUri = rootConfig.getString(
-          'catalog.providers.arcgissde.proxyUri',
+        const providersConfig = rootConfig.getOptionalConfig(
+          'catalog.providers.arcgissde',
         );
-        const arcGISSDEDatabase = rootConfig.getString(
-          'catalog.providers.arcgissde.database',
-        );
-        const arcGISSDEAdminUser = rootConfig.getString(
-          'catalog.providers.arcgissde.adminUser',
-        );
-        const arcGISSDEAdminPassword = rootConfig.getString(
-          'catalog.providers.arcgissde.adminPassword',
-        );
-        const arcGISSDEClient = new ArcGISSDEClient(arcGISUri, arcGISSDEAdminUser, arcGISSDEAdminPassword, arcGISSDEDatabase);
+        if (!providersConfig) {
+          logger.info(
+            'No catalog.providers.arcgissde configuration found, skipping ArcGIS SDE data provider.',
+          );
+          return;
+        }
 
-        const provider = new ArcGISSDEDataProvider(
-          arcGISUri,
-          taskRunner,
-          logger,
-          arcGISSDEClient,
-        );
-        catalog.addEntityProvider(provider);
         catalog.addProcessor(new ArcGISSDEEntitiesProcessor());
+
+        for (const databaseName of providersConfig.keys()) {
+          const dbConfig = providersConfig.getConfig(databaseName);
+          const arcGISUri = dbConfig.getString('proxyUri');
+          const arcGISSDEDatabase = dbConfig.getString('database');
+          const arcGISSDEAdminUser = dbConfig.getString('adminUser');
+          const arcGISSDEAdminPassword = dbConfig.getString('adminPassword');
+
+          const taskRunner = scheduler.createScheduledTaskRunner({
+            frequency: { minutes: 5 },
+            timeout: { minutes: 5 },
+          });
+
+          logger.info(
+            `Registering ArcGIS SDE data provider for database resource "${databaseName}".`,
+          );
+
+          const arcGISSDEClient = new ArcGISSDEClient(
+            arcGISUri,
+            arcGISSDEAdminUser,
+            arcGISSDEAdminPassword,
+            arcGISSDEDatabase,
+          );
+
+          const provider = new ArcGISSDEDataProvider(
+            arcGISUri,
+            taskRunner,
+            logger,
+            arcGISSDEClient,
+            databaseName,
+          );
+          catalog.addEntityProvider(provider);
+        }
       },
     });
   },

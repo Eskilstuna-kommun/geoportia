@@ -118,6 +118,12 @@ catalog:
       rules:
         - allow: [User, Group]
 
+    # Database resources (kind: Resource, type: database)
+    - type: file
+      target: ../../examples/databases.yaml
+      rules:
+        - allow: [Resource]
+
     ## Uncomment these lines to add more example data
     # - type: url
     #   target: https://github.com/backstage/backstage/blob/master/packages/catalog-model/examples/all.yaml
@@ -128,18 +134,20 @@ catalog:
     #   rules:
     #     - allow: [User, Group]
   providers:
+    # Each key under postgresql is the metadata.name of a kind: Resource entity (no credentials in entities).
     postgresql:
       uri: ${POSTGRES_URI}
     
     arcgissde:
-      proxyUri: 
-        $env: ARCPY_URI
-      adminUser:
-        $env: ARCPY_ADMIN_USER
-      adminPassword:
-        $env: ARCPY_ADMIN_PASSWORD
-      database:
-        $env: ARCPY_DATABASE
+      my-arcgis-sde-database:
+        proxyUri:
+          $env: ARCPY_URI
+        adminUser:
+          $env: ARCPY_ADMIN_USER
+        adminPassword:
+          $env: ARCPY_ADMIN_PASSWORD
+        database:
+          $env: ARCPY_DATABASE
 
     fmeflow:
       baseUrl: ${FMEFLOW_BASE_URL}

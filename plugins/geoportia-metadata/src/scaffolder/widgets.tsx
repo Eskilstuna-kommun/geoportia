@@ -3,6 +3,7 @@ import type { WidgetProps, EnumOptionsType } from '@rjsf/utils';
 import { TextField, FormControl, Select, MenuItem, Checkbox, ListItemText, Chip, Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { DatasetSelectWithModal } from './DatasetSelectWithModal';
+import { DatabaseSelectWidget } from './DatabaseSelectWidget';
 import { UserSearchWidget } from './UserSearchWidget';
 
 const useMultiSelectStyles = makeStyles((theme) => ({
@@ -142,5 +143,6 @@ export const customWidgets = {
   SelectWidget: FullWidthSelectWidget,
   MultiSelectWidget: MultiSelectWidget,
   DatasetSelectWidget: DatasetSelectWithModal,
+  DatabaseSelectWidget: DatabaseSelectWidget,
   UserSearchWidget: UserSearchWidget,
 };

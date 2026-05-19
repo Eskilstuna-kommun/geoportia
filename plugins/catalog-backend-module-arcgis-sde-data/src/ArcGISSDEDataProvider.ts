@@ -32,10 +32,11 @@ export class ArcGISSDEDataProvider implements EntityProvider {
     private taskRunner: SchedulerServiceTaskRunner,
     private loggerService: LoggerService,
     private arcGISSDEClient: ArcGISSDEClient,
+    private databaseName: string,
   ) {}
 
   getProviderName(): string {
-    return `arcGIS-SDE-data-${this.uri}`;
+    return `arcGIS-SDE-data-${this.databaseName}`;
   }
 
   breakOutName(fullName: string): { name: string; namespace: string } {
@@ -234,6 +235,8 @@ export class ArcGISSDEDataProvider implements EntityProvider {
             },
             spec: {
               dialect: 'arcgis',
+              database: this.databaseName,
+              dependsOn: [`resource:default/${this.databaseName}`],
               dependencyOf: dataSet.featureClasses.map(featureClass => {
                 const {
                   name: featureClassName,

@@ -57,40 +57,53 @@ export const scaffolderModuleGeoportiaMetadata = createBackendModule({
           }),
         );
 
-        const postgresUri = rootConfig.getOptionalString(
-          'catalog.providers.postgresql.uri',
+        const postgresqlProvidersConfig = rootConfig.getOptionalConfig(
+          'catalog.providers.postgresql',
         );
-        if (postgresUri) {
-          scaffolder.addActions(
-            createCreatePostgresSchemaAction({ baseUri: postgresUri }),
-          );
+        if (postgresqlProvidersConfig) {
+          const databases: Record<string, string> = {};
+          for (const databaseName of postgresqlProvidersConfig.keys()) {
+            databases[databaseName] =
+              postgresqlProvidersConfig.getString(databaseName);
+          }
+          if (Object.keys(databases).length > 0) {
+            scaffolder.addActions(
+              createCreatePostgresSchemaAction({ databases }),
+            );
+          }
         }
 
-        const arcgisProxyUri = rootConfig.getOptionalString(
-          'catalog.providers.arcgissde.proxyUri',
+        const arcgisProvidersConfig = rootConfig.getOptionalConfig(
+          'catalog.providers.arcgissde',
         );
-        const arcgisAdminUser = rootConfig.getOptionalString(
-          'catalog.providers.arcgissde.adminUser',
-        );
-        const arcgisAdminPassword = rootConfig.getOptionalString(
-          'catalog.providers.arcgissde.adminPassword',
-        );
-        const arcgisDefaultDatabase = rootConfig.getOptionalString(
-          'catalog.providers.arcgissde.database',
-        );
-        const arcgisDefaultWkid = rootConfig.getOptionalNumber(
-          'catalog.providers.arcgissde.defaultSpatialReferenceWkid',
-        );
-        if (arcgisProxyUri && arcgisAdminUser && arcgisAdminPassword) {
-          scaffolder.addActions(
-            createCreateArcgisSdeDatasetAction({
-              proxyUri: arcgisProxyUri,
-              adminUser: arcgisAdminUser,
-              adminPassword: arcgisAdminPassword,
-              defaultDatabase: arcgisDefaultDatabase,
-              defaultSpatialReferenceWkid: arcgisDefaultWkid,
-            }),
-          );
+        if (arcgisProvidersConfig) {
+          const databases: Record<
+            string,
+            {
+              proxyUri: string;
+              database: string;
+              adminUser: string;
+              adminPassword: string;
+              defaultSpatialReferenceWkid?: number;
+            }
+          > = {};
+          for (const databaseName of arcgisProvidersConfig.keys()) {
+            const dbCfg = arcgisProvidersConfig.getConfig(databaseName);
+            databases[databaseName] = {
+              proxyUri: dbCfg.getString('proxyUri'),
+              database: dbCfg.getString('database'),
+              adminUser: dbCfg.getString('adminUser'),
+              adminPassword: dbCfg.getString('adminPassword'),
+              defaultSpatialReferenceWkid: dbCfg.getOptionalNumber(
+                'defaultSpatialReferenceWkid',
+              ),
+            };
+          }
+          if (Object.keys(databases).length > 0) {
+            scaffolder.addActions(
+              createCreateArcgisSdeDatasetAction({ databases }),
+            );
+          }
         }
       },
     });

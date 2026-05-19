@@ -1,0 +1,31 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: my-pg-database
+  title: Local PostgreSQL (development)
+  description: Local PostgreSQL database used in development.
+  tags:
+    - postgresql
+    - database
+  links:
+    - title: Connection host
+      url: postgres://localhost:15432/postgres
+spec:
+  type: database
+  owner: group:default/geoportia-team
+  system: geoportia
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: my-arcgis-sde-database
+  title: Local ArcGIS SDE (development)
+  description: Local ArcGIS SDE database used in development.
+  tags:
+    - arcgis
+    - sde
+    - database
+spec:
+  type: database
+  owner: group:default/geoportia-team
+  system: geoportia
