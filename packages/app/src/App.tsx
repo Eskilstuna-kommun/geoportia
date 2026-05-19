@@ -44,6 +44,7 @@ import { UnifiedThemeProvider } from '@backstage/theme';
 import { eskilstunaTheme } from './theme/eskilstuna';
 import WbSunny from '@material-ui/icons/WbSunny';
 import { CustomIndexPage } from './components/custompage/CustomIndexPage';
+import { DatabaseIndexPage } from './components/custompage/DatabaseIndexPage';
 import { allSwedishTranslations } from './translations';
 import { GeoDatasetManagementPage } from '@internal/backstage-plugin-geodataset-management';
 
@@ -143,6 +144,10 @@ const routes = (
     <Route
       path="/dataset"
       element={<CatalogIndexPage key="dataset" initialKind="dataset" />}
+    />
+    <Route
+      path="/database"
+      element={<DatabaseIndexPage key="database" />}
     />
     <Route
       path="/catalog/:namespace/:kind/:name"
