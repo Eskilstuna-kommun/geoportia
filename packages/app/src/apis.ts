@@ -7,6 +7,8 @@ import {
   AnyApiFactory,
   configApiRef,
   createApiFactory,
+  discoveryApiRef,
+  fetchApiRef,
 } from '@backstage/core-plugin-api';
 import {
   catalogApiRef,
@@ -14,6 +16,10 @@ import {
 } from '@backstage/plugin-catalog-react';
 import { DefaultEntityPresentationApi } from '@backstage/plugin-catalog';
 import TableIcon from '@material-ui/icons/TableChart';
+import {
+  metadataApiRef,
+  ExtendedMetadataClient,
+} from '@internal/backstage-plugin-geoportia-metadata';
 
 export const apis: AnyApiFactory[] = [
   createApiFactory({
@@ -33,5 +39,14 @@ export const apis: AnyApiFactory[] = [
         },
       });
     },
+  }),
+  createApiFactory({
+    api: metadataApiRef,
+    deps: {
+      discoveryApi: discoveryApiRef,
+      fetchApi: fetchApiRef,
+    },
+    factory: ({ discoveryApi, fetchApi }) =>
+      new ExtendedMetadataClient({ discoveryApi, fetchApi }),
   }),
 ];
