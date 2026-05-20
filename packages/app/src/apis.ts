@@ -18,7 +18,7 @@ import { DefaultEntityPresentationApi } from '@backstage/plugin-catalog';
 import TableIcon from '@material-ui/icons/TableChart';
 import {
   metadataApiRef,
-  ExtendedMetadataClient,
+  MetadataClient,
 } from '@internal/backstage-plugin-geoportia-metadata';
 
 export const apis: AnyApiFactory[] = [
@@ -47,6 +47,6 @@ export const apis: AnyApiFactory[] = [
       fetchApi: fetchApiRef,
     },
     factory: ({ discoveryApi, fetchApi }) =>
-      new ExtendedMetadataClient({ discoveryApi, fetchApi }),
+      new MetadataClient({ discoveryApi, fetchApi }),
   }),
 ];
