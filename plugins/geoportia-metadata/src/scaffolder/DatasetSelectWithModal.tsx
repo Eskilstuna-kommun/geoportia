@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { WidgetProps } from '@rjsf/utils';
 import {
   Box,
@@ -21,6 +21,7 @@ import AddIcon from '@material-ui/icons/Add';
 import { makeStyles } from '@material-ui/core/styles';
 import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
+import useAsync from 'react-use/esm/useAsync';
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -54,8 +55,20 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
 
   const catalogApi = useApi(catalogApiRef);
 
-  const [datasets, setDatasets] = useState<Dataset[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Use useAsync to fetch datasets - eliminates boilerplate loading/error/data state management
+  const { value: datasets = [], loading } = useAsync(async () => {
+    const response = await catalogApi.getEntities({
+      filter: { kind: 'Dataset' },
+    });
+    
+    return response.items
+      .map(entity => ({
+        id: entity.metadata.name,
+        name: (entity.metadata.title || entity.metadata.name) as string,
+      }))
+      .sort((a: Dataset, b: Dataset) => a.name.localeCompare(b.name));
+  }, [catalogApi]);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [newDatasetName, setNewDatasetName] = useState('');
   const [newDatasetSummary, setNewDatasetSummary] = useState('');
@@ -63,32 +76,6 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
   const [newDatasetAllowZValues, setNewDatasetAllowZValues] = useState(false);
   const [newDatasetStatus, setNewDatasetStatus] = useState('');
   const [creating, setCreating] = useState(false);
-
-  // Fetch datasets from the catalog (read from source database via entity providers)
-  const fetchDatasets = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await catalogApi.getEntities({
-        filter: { kind: 'Dataset' },
-      });
-      
-      const datasetEntities: Dataset[] = response.items.map(entity => ({
-        id: entity.metadata.name,
-        name: (entity.metadata.title || entity.metadata.name) as string,
-      }));
-      
-      setDatasets(datasetEntities.sort((a: Dataset, b: Dataset) => a.name.localeCompare(b.name)));
-    } catch (err) {
-      console.error('Error fetching datasets:', err);
-      setDatasets([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [catalogApi]);
-
-  useEffect(() => {
-    fetchDatasets();
-  }, [fetchDatasets]);
 
   const handleOpenModal = () => {
     setNewDatasetName('');
