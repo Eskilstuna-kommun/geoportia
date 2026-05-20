@@ -8,9 +8,10 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import PersonIcon from '@material-ui/icons/Person';
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import { useApi, identityApiRef } from '@backstage/core-plugin-api';
+import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { useAsync } from 'react-use';
+import { JsonObject } from '@backstage/types';
 
-import { metadataApiRef } from '../client';
 import { customWidgets } from './widgets';
 import { createCustomTemplates } from './templates';
 import { TableArrayFieldTemplate } from './TableArrayFieldTemplate';
@@ -32,7 +33,7 @@ export const GeoPortiaMetadataField = (
 ) => {
   const { onChange, formData, uiSchema, formContext } = props;
 
-  const metadataApi = useApi(metadataApiRef);
+  const catalogApi = useApi(catalogApiRef);
   const identityApi = useApi(identityApiRef);
 
   const { value: currentUser } = useAsync(async () => {
@@ -67,8 +68,20 @@ export const GeoPortiaMetadataField = (
     if (!effectiveEntityRef) {
       return null;
     }
-    return metadataApi.getMetadataEntry(effectiveEntityRef);
-  }, [effectiveEntityRef, metadataApi]);
+    try {
+      const entity = await catalogApi.getEntityByRef(effectiveEntityRef);
+      if (!entity) {
+        return null;
+      }
+      // MetadataEntry entities store schema and metadata in spec
+      return {
+        schema: (entity.spec as { schema?: JsonObject })?.schema ?? {},
+        metadata: (entity.spec as { metadata?: JsonObject })?.metadata ?? {},
+      };
+    } catch {
+      return null;
+    }
+  }, [effectiveEntityRef, catalogApi]);
 
   useEffect(() => {
     if (

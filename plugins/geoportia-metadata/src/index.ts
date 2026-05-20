@@ -17,5 +17,5 @@ export {
 
 export { geoportiaMetadataTranslationRef } from './translation';
 
-export { metadataApiRef, ExtendedMetadataClient } from './client';
-export type { ExtendedMetadataApi } from './client';
+export { metadataApiRef, MetadataClient } from './client';
+export type { MetadataApi } from './client';
