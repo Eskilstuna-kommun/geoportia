@@ -9,6 +9,7 @@ import {
   createCreatePostgresSchemaAction,
   createCreateArcgisSdeDatasetAction,
   createMetadataChangeSuggestionAction,
+  createCreateDatabaseAction,
 } from './actions';
 import { MetadataService } from './services/MetadataService/MetadataService';
 import { SuggestionService } from './services/SuggestionService/SuggestionService';
@@ -25,8 +26,9 @@ export const scaffolderModuleGeoportiaMetadata = createBackendModule({
         discovery: coreServices.discovery,
         auth: coreServices.auth,
         rootConfig: coreServices.rootConfig,
+        permissions: coreServices.permissions,
       },
-      async init({ scaffolder, database, discovery, auth, rootConfig }) {
+      async init({ scaffolder, database, discovery, auth, rootConfig, permissions }) {
         const client = await database.getClient();
 
         // Run migrations if needed (use separate table to avoid conflicts)
@@ -42,6 +44,15 @@ export const scaffolderModuleGeoportiaMetadata = createBackendModule({
 
         const catalogClient = new CatalogClient({ discoveryApi: discovery });
         const metadataService = new MetadataService(client, catalogClient, auth);
+
+        // Register the database creation action
+        scaffolder.addActions(
+          createCreateDatabaseAction({
+            catalogClient,
+            auth,
+            permissions,
+          }),
+        );
 
         scaffolder.addActions(
           createStoreMetadataAction({

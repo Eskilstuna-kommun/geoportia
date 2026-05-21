@@ -9,11 +9,13 @@ export {
   createCreatePostgresSchemaAction,
   createCreateArcgisSdeDatasetAction,
   createMetadataChangeSuggestionAction,
+  createCreateDatabaseAction,
 } from './actions';
 export type {
   CreatePostgresSchemaActionOptions,
   CreateArcgisSdeDatasetActionOptions,
   CreateMetadataChangeSuggestionActionOptions,
+  CreateDatabaseActionOptions,
 } from './actions';
 export { geoportiaPermissionPolicyModule } from './permission-policy-module';
 export {

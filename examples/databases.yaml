@@ -29,3 +29,18 @@ spec:
   type: database
   owner: group:default/geoportia-team
   system: geoportia
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: ag-analys
+  title: AG_Analys
+  description: "Arbetsmarknads- och vuxenutbildningsförvaltningen, Arbete och försörjning"
+  tags:
+    - database
+  annotations:
+    geoportia.se/host-name: AG_Analys
+    geoportia.se/status: Godkänd
+spec:
+  type: database
+  owner: "group:default/geoportia-team"

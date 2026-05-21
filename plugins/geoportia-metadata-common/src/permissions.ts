@@ -1,6 +1,7 @@
 import { createPermission } from '@backstage/plugin-permission-common';
 
 export const RESOURCE_TYPE_METADATA_ENTRY = 'geoportia-metadata-entry';
+export const RESOURCE_TYPE_DATABASE = 'geoportia-database';
 
 export const metadataEntryReadPermission = createPermission({
   name: 'geoportia.metadata.read',
@@ -41,6 +42,11 @@ export const metadataDelegateRolePermission = createPermission({
   attributes: { action: 'update' },
 });
 
+export const databaseCreatePermission = createPermission({
+  name: 'geoportia.database.create',
+  attributes: { action: 'create' },
+});
+
 export const geoportiaMetadataPermissions = [
   metadataEntryReadPermission,
   metadataEntryCreatePermission,
@@ -49,6 +55,7 @@ export const geoportiaMetadataPermissions = [
   metadataEntrySuggestPermission,
   metadataSensitiveReadPermission,
   metadataDelegateRolePermission,
+  databaseCreatePermission,
 ];
 
 export const GEOPORTIA_ROLES = {
