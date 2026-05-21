@@ -19,6 +19,7 @@ import {
   metadataEntryDeletePermission,
   metadataSensitiveReadPermission,
   metadataDelegateRolePermission,
+  databaseCreatePermission,
 } from '@internal/backstage-plugin-geoportia-metadata-common';
 
 /**
@@ -80,6 +81,11 @@ class GeoportiaPermissionPolicy implements PermissionPolicy {
 
     // Moderator can view all but only edit main geodata
     if (isModerator(user)) {
+      // Deny database creation for moderators (admin only)
+      if (permission.name === databaseCreatePermission.name) {
+        return { result: AuthorizeResult.DENY };
+      }
+
       if (permission.attributes.action === 'read') {
         if (permission.name === metadataSensitiveReadPermission.name) {
           return { result: AuthorizeResult.DENY };
@@ -102,6 +108,11 @@ class GeoportiaPermissionPolicy implements PermissionPolicy {
       ) {
         return { result: AuthorizeResult.DENY };
       }
+    }
+
+    // Database creation requires admin role
+    if (permission.name === databaseCreatePermission.name) {
+      return { result: AuthorizeResult.DENY };
     }
 
     if (permission.attributes.action === 'read') {

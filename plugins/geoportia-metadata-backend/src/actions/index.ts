@@ -6,3 +6,5 @@ export { createCreateArcgisSdeDatasetAction } from './createArcgisSdeDataset';
 export type { CreateArcgisSdeDatasetActionOptions } from './createArcgisSdeDataset';
 export { createMetadataChangeSuggestionAction } from './createMetadataChangeSuggestion';
 export type { CreateMetadataChangeSuggestionActionOptions } from './createMetadataChangeSuggestion';
+export { createCreateDatabaseAction } from './createDatabase';
+export type { CreateDatabaseActionOptions } from './createDatabase';

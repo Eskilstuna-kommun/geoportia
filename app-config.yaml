@@ -109,6 +109,9 @@ catalog:
     # GeoPortia Metadata suggestion template
     - type: file
       target: ../../plugins/geoportia-metadata/templates/suggest-metadata-change.yaml
+    # Create Database template (admin only)
+    - type: file
+      target: ../../plugins/geoportia-metadata/templates/create-database.yaml
       rules:
         - allow: [Template]
 

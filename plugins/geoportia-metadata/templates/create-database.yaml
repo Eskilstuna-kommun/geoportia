@@ -1,0 +1,69 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-database
+  title: Skapa databas
+  description: Skapa en ny databasresurs i Geoportia (endast administratörer)
+  tags:
+    - database
+    - admin
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+spec:
+  owner: group:default/geoportia-admin
+  type: database
+
+  # Only allow administrators to see and use this template
+  # This is enforced via permission policies in permission-policy.ts
+
+  parameters:
+    - title: Skapa ny databas
+      required:
+        - name
+        - status
+      properties:
+        name:
+          title: Namn
+          type: string
+          description: Ange ett namn på databasen
+          ui:autofocus: true
+        description:
+          title: Beskrivning
+          type: string
+          description: Ange en beskrivning
+        hostName:
+          title: Host Name
+          type: string
+          description: Ange ett host name
+        status:
+          title: Status
+          type: string
+          description: Välj status för databasen
+          enum:
+            - Välj...
+            - Ska sättas
+            - Raderad
+            - Förslag
+            - Godkänd
+            - Ska avpubliceras
+          default: Välj...
+
+  steps:
+    # Create the database resource in the catalog
+    - id: create-database-resource
+      name: Skapa databasresurs
+      action: geoportia:database:create
+      input:
+        name: ${{ parameters.name }}
+        description: ${{ parameters.description }}
+        hostName: ${{ parameters.hostName }}
+        status: ${{ parameters.status }}
+
+  output:
+    links:
+      - title: Visa databas i katalogen
+        icon: catalog
+        entityRef: ${{ steps['create-database-resource'].output.entityRef }}
+    text:
+      - title: Skapad databasreferens
+        content: ${{ steps['create-database-resource'].output.entityRef }}

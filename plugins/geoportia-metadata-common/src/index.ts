@@ -15,6 +15,7 @@ export {
 } from './dataset';
  
 export { RESOURCE_TYPE_METADATA_ENTRY,
+  RESOURCE_TYPE_DATABASE,
   metadataEntryReadPermission,
   metadataEntryCreatePermission,
   metadataEntryUpdatePermission,
@@ -22,6 +23,7 @@ export { RESOURCE_TYPE_METADATA_ENTRY,
   metadataEntrySuggestPermission,
   metadataSensitiveReadPermission,
   metadataDelegateRolePermission,
+  databaseCreatePermission,
   geoportiaMetadataPermissions,
   GEOPORTIA_ROLES,
   type GeoportiaRole,
