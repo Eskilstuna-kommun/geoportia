@@ -78,19 +78,31 @@ spec:
             type: string
             title: Attribute specification för sökvy
   steps:
-    - id: create-layer-spec
-      name: Skapa kartlagerspecifikation
-      action: geoportia:create-layer-spec
+    - id: create-metadata
+      name: Skapa metadata
+      action: geoportia:metadata:store
       input:
-        status: '{{ parameters.Lager.status }}'
-        availability: '{{ parameters.Lager.availability }}'
-        databasspecifikation: '{{ parameters.Lager.databasspecifikation }}'
+        entityRef: '{{ parameters.Lager.name }}'
+        metadata: '{{ parameters.Metadata }}'
+        schema: '{{ parameters.Metadata.workspace }}'
+    - id: create-postgresql-view
+      name: Skapa PostGIS-sökvy
+      action: postgresql:create-view
+      input:
+        viewName: '{{ parameters.Lager.name }}'
+        schemaName: '{{ parameters.Metadata.workspace }}'
+        tables: []
+    - id: create-geoserver-layer
+      name: Skapa GeoServer-lager
+      action: geoserver:create-layer
+      input:
         name: '{{ parameters.Lager.name }}'
-        titel: '{{ parameters.Lager.titel }}'
-        orderer: '{{ parameters.Kartlager.orderer }}'
-        style: '{{ parameters.Kartlager.style }}'
         workspace: '{{ parameters.Metadata.workspace }}'
-        cachingrutin: '{{ parameters.Metadata.cachingrutin }}'
-        tillkomsthistorik: '{{ parameters.Metadata.tillkomsthistorik }}'
-        boundingboxtyp: '{{ parameters.Metadata.boundingboxtyp }}'
-        statusdatamängd: '{{ parameters.Metadata.status }}'
+        datastore: '{{ parameters.Lager.databasspecifikation }}'
+        nativeName: '{{ parameters.Lager.name }}'
+        title: '{{ parameters.Lager.titel }}'
+        srs: 'EPSG:3006'
+        enabled: true
+        abstract: 'Kartlager skapat via Backstage'
+        storeType: 'PostGIS'
+        nativeBoundingBox: '{{ parameters.Metadata.boundingboxtyp }}'
