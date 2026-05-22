@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Box,
   Checkbox,
-  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -12,7 +11,6 @@ import {
   Typography,
 } from '@material-ui/core';
 import CheckIcon from '@mui/icons-material/Check';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { geodatasetManagementTranslationRef } from '../../../translation';
 import { ReviewItem } from '../../../data';
@@ -33,17 +31,6 @@ export const SignListView = ({
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
   return (
     <Box>
-      <Box display="flex" alignItems="flex-start" mb={2}>
-        <Box flex={1}>
-          <Typography variant="body2" paragraph>
-            {t('reviewDialog.intro1')}...
-          </Typography>
-        </Box>
-        <IconButton size="small">
-          <ExpandMoreIcon />
-        </IconButton>
-      </Box>
-
       <TableContainer>
         <Table size="small">
           <TableHead>
