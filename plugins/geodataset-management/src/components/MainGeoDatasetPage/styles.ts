@@ -101,8 +101,24 @@ export const useMainGeoDatasetStyles = makeStyles((theme: Theme) => ({
     alignItems: 'center',
     gap: theme.spacing(0.5),
   },
+  reviewChangeInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+  },
   lockIcon: {
     fontSize: 16,
     color: theme.palette.text.secondary,
+  },
+  reviewChange: {
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.background.default,
+    borderRadius: 4,
+    padding: theme.spacing(2),
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing(1),
+    marginBottom: theme.spacing(2),
   },
 }));
