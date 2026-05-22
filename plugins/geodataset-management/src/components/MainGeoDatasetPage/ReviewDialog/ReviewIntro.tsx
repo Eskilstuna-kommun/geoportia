@@ -17,7 +17,7 @@ export const ReviewIntro = ({ expanded, onToggle }: Props) => {
       <Box display="flex" alignItems="flex-start" mb={1}>
         <Box flex={1}>
           <Typography variant="body2" paragraph>
-            {t('reviewDialog.intro1')}
+            {t('reviewDialog.intro')}
             {!expanded && '...'}
           </Typography>
         </Box>
@@ -29,7 +29,7 @@ export const ReviewIntro = ({ expanded, onToggle }: Props) => {
       {expanded && (
         <>
           <Typography variant="body2" paragraph>
-            {t('reviewDialog.intro2')}
+            {t('reviewDialog.intro')}
           </Typography>
           <Typography variant="body2" style={{ fontWeight: 'bold' }}>
             {t('reviewDialog.agreementIncludes')}

@@ -186,12 +186,18 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
           )}
 
           {dialogTab === 1 && (
-            <SignListView
-              items={toSignItems}
-              selectedRows={signSelectedRows}
-              onToggleRow={toggleSignRow}
-              onToggleAll={toggleAllSign}
-            />
+            <Box>
+              <ReviewIntro
+                expanded={expanded}
+                onToggle={() => setExpanded(!expanded)}
+              />
+              <SignListView
+                items={toSignItems}
+                selectedRows={signSelectedRows}
+                onToggleRow={toggleSignRow}
+                onToggleAll={toggleAllSign}
+              />
+            </Box>
           )}
         </DialogContent>
 
