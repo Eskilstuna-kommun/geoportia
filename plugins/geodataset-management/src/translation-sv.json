@@ -26,5 +26,7 @@
   "content.contactPerson": "Kontaktperson innehåll",
   "content.myProposals": "Mina förslag innehåll",
   "content.manageActiveProposals": "Hantera aktiva förslag innehåll",
-  "content.managementAgreement": "Förvaltningsöverenskommelse innehåll"
+  "content.managementAgreement": "Förvaltningsöverenskommelse innehåll",
+  "review.changes": "Du har huvudgeodatamängd som måste granskas",
+  "review.startReview": "Starta granskning"
 }

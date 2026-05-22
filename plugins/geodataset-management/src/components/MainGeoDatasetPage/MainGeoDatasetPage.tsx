@@ -2,17 +2,22 @@ import { Content, PageWithHeader, Progress } from '@backstage/core-components';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
-import { Box, Tab, Tabs, Typography } from '@material-ui/core';
+import { Box, Button, Tab, Tabs, Typography } from '@material-ui/core';
 import React, { useState, useEffect, useCallback } from 'react';
+import CreateIcon from '@mui/icons-material/Create';
+import InfoIcon from '@mui/icons-material/Info';
 import { geodatasetManagementTranslationRef } from '../../translation';
 import { DatasetEntry } from '../../data';
 import { useMainGeoDatasetStyles } from './styles';
 import { DatasetToolbar } from './DatasetToolbar';
 import { DatasetPaginationInfo } from './DatasetPaginationInfo';
 import { DatasetTable } from './DatasetTable';
+import { ReviewDialog } from './ReviewDialog';
 
 // Map security class to color
-const mapSecurityClass = (securityClass?: string): 'green' | 'yellow' | 'red' => {
+const mapSecurityClass = (
+  securityClass?: string,
+): 'green' | 'yellow' | 'red' => {
   switch (securityClass) {
     case 'Öppen data':
       return 'green';
@@ -44,7 +49,8 @@ export const MainGeoDatasetPage = () => {
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
   const configApi = useApi(configApiRef);
   const catalogApi = useApi(catalogApiRef);
-  const orgName = configApi.getOptionalString('organization.name') ?? 'Backstage';
+  const orgName =
+    configApi.getOptionalString('organization.name') ?? 'Backstage';
 
   const [activeTab, setActiveTab] = useState(0);
   const [searchText, setSearchText] = useState('');
@@ -54,8 +60,8 @@ export const MainGeoDatasetPage = () => {
   const [selectedRows, setSelectedRows] = useState<DatasetEntry[]>([]);
   const [datasetEntries, setDatasetEntries] = useState<DatasetEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
-  // Fetch real data from catalog - MetadataEntry entities contain all the metadata
   const fetchDatasets = useCallback(async () => {
     try {
       setLoading(true);
@@ -64,15 +70,23 @@ export const MainGeoDatasetPage = () => {
       });
 
       const entries: DatasetEntry[] = response.items.map((entity, index) => {
-        const metadata = (entity.spec?.metadata as Record<string, unknown>) ?? {};
+        const metadata =
+          (entity.spec?.metadata as Record<string, unknown>) ?? {};
         const securityClass = metadata.securityClass as string | undefined;
 
         return {
           id: entity.metadata.name ?? String(index),
           signaturstatus: mapStatus(metadata.status as string | undefined),
-          titel: (metadata.title as string) ?? entity.metadata.title ?? entity.metadata.name ?? 'Untitled',
+          titel:
+            (metadata.title as string) ??
+            entity.metadata.title ??
+            entity.metadata.name ??
+            'Untitled',
           skyddsklass: mapSecurityClass(securityClass),
-          sammanfattning: (metadata.summary as string) ?? (metadata.description as string) ?? '',
+          sammanfattning:
+            (metadata.summary as string) ??
+            (metadata.description as string) ??
+            '',
           oppenData: securityClass === 'Öppen data',
         };
       });
@@ -90,13 +104,31 @@ export const MainGeoDatasetPage = () => {
     fetchDatasets();
   }, [fetchDatasets]);
 
-  const handleTabChange = (_event: React.ChangeEvent<{}>, newValue: number) => {
+  const handleTabChange = (
+    _event: React.ChangeEvent<{}>,
+    newValue: number,
+  ) => {
     setActiveTab(newValue);
   };
 
   return (
     <PageWithHeader title={orgName} themeId="home">
       <Content>
+        <Box>
+          <div className={`${classes.reviewChange}`}>
+            <div className={`${classes.reviewChangeInfo}`}>
+              <InfoIcon />
+              {t('review.changes')}
+            </div>
+            <Button
+              onClick={() => setReviewModalOpen(true)}
+              variant="contained"
+            >
+              <CreateIcon />
+              {t('review.startReview')}
+            </Button>
+          </div>
+        </Box>
         <Box className={classes.tabsContainer}>
           <Tabs
             value={activeTab}
@@ -159,6 +191,11 @@ export const MainGeoDatasetPage = () => {
           {activeTab === 3 && <div>{t('content.manageActiveProposals')}</div>}
           {activeTab === 4 && <div>{t('content.managementAgreement')}</div>}
         </Box>
+
+        <ReviewDialog
+          open={reviewModalOpen}
+          onClose={() => setReviewModalOpen(false)}
+        />
       </Content>
     </PageWithHeader>
   );
