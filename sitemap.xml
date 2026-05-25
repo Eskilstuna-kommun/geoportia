@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://eskilstuna-kommun.github.io/geoportia/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://eskilstuna-kommun.github.io/geoportia/licens/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://eskilstuna-kommun.github.io/geoportia/development/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://eskilstuna-kommun.github.io/geoportia/development/arcpy/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://eskilstuna-kommun.github.io/geoportia/development/eskilstuna/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://eskilstuna-kommun.github.io/geoportia/development/geoserver/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://eskilstuna-kommun.github.io/geoportia/use/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://eskilstuna-kommun.github.io/geoportia/use/get-started/postgresql/automatic-schema-updates/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+</urlset>
