@@ -42,6 +42,53 @@ export const geoportiaMetadataTranslationRef = createTranslationRef({
       suggestedByLabel: 'Suggested by:',
       unknownUser: 'Unknown user',
       noSchemaError: 'Error: No geoportiaMetadataSchema defined in ui:options',
+      fetchError: 'Error fetching metadata',
+    },
+    scaffolder: {
+      datasetSelect: {
+        loadingDatasets: 'Loading datasets...',
+        fetchError: 'Fetch error: {{message}}',
+        selectDatabaseHelper: 'Select a database to see available datasets',
+        createButton: 'Create new dataset',
+        createTooltipNoDatabase:
+          'Select a database first to create a dataset',
+        optionPending: 'created – waiting for indexing',
+        optionPendingShort: 'waiting for indexing',
+        modal: {
+          title: 'Create new dataset',
+          description:
+            'Creates a new feature dataset in the ArcGIS SDE database {{database}} via the python proxy.',
+          name: 'Name',
+          namePlaceholder: 'e.g. MyDataset',
+          nameHelper:
+            'Letters, digits and underscores. Must start with a letter or underscore.',
+          descriptionField: 'Description',
+          descriptionPlaceholder: 'Short description of the dataset',
+          database: 'Database',
+          versioning: 'Versioning',
+          versioningSelect: 'Select...',
+          versioningNone: 'Not versioned',
+          versioningTraditional: 'Traditional versioned',
+          versioningBranch: 'Branch-versioned',
+          allowZValues: 'Allow Z values',
+          status: 'Status',
+          statusSelect: 'Select...',
+          statusToBeSet: 'To be set',
+          statusDeleted: 'Deleted',
+          statusSuggested: 'Suggested',
+          statusApproved: 'Approved',
+          statusToBeUnpublished: 'To be unpublished',
+          databaseSpecifications: 'Database specifications',
+          save: 'Save',
+          back: 'Back',
+          errorNoDatabase: 'Select a database before creating a dataset.',
+          errorDatasetNameRequired: 'Name is required.',
+          errorCreateFailed:
+            'Could not create dataset ({{status}} {{statusText}}): {{body}}',
+          errorNotSdeBacked:
+            'The selected database is not backed by an ArcGIS SDE proxy and cannot create datasets.',
+        },
+      },
     },
     metadataViewer: {
       saved: 'Metadata saved!',

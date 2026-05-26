@@ -8,6 +8,7 @@ import HelpOutlineIcon from '@material-ui/icons/HelpOutline';
 import PersonIcon from '@material-ui/icons/Person';
 import InfoOutlinedIcon from '@material-ui/icons/InfoOutlined';
 import { useApi, identityApiRef } from '@backstage/core-plugin-api';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { useAsync } from 'react-use';
 import { JsonObject } from '@backstage/types';
@@ -17,6 +18,7 @@ import { createCustomTemplates } from './templates';
 import { TableArrayFieldTemplate } from './TableArrayFieldTemplate';
 import { MetadataInfoPanel } from './MetadataInfoPanel';
 import type { GeoPortiaMetadataFieldValue, GeoPortiaMetadataFieldUiOptions } from './types';
+import { geoportiaMetadataTranslationRef } from '../translation';
 
 export type { GeoPortiaMetadataFieldValue, GeoPortiaMetadataFieldUiOptions };
 
@@ -33,6 +35,7 @@ export const GeoPortiaMetadataField = (
 ) => {
   const { onChange, formData, uiSchema, formContext } = props;
 
+  const { t } = useTranslationRef(geoportiaMetadataTranslationRef);
   const catalogApi = useApi(catalogApiRef);
   const identityApi = useApi(identityApiRef);
 
@@ -176,19 +179,19 @@ export const GeoPortiaMetadataField = (
     onChange({ schema: metadataSchema, metadata: newArray });
   }, [metadataSchema, isArraySchema, onChange]);
 
-  // Form context to pass callbacks to nested components
   const rjsfFormContext = useMemo(() => ({
     addArrayItem: isArraySchema ? addArrayItem : undefined,
     updateArrayItem: isArraySchema ? updateArrayItem : undefined,
     deleteArrayItem: isArraySchema ? deleteArrayItem : undefined,
-  }), [isArraySchema, addArrayItem, updateArrayItem, deleteArrayItem]);
+    parentFormData: formData?.metadata,
+  }), [isArraySchema, addArrayItem, updateArrayItem, deleteArrayItem, formData?.metadata]);
 
   if (isLoadingPrefill) {
     return (
       <Box display="flex" alignItems="center" justifyContent="center" p={4}>
         <CircularProgress size={24} />
         <Typography variant="body2" style={{ marginLeft: 8 }}>
-          Laddar befintlig metadata...
+          {t('metadataField.loading')}
         </Typography>
       </Box>
     );
@@ -198,25 +201,23 @@ export const GeoPortiaMetadataField = (
     return (
       <Box p={2}>
         <Typography variant="body2" color="error">
-          {prefillError.message || 'Fel vid hämtning av metadata'}
+          {prefillError.message || t('metadataField.fetchError')}
         </Typography>
       </Box>
     );
   }
 
   if (!metadataSchema) {
-    return <div style={{ color: 'red' }}>Error: No geoportiaMetadataSchema defined in ui:options</div>;
+    return <div style={{ color: 'red' }}>{t('metadataField.noSchemaError')}</div>;
   }
 
-  // Show disabled state if no entity is selected yet (only for templates that
-  // edit/suggest changes to an existing entity, e.g. suggest-metadata-change).
   if (requireEntityRef && !effectiveEntityRef) {
     return (
       <Paper variant="outlined" style={{ padding: 24, backgroundColor: '#f5f5f5' }}>
         <Box display="flex" alignItems="center" justifyContent="center" flexDirection="column" py={4}>
           <InfoOutlinedIcon style={{ fontSize: 48, color: '#9e9e9e', marginBottom: 16 }} />
           <Typography variant="body1" color="textSecondary" align="center">
-            Välj en metadatapost ovan för att se och redigera dess metadata
+            {t('metadataField.selectEntityPrompt')}
           </Typography>
         </Box>
       </Paper>
@@ -227,7 +228,7 @@ export const GeoPortiaMetadataField = (
 
   // Format user display name from entity ref
   const formatUserName = (userRef: string | null) => {
-    if (!userRef) return 'Okänd användare';
+    if (!userRef) return t('metadataField.unknownUser');
     // Extract name from user:default/username format
     const match = userRef.match(/user:[^/]+\/(.+)/);
     return match ? match[1] : userRef;
@@ -253,7 +254,7 @@ export const GeoPortiaMetadataField = (
         <Box mb={2}>
           <Chip
             icon={<PersonIcon />}
-            label={`Föreslås av: ${formatUserName(currentUser)}`}
+            label={`${t('metadataField.suggestedByLabel')} ${formatUserName(currentUser)}`}
             variant="outlined"
             size="small"
             color="primary"

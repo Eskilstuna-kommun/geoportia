@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import type { WidgetProps } from '@rjsf/utils';
+import TextField from '@material-ui/core/TextField';
+import Autocomplete, {
+  createFilterOptions,
+} from '@material-ui/lab/Autocomplete';
 import {
   Box,
   Button,
@@ -8,231 +12,487 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
   FormControlLabel,
-  InputLabel,
   MenuItem,
-  Select,
   Switch,
-  TextField,
   Typography,
 } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import { makeStyles } from '@material-ui/core/styles';
-import { useApi } from '@backstage/core-plugin-api';
-import { catalogApiRef } from '@backstage/plugin-catalog-react';
-import useAsync from 'react-use/esm/useAsync';
+import useAsyncFn from 'react-use/lib/useAsyncFn';
+import useAsync from 'react-use/lib/useAsync';
+import {
+  discoveryApiRef,
+  fetchApiRef,
+  useApi,
+} from '@backstage/core-plugin-api';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
+import {
+  catalogApiRef,
+  entityPresentationApiRef,
+  EntityDisplayName,
+} from '@backstage/plugin-catalog-react';
+import { stringifyEntityRef } from '@backstage/catalog-model';
+import type { Entity } from '@backstage/catalog-model';
+import { geoportiaMetadataTranslationRef } from '../translation';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   container: {
     display: 'flex',
+    flexDirection: 'column',
     gap: theme.spacing(1),
     width: '100%',
-    flexDirection: 'column',
   },
-  selectContainer: {
-    flex: 1,
-  },
-  createButton: {
-    whiteSpace: 'nowrap',
-    width: 'fit-content',
-  },
-  buttonContainer: {
-    width: '100%',
+  toolbar: {
     display: 'flex',
     flexDirection: 'row-reverse',
   },
+  createButton: {
+    whiteSpace: 'nowrap',
+  },
 }));
 
-interface Dataset {
-  id: string;
-  name: string;
-}
-
 export const DatasetSelectWithModal = (props: WidgetProps) => {
-  const { id, readonly, disabled, value, onChange } = props;
+  const { id, value, onChange, disabled, readonly, required, formContext } =
+    props;
   const classes = useStyles();
+  const { t } = useTranslationRef(geoportiaMetadataTranslationRef);
 
   const catalogApi = useApi(catalogApiRef);
+  const entityPresentationApi = useApi(entityPresentationApiRef);
+  const discoveryApi = useApi(discoveryApiRef);
+  const fetchApi = useApi(fetchApiRef);
 
-  // Use useAsync to fetch datasets - eliminates boilerplate loading/error/data state management
-  const { value: datasets = [], loading } = useAsync(async () => {
-    const response = await catalogApi.getEntities({
-      filter: { kind: 'Dataset' },
+  const parentFormData = (formContext as { parentFormData?: unknown })
+    ?.parentFormData as Record<string, unknown> | undefined;
+  const selectedDatabase =
+    typeof parentFormData?.database === 'string'
+      ? (parentFormData.database as string)
+      : undefined;
+
+  const { value: sdeBackedDatabases } = useAsync(async () => {
+    const baseUrl = await discoveryApi.getBaseUrl('geoportia-metadata');
+    const response = await fetchApi.fetch(
+      `${baseUrl}/arcgis-sde/databases`,
+    );
+    if (!response.ok) {
+      return [] as string[];
+    }
+    const body = (await response.json()) as { items: string[] };
+    return body.items ?? [];
+  }, [discoveryApi, fetchApi]);
+
+  const isSelectedDatabaseSdeBacked = useMemo(() => {
+    if (!selectedDatabase || !sdeBackedDatabases) return false;
+    return sdeBackedDatabases.includes(selectedDatabase);
+  }, [selectedDatabase, sdeBackedDatabases]);
+
+  // Optimistic stubs created via the modal that aren't in the catalog yet.
+  const [stubNames, setStubNames] = useState<string[]>([]);
+
+  const {
+    value: datasets,
+    loading: loadingDatasets,
+    error: datasetsError,
+  } = useAsync(async () => {
+    const filter: Record<string, string> = {
+      kind: 'Schema',
+      'spec.dialect': 'arcgis',
+    };
+    if (selectedDatabase) {
+      filter['spec.database'] = selectedDatabase;
+    }
+    const { items } = await catalogApi.getEntities({
+      filter,
+      fields: [
+        'kind',
+        'metadata.name',
+        'metadata.namespace',
+        'metadata.title',
+        'metadata.description',
+        'spec.dialect',
+        'spec.database',
+      ],
     });
-    
-    return response.items
-      .map(entity => ({
-        id: entity.metadata.name,
-        name: (entity.metadata.title || entity.metadata.name) as string,
-      }))
-      .sort((a: Dataset, b: Dataset) => a.name.localeCompare(b.name));
-  }, [catalogApi]);
+    const entityRefToPresentation = new Map(
+      await Promise.all(
+        items.map(async item => {
+          const presentation = await entityPresentationApi.forEntity(item)
+            .promise;
+          return [stringifyEntityRef(item), presentation] as const;
+        }),
+      ),
+    );
+    return { items, entityRefToPresentation };
+  }, [catalogApi, entityPresentationApi, selectedDatabase]);
+
+  type Option = Entity | { __stub: true; name: string };
+
+  const options: Option[] = useMemo(() => {
+    const real = datasets?.items ?? [];
+    const realNames = new Set(real.map(e => e.metadata.name));
+    const stubs: Option[] = stubNames
+      .filter(n => !realNames.has(n))
+      .map(name => ({ __stub: true as const, name }));
+    return [...real, ...stubs];
+  }, [datasets, stubNames]);
+
+  const selectedOption =
+    options.find(o =>
+      '__stub' in o ? o.name === value : o.metadata.name === value,
+    ) ?? null;
+
+  const onSelect = useCallback(
+    (_event: unknown, selected: Option | null) => {
+      if (!selected) {
+        onChange(undefined);
+        return;
+      }
+      onChange('__stub' in selected ? selected.name : selected.metadata.name);
+    },
+    [onChange],
+  );
+
+  // ---------- modal state ----------
+  type Versioning = '' | 'NONE' | 'TRADITIONAL' | 'BRANCH';
+  type Status =
+    | ''
+    | 'TO_BE_SET'
+    | 'DELETED'
+    | 'SUGGESTED'
+    | 'APPROVED'
+    | 'TO_BE_UNPUBLISHED';
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [newDatasetName, setNewDatasetName] = useState('');
-  const [newDatasetSummary, setNewDatasetSummary] = useState('');
-  const [newDatasetVersioning, setNewDatasetVersioning] = useState('');
-  const [newDatasetAllowZValues, setNewDatasetAllowZValues] = useState(false);
-  const [newDatasetStatus, setNewDatasetStatus] = useState('');
-  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [newModalDatabase, setNewModalDatabase] = useState('');
+  const [newVersioning, setNewVersioning] = useState<Versioning>('');
+  const [newAllowZValues, setNewAllowZValues] = useState(false);
+  const [newStatus, setNewStatus] = useState<Status>('');
 
   const handleOpenModal = () => {
-    setNewDatasetName('');
-    setNewDatasetSummary('');
-    setNewDatasetVersioning('');
-    setNewDatasetAllowZValues(false);
-    setNewDatasetStatus('');
+    setNewName('');
+    setNewDescription('');
+    setNewModalDatabase(selectedDatabase ?? '');
+    setNewVersioning('');
+    setNewAllowZValues(false);
+    setNewStatus('');
     setModalOpen(true);
   };
+  const handleCloseModal = () => setModalOpen(false);
 
-  const handleCloseModal = () => {
-    setModalOpen(false);
-    setNewDatasetName('');
-    setNewDatasetSummary('');
-    setNewDatasetVersioning('');
-    setNewDatasetAllowZValues(false);
-    setNewDatasetStatus('');
-  };
-
-  const handleCreateDataset = async () => {
-    if (!newDatasetName.trim() || !newDatasetVersioning || !newDatasetStatus) return;
-
-    try {
-      setCreating(true);
-      
-      // TODO: Implement dataset creation in source database (ArcGIS SDE)
-      // For now, just close the modal
-      console.warn('Dataset creation not yet implemented - datasets should be created in the source database');
-      handleCloseModal();
-    } catch (err) {
-      console.error('Error creating dataset:', err);
-    } finally {
-      setCreating(false);
+  const [createState, createDataset] = useAsyncFn(async () => {
+    const databaseToUse = newModalDatabase || selectedDatabase;
+    if (!databaseToUse) {
+      throw new Error(t('scaffolder.datasetSelect.modal.errorNoDatabase'));
     }
-  };
+    if (
+      sdeBackedDatabases &&
+      !sdeBackedDatabases.includes(databaseToUse)
+    ) {
+      throw new Error(t('scaffolder.datasetSelect.modal.errorNotSdeBacked'));
+    }
+    const datasetName = newName.trim();
+    if (!datasetName) {
+      throw new Error(
+        t('scaffolder.datasetSelect.modal.errorDatasetNameRequired'),
+      );
+    }
 
-  // Build dropdown options from datasets
-  const dropdownOptions = [
-    { value: '', label: 'Välj...' },
-    ...datasets.map((ds) => ({ value: ds.id, label: ds.name })),
-  ];
+    const baseUrl = await discoveryApi.getBaseUrl('geoportia-metadata');
+    const response = await fetchApi.fetch(
+      `${baseUrl}/arcgis-sde/databases/${encodeURIComponent(
+        databaseToUse,
+      )}/datasets`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          datasetName,
+          description: newDescription.trim() || undefined,
+          versioning: newVersioning || undefined,
+          allowZValues: newAllowZValues,
+          status: newStatus || undefined,
+        }),
+      },
+    );
 
-  if (loading) {
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      throw new Error(
+        t('scaffolder.datasetSelect.modal.errorCreateFailed', {
+          status: String(response.status),
+          statusText: response.statusText,
+          body,
+        }),
+      );
+    }
+    setStubNames(prev =>
+      prev.includes(datasetName) ? prev : [...prev, datasetName],
+    );
+    onChange(datasetName);
+    handleCloseModal();
+  }, [
+    selectedDatabase,
+    newModalDatabase,
+    sdeBackedDatabases,
+    newName,
+    newDescription,
+    newVersioning,
+    newAllowZValues,
+    newStatus,
+    discoveryApi,
+    fetchApi,
+    onChange,
+    t,
+  ]);
+
+  // ---------- render ----------
+  if (loadingDatasets) {
     return (
       <Box className={classes.container}>
         <CircularProgress size={20} />
-        <Typography variant="body2" color="textSecondary">Laddar datasets...</Typography>
+        <Typography variant="body2" color="textSecondary">
+          {t('scaffolder.datasetSelect.loadingDatasets')}
+        </Typography>
       </Box>
     );
   }
 
+  const createButtonTooltip = !selectedDatabase
+    ? t('scaffolder.datasetSelect.createTooltipNoDatabase')
+    : !isSelectedDatabaseSdeBacked
+      ? t('scaffolder.datasetSelect.modal.errorNotSdeBacked')
+      : undefined;
+
   return (
     <>
       <Box className={classes.container}>
-        <div className={classes.buttonContainer}>
+        <div className={classes.toolbar}>
           <Button
             variant="outlined"
             color="primary"
             size="small"
             startIcon={<AddIcon />}
             onClick={handleOpenModal}
-            disabled={disabled || readonly}
+            disabled={
+              disabled ||
+              readonly ||
+              !selectedDatabase
+            }
             className={classes.createButton}
+            title={createButtonTooltip}
           >
-            Skapa nytt dataset
+            {t('scaffolder.datasetSelect.createButton')}
           </Button>
         </div>
-        <FormControl className={classes.selectContainer} variant="outlined" size="small" disabled={disabled || readonly}>
-          <Select
-            id={id}
-            value={value ?? ''}
-            onChange={(e) => onChange(e.target.value)}
-            displayEmpty
-          >
-            {dropdownOptions.map((opt) => (
-              <MenuItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+
+        <Autocomplete<Option, false, false, false>
+          id={id}
+          value={selectedOption}
+          options={options}
+          onChange={onSelect}
+          disabled={disabled || readonly}
+          getOptionLabel={option => {
+            if ('__stub' in option) {
+              return `${option.name} (${t(
+                'scaffolder.datasetSelect.optionPending',
+              )})`;
+            }
+            return (
+              datasets?.entityRefToPresentation.get(stringifyEntityRef(option))
+                ?.entityRef ?? option.metadata.name
+            );
+          }}
+          renderOption={option =>
+            '__stub' in option ? (
+              <Typography variant="body2">
+                {option.name}{' '}
+                <Typography
+                  variant="caption"
+                  color="textSecondary"
+                  component="span"
+                >
+                  ({t('scaffolder.datasetSelect.optionPendingShort')})
+                </Typography>
+              </Typography>
+            ) : (
+              <EntityDisplayName entityRef={option} />
+            )
+          }
+          renderInput={params => (
+            <TextField
+              {...params}
+              margin="dense"
+              variant="outlined"
+              required={required}
+              disabled={disabled || readonly}
+              error={Boolean(datasetsError)}
+              helperText={
+                datasetsError
+                  ? t('scaffolder.datasetSelect.fetchError', {
+                      message: datasetsError.message,
+                    })
+                  : !selectedDatabase
+                    ? t('scaffolder.datasetSelect.selectDatabaseHelper')
+                    : undefined
+              }
+            />
+          )}
+          filterOptions={createFilterOptions({
+            stringify: option =>
+              '__stub' in option
+                ? option.name
+                : datasets?.entityRefToPresentation.get(
+                    stringifyEntityRef(option),
+                  )?.primaryTitle ?? option.metadata.name,
+          })}
+        />
       </Box>
 
-      <Dialog open={modalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth>
-        <DialogTitle>Skapa nytt dataset</DialogTitle>
+      <Dialog
+        open={modalOpen}
+        onClose={handleCloseModal}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>{t('scaffolder.datasetSelect.modal.title')}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             required
             margin="dense"
-            label="Namn"
-            placeholder="Ange ett namn på dataset"
+            label={t('scaffolder.datasetSelect.modal.name')}
+            placeholder={t('scaffolder.datasetSelect.modal.namePlaceholder')}
             fullWidth
             variant="outlined"
-            value={newDatasetName}
-            onChange={(e) => setNewDatasetName(e.target.value)}
+            value={newName}
+            onChange={e => setNewName(e.target.value)}
+            helperText={t('scaffolder.datasetSelect.modal.nameHelper')}
           />
           <TextField
             margin="dense"
-            label="Sammanfattning"
-            placeholder="Ange en sammanfattning"
+            label={t('scaffolder.datasetSelect.modal.descriptionField')}
+            placeholder={t(
+              'scaffolder.datasetSelect.modal.descriptionPlaceholder',
+            )}
             fullWidth
             variant="outlined"
-            value={newDatasetSummary}
-            onChange={(e) => setNewDatasetSummary(e.target.value)}
+            value={newDescription}
+            onChange={e => setNewDescription(e.target.value)}
           />
-          <FormControl variant="outlined" fullWidth margin="dense" required>
-            <InputLabel>Versionering</InputLabel>
-            <Select
-              value={newDatasetVersioning}
-              onChange={(e) => setNewDatasetVersioning(e.target.value as string)}
-              label="Versionering"
-            >
-              <MenuItem value="">Välj...</MenuItem>
-              <MenuItem value="Ej versionerad">Ej versionerad</MenuItem>
-              <MenuItem value="Traditionell versionerad">Traditionell versionerad</MenuItem>
-              <MenuItem value="Branch-versionerad">Branch-versionerad</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={newDatasetAllowZValues}
-                onChange={(e) => setNewDatasetAllowZValues(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Tillåt Z-värden *"
-            style={{ marginTop: 8, marginBottom: 8 }}
-          />
-          <FormControl variant="outlined" fullWidth margin="dense" required>
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={newDatasetStatus}
-              onChange={(e) => setNewDatasetStatus(e.target.value as string)}
-              label="Status"
-            >
-              <MenuItem value="">Välj...</MenuItem>
-              <MenuItem value="Ska sättas">Ska sättas</MenuItem>
-              <MenuItem value="Raderad">Raderad</MenuItem>
-              <MenuItem value="Förslagen">Förslagen</MenuItem>
-              <MenuItem value="Godkänd">Godkänd</MenuItem>
-              <MenuItem value="Ska avpubliceras">Ska avpubliceras</MenuItem>
-            </Select>
-          </FormControl>
+          <TextField
+            select
+            required
+            margin="dense"
+            label={t('scaffolder.datasetSelect.modal.database')}
+            fullWidth
+            variant="outlined"
+            value={newModalDatabase}
+            onChange={e => setNewModalDatabase(e.target.value)}
+          >
+            {(sdeBackedDatabases ?? []).map(db => (
+              <MenuItem key={db} value={db}>
+                {db}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            required
+            margin="dense"
+            label={t('scaffolder.datasetSelect.modal.versioning')}
+            fullWidth
+            variant="outlined"
+            value={newVersioning}
+            onChange={e => setNewVersioning(e.target.value as Versioning)}
+          >
+            <MenuItem value="" disabled>
+              {t('scaffolder.datasetSelect.modal.versioningSelect')}
+            </MenuItem>
+            <MenuItem value="NONE">
+              {t('scaffolder.datasetSelect.modal.versioningNone')}
+            </MenuItem>
+            <MenuItem value="TRADITIONAL">
+              {t('scaffolder.datasetSelect.modal.versioningTraditional')}
+            </MenuItem>
+            <MenuItem value="BRANCH">
+              {t('scaffolder.datasetSelect.modal.versioningBranch')}
+            </MenuItem>
+          </TextField>
+          <Box mt={1} mb={1}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={newAllowZValues}
+                  onChange={e => setNewAllowZValues(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label={t('scaffolder.datasetSelect.modal.allowZValues')}
+            />
+          </Box>
+          <TextField
+            select
+            required
+            margin="dense"
+            label={t('scaffolder.datasetSelect.modal.status')}
+            fullWidth
+            variant="outlined"
+            value={newStatus}
+            onChange={e => setNewStatus(e.target.value as Status)}
+          >
+            <MenuItem value="" disabled>
+              {t('scaffolder.datasetSelect.modal.statusSelect')}
+            </MenuItem>
+            <MenuItem value="TO_BE_SET">
+              {t('scaffolder.datasetSelect.modal.statusToBeSet')}
+            </MenuItem>
+            <MenuItem value="DELETED">
+              {t('scaffolder.datasetSelect.modal.statusDeleted')}
+            </MenuItem>
+            <MenuItem value="SUGGESTED">
+              {t('scaffolder.datasetSelect.modal.statusSuggested')}
+            </MenuItem>
+            <MenuItem value="APPROVED">
+              {t('scaffolder.datasetSelect.modal.statusApproved')}
+            </MenuItem>
+            <MenuItem value="TO_BE_UNPUBLISHED">
+              {t('scaffolder.datasetSelect.modal.statusToBeUnpublished')}
+            </MenuItem>
+          </TextField>
+          {createState.error && (
+            <Typography variant="body2" color="error" style={{ marginTop: 8 }}>
+              {createState.error.message}
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseModal} disabled={creating}>
-            Avbryt
+          <Button
+            variant="outlined"
+            onClick={handleCloseModal}
+            disabled={createState.loading}
+          >
+            {t('scaffolder.datasetSelect.modal.back')}
           </Button>
           <Button
-            onClick={handleCreateDataset}
+            onClick={() => createDataset()}
             color="primary"
             variant="contained"
-            disabled={!newDatasetName.trim() || !newDatasetVersioning || !newDatasetStatus || creating}
+            disabled={
+              !newName.trim() ||
+              !newModalDatabase ||
+              !newVersioning ||
+              !newStatus ||
+              createState.loading
+            }
           >
-            {creating ? <CircularProgress size={20} /> : 'Skapa'}
+            {createState.loading ? (
+              <CircularProgress size={20} />
+            ) : (
+              t('scaffolder.datasetSelect.modal.save')
+            )}
           </Button>
         </DialogActions>
       </Dialog>
