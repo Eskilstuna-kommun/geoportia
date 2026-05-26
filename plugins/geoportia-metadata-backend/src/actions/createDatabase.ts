@@ -7,6 +7,8 @@ import { AuthorizeResult } from '@backstage/plugin-permission-common';
 import { CatalogClient } from '@backstage/catalog-client';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { pathToFileURL } from 'url';
+import * as yaml from 'yaml';
 
 /**
  * Path (relative to the backend working directory) of the YAML file that
@@ -14,54 +16,6 @@ import * as path from 'path';
  * location in app-config.yaml.
  */
 const DATABASES_YAML_RELATIVE_PATH = '../../examples/databases.yaml';
-
-function escapeYamlValue(value: string): string {
-  if (value === '') return '""';
-  if (/[:#&*!|>'"%@`{}\[\],\n]/.test(value) || /^\s|\s$/.test(value)) {
-    return JSON.stringify(value);
-  }
-  return value;
-}
-
-function serializeEntityToYaml(entity: {
-  apiVersion: string;
-  kind: string;
-  metadata: {
-    name: string;
-    title: string;
-    description: string;
-    tags: string[];
-    annotations: Record<string, string>;
-  };
-  spec: { type: string; owner: string };
-}): string {
-  const lines: string[] = [];
-  lines.push(`apiVersion: ${entity.apiVersion}`);
-  lines.push(`kind: ${entity.kind}`);
-  lines.push(`metadata:`);
-  lines.push(`  name: ${escapeYamlValue(entity.metadata.name)}`);
-  lines.push(`  title: ${escapeYamlValue(entity.metadata.title)}`);
-  lines.push(`  description: ${escapeYamlValue(entity.metadata.description)}`);
-  lines.push(`  tags:`);
-  for (const tag of entity.metadata.tags) {
-    lines.push(`    - ${escapeYamlValue(tag)}`);
-  }
-  const annotationKeys = Object.keys(entity.metadata.annotations);
-  if (annotationKeys.length > 0) {
-    lines.push(`  annotations:`);
-    for (const key of annotationKeys) {
-      lines.push(
-        `    ${escapeYamlValue(key)}: ${escapeYamlValue(
-          entity.metadata.annotations[key],
-        )}`,
-      );
-    }
-  }
-  lines.push(`spec:`);
-  lines.push(`  type: ${escapeYamlValue(entity.spec.type)}`);
-  lines.push(`  owner: ${escapeYamlValue(entity.spec.owner)}`);
-  return lines.join('\n');
-}
 
 /**
  * Input options for the geoportia:database:create action.
@@ -113,6 +67,12 @@ export function createCreateDatabaseAction(options: CreateDatabaseActionOptions)
             type: 'string',
             title: 'Entity Reference',
             description: 'The entityRef of the created database resource',
+          },
+          catalogInfoUrl: {
+            type: 'string',
+            title: 'Catalog Info URL',
+            description:
+              'A file:// URL pointing to the databases.yaml that contains the new entity, suitable for catalog:register.',
           },
         },
       },
@@ -172,22 +132,6 @@ export function createCreateDatabaseAction(options: CreateDatabaseActionOptions)
         },
       };
 
-      // Get auth token for catalog API.
-      let token: string | undefined;
-      if (auth) {
-        const credentials = await auth.getPluginRequestToken({
-          onBehalfOf: await auth.getOwnServiceCredentials(),
-          targetPluginId: 'catalog',
-        });
-        token = credentials.token;
-      }
-      // Token reserved for potential future catalog API use.
-      void token;
-
-      // Append the new entity to the YAML file that's registered as a catalog
-      // location. The catalog file-location processor will pick it up on its
-      // next refresh cycle. Database entities never contain credentials –
-      // connection details live in app-config keyed by metadata.name.
       const targetPath = path.resolve(
         process.cwd(),
         DATABASES_YAML_RELATIVE_PATH,
@@ -216,7 +160,7 @@ export function createCreateDatabaseAction(options: CreateDatabaseActionOptions)
           );
         }
 
-        const yamlDoc = serializeEntityToYaml(entity);
+        const yamlDoc = yaml.stringify(entity);
         const trimmed = existing.trimEnd();
         const separator =
           trimmed.length === 0
@@ -224,7 +168,7 @@ export function createCreateDatabaseAction(options: CreateDatabaseActionOptions)
             : trimmed.endsWith('---')
               ? '\n'
               : '\n---\n';
-        const newContent = `${trimmed}${separator}${yamlDoc}\n`;
+        const newContent = `${trimmed}${separator}${yamlDoc}`;
 
         await fs.writeFile(targetPath, newContent, 'utf8');
 
@@ -238,6 +182,7 @@ export function createCreateDatabaseAction(options: CreateDatabaseActionOptions)
           `Successfully wrote database resource ${entityRef} to ${targetPath}`,
         );
         ctx.output('entityRef', entityRef);
+        ctx.output('catalogInfoUrl', pathToFileURL(targetPath).toString());
       } catch (error) {
         ctx.logger.error(`Failed to create database resource: ${error}`);
         if (error instanceof InputError) {

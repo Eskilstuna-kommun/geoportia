@@ -44,3 +44,39 @@ metadata:
 spec:
   type: database
   owner: "group:default/geoportia-team"
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: test
+  title: test
+  description: "STASH (Sweco TEM Application Subscription Handling) är att
+    underlätta för produktägaren vid hanteringen av återkommande abonnemang och
+    göra en direktkoppling till TEM för att slippa återkommande manuell
+    hantering. "
+  tags:
+    - database
+  annotations:
+    geoportia.se/host-name: AG_Analys
+    geoportia.se/status: Godkänd
+spec:
+  type: database
+  owner: group:default/geoportia-team
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: test1
+  title: test1
+  description: "STASH (Sweco TEM Application Subscription Handling) är att
+    underlätta för produktägaren vid hanteringen av återkommande abonnemang och
+    göra en direktkoppling till TEM för att slippa återkommande manuell
+    hantering. "
+  tags:
+    - database
+  annotations:
+    geoportia.se/host-name: AG_Analys
+    geoportia.se/status: Godkänd
+spec:
+  type: database
+  owner: group:default/geoportia-team

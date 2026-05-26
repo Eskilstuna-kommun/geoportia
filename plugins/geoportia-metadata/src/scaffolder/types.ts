@@ -27,4 +27,11 @@ export interface GeoPortiaMetadataFieldUiOptions {
   headerDescription?: string;
   showSidebar?: boolean;
   prefillFromEntity?: string;
+  /**
+   * When true, the field renders a disabled placeholder until an entity
+   * reference is resolved (either via `prefillFromEntity` or a sibling
+   * `entityRef` field). Used by templates that edit/suggest changes to an
+   * existing entity. Defaults to false for create flows.
+   */
+  requireEntityRef?: boolean;
 }

@@ -26,10 +26,11 @@ export const catalogModulePostgresqlData = createBackendModule({
 
         const postgresUri = rootConfig.getString('catalog.providers.postgresql.uri');
 
-        const provider = new PostgreSQLDataProvider(postgresUri, taskRunner, logger);
+        const provider = new PostgreSQLDataProvider(postgresUri, taskRunner, logger, 'default');
         catalog.addEntityProvider(provider);
         catalog.addProcessor(new PostgreSQLEntitiesProcessor());
 
+        const providersConfig = rootConfig.getConfig('catalog.providers.postgresql.databases');
         for (const databaseName of providersConfig.keys()) {
           const postgresUri = providersConfig.getString(databaseName);
 
