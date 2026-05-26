@@ -31,6 +31,7 @@ spec:
             headerTitle: Föreslagen metadata
             headerDescription: Redigera fälten nedan för att föreslå ändringar
             showSidebar: true
+            requireEntityRef: true
             geoportiaMetadataSchema:
               required:
                 - administrationRoutine

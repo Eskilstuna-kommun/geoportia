@@ -53,6 +53,7 @@ export const GeoPortiaMetadataField = (
   const headerDescription = uiOptions?.headerDescription;
   const showSidebar = uiOptions?.showSidebar ?? false;
   const prefillFromEntity = uiOptions?.prefillFromEntity;
+  const requireEntityRef = uiOptions?.requireEntityRef ?? false;
 
   // Get entity ref from formContext (sibling field in same form step)
   const entityRefFromContext = formContext?.formData?.entityRef as string | undefined;
@@ -207,8 +208,9 @@ export const GeoPortiaMetadataField = (
     return <div style={{ color: 'red' }}>Error: No geoportiaMetadataSchema defined in ui:options</div>;
   }
 
-  // Show disabled state if no entity is selected yet
-  if (!effectiveEntityRef) {
+  // Show disabled state if no entity is selected yet (only for templates that
+  // edit/suggest changes to an existing entity, e.g. suggest-metadata-change).
+  if (requireEntityRef && !effectiveEntityRef) {
     return (
       <Paper variant="outlined" style={{ padding: 24, backgroundColor: '#f5f5f5' }}>
         <Box display="flex" alignItems="center" justifyContent="center" flexDirection="column" py={4}>
@@ -247,7 +249,7 @@ export const GeoPortiaMetadataField = (
           {headerDescription}
         </Typography>
       )}
-      {currentUser && (
+      {requireEntityRef && currentUser && (
         <Box mb={2}>
           <Chip
             icon={<PersonIcon />}

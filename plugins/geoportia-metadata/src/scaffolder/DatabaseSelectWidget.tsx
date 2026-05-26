@@ -1,100 +1,87 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import type { WidgetProps } from '@rjsf/utils';
-import {
-  Box,
-  CircularProgress,
-  FormControl,
-  MenuItem,
-  Select,
-  Typography,
-} from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import TextField from '@material-ui/core/TextField';
+import Autocomplete, {
+  createFilterOptions,
+} from '@material-ui/lab/Autocomplete';
+import useAsync from 'react-use/lib/useAsync';
 import { useApi } from '@backstage/core-plugin-api';
-import { catalogApiRef } from '@backstage/plugin-catalog-react';
-
-const useStyles = makeStyles((theme) => ({
-  container: {
-    display: 'flex',
-    gap: theme.spacing(1),
-    width: '100%',
-    flexDirection: 'column',
-  },
-  selectContainer: {
-    flex: 1,
-  },
-}));
-
-interface Database {
-  id: string;
-  name: string;
-}
+import {
+  catalogApiRef,
+  entityPresentationApiRef,
+  EntityDisplayName,
+} from '@backstage/plugin-catalog-react';
+import { stringifyEntityRef } from '@backstage/catalog-model';
+import type { Entity } from '@backstage/catalog-model';
 
 export const DatabaseSelectWidget = (props: WidgetProps) => {
-  const { id, readonly, disabled, value, onChange } = props;
-  const classes = useStyles();
+  const { id, value, onChange, disabled, readonly, required } = props;
 
   const catalogApi = useApi(catalogApiRef);
+  const entityPresentationApi = useApi(entityPresentationApiRef);
 
-  const [databases, setDatabases] = useState<Database[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch database resources from the catalog (kind: Resource, spec.type: database)
-  const fetchDatabases = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await catalogApi.getEntities({
-        filter: { kind: 'Resource', 'spec.type': 'database' },
-      });
-      
-      const databaseEntities: Database[] = response.items.map(entity => ({
-        id: entity.metadata.name,
-        name: (entity.metadata.title || entity.metadata.name) as string,
-      }));
-      
-      setDatabases(databaseEntities.sort((a: Database, b: Database) => a.name.localeCompare(b.name)));
-    } catch (err) {
-      console.error('Error fetching databases:', err);
-      setDatabases([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [catalogApi]);
-
-  useEffect(() => {
-    fetchDatabases();
-  }, [fetchDatabases]);
-
-  // Build dropdown options from databases
-  const dropdownOptions = [
-    { value: '', label: 'Välj...' },
-    ...databases.map((db) => ({ value: db.id, label: db.name })),
-  ];
-
-  if (loading) {
-    return (
-      <Box className={classes.container}>
-        <CircularProgress size={20} />
-        <Typography variant="body2" color="textSecondary">Laddar databaser...</Typography>
-      </Box>
+  const { value: entities, loading } = useAsync(async () => {
+    const { items } = await catalogApi.getEntities({
+      filter: { kind: 'Resource', 'spec.type': 'database' },
+      fields: [
+        'kind',
+        'metadata.name',
+        'metadata.namespace',
+        'metadata.title',
+        'metadata.description',
+        'spec.type',
+      ],
+    });
+    const entityRefToPresentation = new Map(
+      await Promise.all(
+        items.map(async item => {
+          const presentation = await entityPresentationApi.forEntity(item)
+            .promise;
+          return [stringifyEntityRef(item), presentation] as const;
+        }),
+      ),
     );
-  }
+    return { catalogEntities: items, entityRefToPresentation };
+  }, [catalogApi, entityPresentationApi]);
+
+  const onSelect = useCallback(
+    (_event: unknown, selected: Entity | null) => {
+      onChange(selected ? selected.metadata.name : undefined);
+    },
+    [onChange],
+  );
+
+  const selectedEntity =
+    entities?.catalogEntities.find(e => e.metadata.name === value) ?? null;
 
   return (
-    <Box className={classes.container}>
-      <FormControl className={classes.selectContainer} variant="outlined" size="small" disabled={disabled || readonly}>
-        <Select
-          id={id}
-          value={value ?? ''}
-          onChange={(e) => onChange(e.target.value)}
-          displayEmpty
-        >
-          {dropdownOptions.map((opt) => (
-            <MenuItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-    </Box>
+    <Autocomplete
+      id={id}
+      value={selectedEntity}
+      loading={loading}
+      onChange={onSelect}
+      options={entities?.catalogEntities ?? []}
+      disabled={disabled || readonly}
+      getOptionLabel={option =>
+        entities?.entityRefToPresentation.get(stringifyEntityRef(option))
+          ?.entityRef ?? option.metadata.name
+      }
+      renderOption={option => <EntityDisplayName entityRef={option} />}
+      renderInput={params => (
+        <TextField
+          {...params}
+          margin="dense"
+          variant="outlined"
+          required={required}
+          disabled={disabled || readonly}
+          InputProps={params.InputProps}
+        />
+      )}
+      filterOptions={createFilterOptions({
+        stringify: option =>
+          entities?.entityRefToPresentation.get(stringifyEntityRef(option))
+            ?.primaryTitle ?? option.metadata.name,
+      })}
+    />
   );
 };

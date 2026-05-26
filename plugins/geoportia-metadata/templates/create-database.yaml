@@ -59,6 +59,14 @@ spec:
         hostName: ${{ parameters.hostName }}
         status: ${{ parameters.status }}
 
+    # Register the new entity immediately so it appears in the catalog
+    # without waiting for the next file-location refresh cycle.
+    - id: register-database-resource
+      name: Registrera i katalogen
+      action: catalog:register
+      input:
+        catalogInfoUrl: ${{ steps['create-database-resource'].output.catalogInfoUrl }}
+
   output:
     links:
       - title: Visa databas i katalogen

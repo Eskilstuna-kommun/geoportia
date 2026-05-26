@@ -24,6 +24,8 @@ import {
 import MenuIcon from '@material-ui/icons/Menu';
 import SearchIcon from '@material-ui/icons/Search';
 import { useLocation } from 'react-router-dom';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
+import { geoportiaTranslationRef } from '../../translations/geoportia-translation';
 
 import {
   FmeIcon,
@@ -232,74 +234,77 @@ const ExpandableItem: React.FC<ExpandableItemProps> = ({
 const SidebarLogo = () => {
   const classes = useSidebarLogoStyles();
   const { isOpen } = useSidebarOpenState();
+  const { t } = useTranslationRef(geoportiaTranslationRef);
 
   return (
     <div className={classes.root}>
-      <Link to="/" underline="none" className={classes.link} aria-label="Home">
+      <Link to="/" underline="none" className={classes.link} aria-label={t('sidebar.home')}>
         {isOpen ? <LogoFull /> : <LogoIcon />}
       </Link>
     </div>
   );
 };
 
-export const Root = ({ children }: PropsWithChildren<{}>) => (
+export const Root = ({ children }: PropsWithChildren<{}>) => {
+  const { t } = useTranslationRef(geoportiaTranslationRef);
+  return (
   <SidebarPage>
     <Sidebar>
       <SidebarLogo />
-      <SidebarGroup label="Search" icon={<SearchIcon />} to="/search">
+      <SidebarGroup label={t('sidebar.search')} icon={<SearchIcon />} to="/search">
         <SidebarSearchModal />
       </SidebarGroup>
       <SidebarDivider />
-      <SidebarGroup label="Menu" icon={<MenuIcon />}>
-        <SidebarItem icon={ControllpanelIcon} to="/" text="Min sida" />
+      <SidebarGroup label={t('sidebar.menu')} icon={<MenuIcon />}>
+        <SidebarItem icon={ControllpanelIcon} to="/" text={t('sidebar.myPage')} />
         <ExpandableItem
           icon={DatabaseIcon}
-          text="Huvudgeodatamängd"
+          text={t('sidebar.mainDataset')}
           items={[
-            { to: 'listView', text: 'Listvy' },
-            { to: 'permissionGroups', text: 'Behörighetsgrupper' },
+            { to: 'listView', text: t('sidebar.mainDatasetListView') },
+            { to: 'permissionGroups', text: t('sidebar.mainDatasetPermissionGroups') },
           ]}
         />
 
           <ExpandableItem
             icon={DatabaseIcon}
-            text="Databashantering"
+            text={t('sidebar.databaseManagement')}
             items={[
-              { to: 'database', text: 'Databaser' },
-              { to: 'databaseUsers', text: 'Databasanvändare' },
-              { to: 'roles', text: 'Roller' },
-              { to: 'dataset', text: 'Dataset (ESRI)' },
+              { to: 'database', text: t('sidebar.databases') },
+              { to: 'databaseUsers', text: t('sidebar.databaseUsers') },
+              { to: 'roles', text: t('sidebar.roles') },
+              { to: 'dataset', text: t('sidebar.datasetEsri') },
             ]}
           />
         <ExpandableItem
           icon={GeoserverIcon}
-          text="Geoserver"
+          text={t('sidebar.geoserver')}
           items={[
-            { to: 'geoserverlayer', text: 'Geoserver Layers' },
-            { to: 'geoserverstore', text: 'Geoserver Stores' },
+            { to: 'geoserverlayer', text: t('sidebar.geoserverLayers') },
+            { to: 'geoserverstore', text: t('sidebar.geoserverStores') },
           ]}
         />
 
         <ExpandableItem
           icon={GeoserverIcon}
-          text="ArcGIS SDE"
+          text={t('sidebar.arcgisSde')}
           items={[
-            { to: 'domain', text: 'Domains' },
-            { to: 'value', text: 'Values' },
-            { to: 'dataset', text: 'Data Sets' },
-            { to: 'table', text: 'Tables' },
-            { to: 'field', text: 'Fields' },
+            { to: 'domain', text: t('sidebar.arcgisDomains') },
+            { to: 'value', text: t('sidebar.arcgisValues') },
+            { to: 'dataset', text: t('sidebar.arcgisDatasets') },
+            { to: 'table', text: t('sidebar.arcgisTables') },
+            { to: 'field', text: t('sidebar.arcgisFields') },
           ]}
         />
 
-        <SidebarItem icon={FmeIcon} to="fmeworkspace" text="FME" />
-        <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
+        <SidebarItem icon={FmeIcon} to="fmeworkspace" text={t('sidebar.fme')} />
+        <SidebarItem icon={CreateComponentIcon} to="create" text={t('sidebar.create')} />
         <SidebarDivider />
       </SidebarGroup>
       <SidebarSpace />
       <SidebarDivider />
       <SidebarGroup
-        label="Settings"
+        label={t('sidebar.settings')}
         icon={<UserSettingsSignInAvatar />}
         to="/settings"
       >
@@ -308,4 +313,5 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
     </Sidebar>
     {children}
   </SidebarPage>
-);
+  );
+};
