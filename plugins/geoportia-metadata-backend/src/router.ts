@@ -14,17 +14,24 @@ import {
   metadataEntryDeletePermission,
 } from '@internal/backstage-plugin-geoportia-metadata-common';
 import { z } from 'zod';
+import {
+  ArcgisSdeDatabases,
+  createArcgisSdeDataset,
+} from './arcgisSde/arcgisSdeConfig';
+import { NotFoundError, InputError } from '@backstage/errors';
 
 export async function createRouter({
   httpAuth,
   metadataService,
   suggestionService,
   permissions,
+  arcgisSdeDatabases,
 }: {
   httpAuth: HttpAuthService;
   metadataService: MetadataService;
   suggestionService: SuggestionService;
   permissions: PermissionsService;
+  arcgisSdeDatabases: ArcgisSdeDatabases;
 }): Promise<express.Router> {
   const parentRouter = Router();
   parentRouter.use(express.json());
@@ -186,6 +193,56 @@ export async function createRouter({
   });
 
   parentRouter.use(openApiRouter);
+
+  // GET /arcgis-sde/databases
+  // Returns the list of database resource names that have ArcGIS SDE proxy
+  // credentials configured. The UI uses this to disable the
+  // "create dataset" button for non-SDE databases.
+  parentRouter.get('/arcgis-sde/databases', async (req, res, next) => {
+    try {
+      await httpAuth.credentials(req, { allow: ['user'] });
+      res.json({ items: Object.keys(arcgisSdeDatabases) });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // POST /arcgis-sde/databases/:database/datasets
+  // Creates a new feature dataset in the configured ArcGIS SDE database via
+  // the python proxy. Admin credentials never leave the backend.
+  parentRouter.post(
+    '/arcgis-sde/databases/:database/datasets',
+    async (req, res, next) => {
+      try {
+        await httpAuth.credentials(req, { allow: ['user'] });
+
+        const body = z
+          .object({
+            datasetName: z.string().min(1),
+            spatialReferenceWkid: z.number().int().positive().optional(),
+          })
+          .parse(req.body);
+
+        const result = await createArcgisSdeDataset(arcgisSdeDatabases, {
+          databaseResourceName: decodeURIComponent(req.params.database),
+          datasetName: body.datasetName,
+          spatialReferenceWkid: body.spatialReferenceWkid,
+        });
+
+        res.status(201).json(result);
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          res.status(404).json({ error: error.message });
+          return;
+        }
+        if (error instanceof InputError) {
+          res.status(400).json({ error: error.message });
+          return;
+        }
+        next(error);
+      }
+    },
+  );
 
   return parentRouter;
 }
