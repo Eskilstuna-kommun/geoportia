@@ -32,7 +32,7 @@ import {
   entityPresentationApiRef,
   EntityDisplayName,
 } from '@backstage/plugin-catalog-react';
-import { parseEntityRef, stringifyEntityRef } from '@backstage/catalog-model';
+import { stringifyEntityRef } from '@backstage/catalog-model';
 import type { Entity } from '@backstage/catalog-model';
 import { geoportiaMetadataTranslationRef } from '../translation';
 
@@ -65,22 +65,10 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
 
   const parentFormData = (formContext as { parentFormData?: unknown })
     ?.parentFormData as Record<string, unknown> | undefined;
-  // The parent "Databas" field may emit either a plain catalog name
-  // ("my-arcgis-sde-database") or a full entity ref ("resource:default/test").
-  // The SDE-backed list returned by the backend uses plain names, so we
-  // normalize here to keep both dropdowns in sync.
-  const selectedDatabase = useMemo(() => {
-    const raw = parentFormData?.database;
-    if (typeof raw !== 'string' || !raw) return undefined;
-    if (raw.includes(':') || raw.includes('/')) {
-      try {
-        return parseEntityRef(raw).name;
-      } catch {
-        return raw;
-      }
-    }
-    return raw;
-  }, [parentFormData?.database]);
+  const selectedDatabase =
+    typeof parentFormData?.database === 'string'
+      ? (parentFormData.database as string)
+      : undefined;
 
   const { value: sdeBackedDatabases } = useAsync(async () => {
     const baseUrl = await discoveryApi.getBaseUrl('geoportia-metadata');
@@ -181,8 +169,6 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
   const [newModalDatabase, setNewModalDatabase] = useState('');
   const [newVersioning, setNewVersioning] = useState<Versioning>('');
   const [newAllowZValues, setNewAllowZValues] = useState(false);
-  const [newZMin, setNewZMin] = useState<string>('');
-  const [newZMax, setNewZMax] = useState<string>('');
   const [newStatus, setNewStatus] = useState<Status>('');
 
   const handleOpenModal = () => {
@@ -191,8 +177,6 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
     setNewModalDatabase(selectedDatabase ?? '');
     setNewVersioning('');
     setNewAllowZValues(false);
-    setNewZMin('');
-    setNewZMax('');
     setNewStatus('');
     setModalOpen(true);
   };
@@ -217,13 +201,6 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
     }
 
     const baseUrl = await discoveryApi.getBaseUrl('geoportia-metadata');
-    const zMinNum = newZMin === '' ? NaN : Number(newZMin);
-    const zMaxNum = newZMax === '' ? NaN : Number(newZMax);
-    const hasValidZExtent =
-      newAllowZValues && Number.isFinite(zMinNum) && Number.isFinite(zMaxNum);
-    if (newAllowZValues && newZMin !== '' && newZMax !== '' && zMinNum >= zMaxNum) {
-      throw new Error(t('scaffolder.datasetSelect.modal.errorZExtentInvalid'));
-    }
     const response = await fetchApi.fetch(
       `${baseUrl}/arcgis-sde/databases/${encodeURIComponent(
         databaseToUse,
@@ -235,12 +212,7 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
           datasetName,
           description: newDescription.trim() || undefined,
           versioning: newVersioning || undefined,
-          isTraditionalVersioned: newVersioning === 'TRADITIONAL',
-          isBranchVersioned: newVersioning === 'BRANCH',
           allowZValues: newAllowZValues,
-          zExtent: hasValidZExtent
-            ? { min: zMinNum, max: zMaxNum }
-            : undefined,
           status: newStatus || undefined,
         }),
       },
@@ -269,8 +241,6 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
     newDescription,
     newVersioning,
     newAllowZValues,
-    newZMin,
-    newZMax,
     newStatus,
     discoveryApi,
     fetchApi,
@@ -463,29 +433,6 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
               label={t('scaffolder.datasetSelect.modal.allowZValues')}
             />
           </Box>
-          {newAllowZValues && (
-            <Box display="flex" style={{ gap: 8 }}>
-              <TextField
-                margin="dense"
-                type="number"
-                label={t('scaffolder.datasetSelect.modal.zMin')}
-                fullWidth
-                variant="outlined"
-                value={newZMin}
-                onChange={e => setNewZMin(e.target.value)}
-                helperText={t('scaffolder.datasetSelect.modal.zExtentHelper')}
-              />
-              <TextField
-                margin="dense"
-                type="number"
-                label={t('scaffolder.datasetSelect.modal.zMax')}
-                fullWidth
-                variant="outlined"
-                value={newZMax}
-                onChange={e => setNewZMax(e.target.value)}
-              />
-            </Box>
-          )}
           <TextField
             select
             required

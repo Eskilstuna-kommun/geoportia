@@ -41,41 +41,6 @@ export function createCreateArcgisSdeDatasetAction(
             description:
               'WKID of the spatial reference for the new dataset (e.g. 3006).',
           },
-          versioning: {
-            type: 'string',
-            enum: ['NONE', 'TRADITIONAL', 'BRANCH'],
-            title: 'Versioning',
-            description:
-              'Register the dataset as traditional- or branch-versioned. Defaults to NONE.',
-          },
-          isTraditionalVersioned: {
-            type: 'boolean',
-            title: 'Is traditional-versioned',
-            description:
-              'Boolean equivalent of versioning=TRADITIONAL. Derived from the dropdown.',
-          },
-          isBranchVersioned: {
-            type: 'boolean',
-            title: 'Is branch-versioned',
-            description:
-              'Boolean equivalent of versioning=BRANCH. Derived from the dropdown.',
-          },
-          allowZValues: {
-            type: 'boolean',
-            title: 'Allow Z values',
-            description:
-              'Enable Z values on the dataset spatial reference.',
-          },
-          zExtent: {
-            type: 'object',
-            title: 'Z extent',
-            description: 'Z domain (min/max) applied when allowZValues is true.',
-            properties: {
-              min: { type: 'number', title: 'Z min' },
-              max: { type: 'number', title: 'Z max' },
-            },
-            required: ['min', 'max'],
-          },
         },
       },
       output: {
@@ -92,21 +57,6 @@ export function createCreateArcgisSdeDatasetAction(
       const spatialReferenceWkid = ctx.input.spatialReferenceWkid as
         | number
         | undefined;
-      const versioning = ctx.input.versioning as
-        | 'NONE'
-        | 'TRADITIONAL'
-        | 'BRANCH'
-        | undefined;
-      const isTraditionalVersioned = ctx.input.isTraditionalVersioned as
-        | boolean
-        | undefined;
-      const isBranchVersioned = ctx.input.isBranchVersioned as
-        | boolean
-        | undefined;
-      const allowZValues = ctx.input.allowZValues as boolean | undefined;
-      const zExtent = ctx.input.zExtent as
-        | { min: number; max: number }
-        | undefined;
 
       ctx.logger.info(
         `Creating ArcGIS SDE dataset "${datasetName}" in database resource "${databaseResourceName}"`,
@@ -116,11 +66,6 @@ export function createCreateArcgisSdeDatasetAction(
         databaseResourceName,
         datasetName,
         spatialReferenceWkid,
-        versioning,
-        isTraditionalVersioned,
-        isBranchVersioned,
-        allowZValues,
-        zExtent,
       });
 
       ctx.logger.info(

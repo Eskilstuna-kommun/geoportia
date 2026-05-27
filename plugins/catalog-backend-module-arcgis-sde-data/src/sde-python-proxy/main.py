@@ -346,12 +346,7 @@ def create_dataset():
         "datasetName": "<name of dataset to create>",
         "adminUser": "<sde admin user>",
         "adminPassword": "<sde admin password>",
-        "spatialReferenceWkid": <optional integer WKID, e.g. 3006>,
-        "versioning": "NONE" | "TRADITIONAL" | "BRANCH",   // optional
-        "isTraditionalVersioned": <optional bool>,         // alt. to versioning
-        "isBranchVersioned": <optional bool>,              // alt. to versioning
-        "allowZValues": <optional bool>,
-        "zExtent": { "min": <float>, "max": <float> }      // optional
+        "spatialReferenceWkid": <optional integer WKID, e.g. 3006>
     }
     """
     data: Any | None = request.json
@@ -378,21 +373,6 @@ def create_dataset():
     database_user = data.get("adminUser")
     password = data.get("adminPassword")
     spatial_reference_wkid = data.get("spatialReferenceWkid")
-    raw_versioning = (data.get("versioning") or "").upper()
-    is_traditional = bool(data.get("isTraditionalVersioned"))
-    is_branch = bool(data.get("isBranchVersioned"))
-    if raw_versioning:
-        versioning = raw_versioning
-    elif is_traditional:
-        versioning = "TRADITIONAL"
-    elif is_branch:
-        versioning = "BRANCH"
-    else:
-        versioning = "NONE"
-    allow_z_values = bool(data.get("allowZValues"))
-    z_extent = data.get("zExtent") or {}
-    z_min = z_extent.get("min") if isinstance(z_extent, dict) else None
-    z_max = z_extent.get("max") if isinstance(z_extent, dict) else None
 
     try:
         connection_file_name = create_connection_file(database, database_user, password)
@@ -410,42 +390,14 @@ def create_dataset():
                 f"Dataset '{dataset_name}' finns redan i databasen '{database}'."
             )
         else:
-            spatial_reference = None
-            if spatial_reference_wkid is not None:
-                spatial_reference = arcpy.SpatialReference(int(spatial_reference_wkid))
-                if allow_z_values:
-                    z_min_val = float(z_min) if z_min is not None else -1000.0
-                    z_max_val = float(z_max) if z_max is not None else 10000.0
-                    spatial_reference.setZDomain(z_min_val, z_max_val)
-
-            dataset_path = arcpy.management.CreateFeatureDataset(
+            spatial_reference = (
+                arcpy.SpatialReference(int(spatial_reference_wkid))
+                if spatial_reference_wkid is not None
+                else None
+            )
+            arcpy.management.CreateFeatureDataset(
                 connection_file_name, dataset_name, spatial_reference
-            )[0]
-
-            if versioning == "TRADITIONAL":
-                try:
-                    arcpy.management.RegisterAsVersioned(
-                        dataset_path, "NO_EDITS_TO_BASE"
-                    )
-                except Exception as vex:
-                    logging.warning(
-                        "Dataset '%s' created but RegisterAsVersioned "
-                        "(traditional) failed: %s",
-                        dataset_name,
-                        vex,
-                    )
-            elif versioning == "BRANCH":
-                try:
-                    # Branch-versioning helper available in ArcGIS Pro 2.6+.
-                    arcpy.management.RegisterAsBranchVersioned(dataset_path)
-                except Exception as vex:
-                    logging.warning(
-                        "Dataset '%s' created but RegisterAsBranchVersioned "
-                        "failed: %s",
-                        dataset_name,
-                        vex,
-                    )
-
+            )
             return_message = (
                 f"Dataset '{dataset_name}' skapad i databasen '{database}'."
             )

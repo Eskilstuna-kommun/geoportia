@@ -71,9 +71,6 @@ export const geoportiaMetadataTranslationRef = createTranslationRef({
           versioningTraditional: 'Traditional versioned',
           versioningBranch: 'Branch-versioned',
           allowZValues: 'Allow Z values',
-          zMin: 'Z min',
-          zMax: 'Z max',
-          zExtentHelper: 'Z domain applied to the dataset spatial reference.',
           status: 'Status',
           statusSelect: 'Select...',
           statusToBeSet: 'To be set',
@@ -90,8 +87,6 @@ export const geoportiaMetadataTranslationRef = createTranslationRef({
             'Could not create dataset ({{status}} {{statusText}}): {{body}}',
           errorNotSdeBacked:
             'The selected database is not backed by an ArcGIS SDE proxy and cannot create datasets.',
-          errorZExtentInvalid:
-            'Z min must be smaller than Z max.',
         },
       },
     },
