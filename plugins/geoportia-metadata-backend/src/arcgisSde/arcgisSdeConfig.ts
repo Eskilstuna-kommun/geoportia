@@ -58,6 +58,11 @@ export async function createArcgisSdeDataset(
     databaseResourceName: string;
     datasetName: string;
     spatialReferenceWkid?: number;
+    versioning?: 'NONE' | 'TRADITIONAL' | 'BRANCH';
+    isTraditionalVersioned?: boolean;
+    isBranchVersioned?: boolean;
+    allowZValues?: boolean;
+    zExtent?: { min: number; max: number };
   },
 ): Promise<{ database: string; datasetName: string }> {
   const databaseResourceName = params.databaseResourceName.trim();
@@ -93,6 +98,13 @@ export async function createArcgisSdeDataset(
       database: sdeDatabase,
       datasetName,
       spatialReferenceWkid,
+      versioning: params.versioning,
+      isTraditionalVersioned:
+        params.isTraditionalVersioned ?? params.versioning === 'TRADITIONAL',
+      isBranchVersioned:
+        params.isBranchVersioned ?? params.versioning === 'BRANCH',
+      allowZValues: params.allowZValues,
+      zExtent: params.zExtent,
       adminUser,
       adminPassword,
     }),
