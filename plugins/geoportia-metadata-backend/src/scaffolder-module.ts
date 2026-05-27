@@ -4,6 +4,7 @@ import {
   resolvePackagePath,
 } from '@backstage/backend-plugin-api';
 import { scaffolderActionsExtensionPoint } from '@backstage/plugin-scaffolder-node/alpha';
+import { DatabaseManager } from '@backstage/backend-defaults/database';
 import {
   createStoreMetadataAction,
   createCreatePostgresSchemaAction,
@@ -22,23 +23,26 @@ export const scaffolderModuleGeoportiaMetadata = createBackendModule({
     env.registerInit({
       deps: {
         scaffolder: scaffolderActionsExtensionPoint,
-        database: coreServices.database,
         discovery: coreServices.discovery,
         auth: coreServices.auth,
         rootConfig: coreServices.rootConfig,
         permissions: coreServices.permissions,
+        logger: coreServices.logger,
+        lifecycle: coreServices.lifecycle,
       },
-      async init({ scaffolder, database, discovery, auth, rootConfig, permissions }) {
-        const client = await database.getClient();
+      async init({ scaffolder, discovery, auth, rootConfig, permissions, logger, lifecycle }) {
+        const geoportiaMetadataDb = DatabaseManager.fromConfig(rootConfig).forPlugin(
+          'geoportia-metadata',
+          { logger, lifecycle },
+        );
+        const client = await geoportiaMetadataDb.getClient();
 
-        // Run migrations if needed (use separate table to avoid conflicts)
-        if (!database.migrations?.skip) {
+        if (!geoportiaMetadataDb.migrations?.skip) {
           await client.migrate.latest({
             directory: resolvePackagePath(
               '@internal/backstage-plugin-geoportia-metadata-backend',
               'migrations',
             ),
-            tableName: 'geoportia_metadata_knex_migrations',
           });
         }
 
