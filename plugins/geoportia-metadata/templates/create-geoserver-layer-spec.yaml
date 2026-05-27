@@ -34,18 +34,14 @@ spec:
         abstract:
           type: string
           title: Sammanfattning för kartlagret
-        status:
+        boundingboxtyp:
           type: string
-          title: Status
+          title: Typ av bounding box
           default: 'Välj...'
           enum:
             - 'Välj...'
-            - 'Ska sättas'
-            - 'Raderad'
-            - 'Förslag'
-            - 'Godkänd'
-            - 'Ska avpubliceras'
-            - 'Godkänd - ej sökbar'
+            - 'Geografisk'
+            - 'Projektionsbaserad'
 
     - title: SecurityAndAccess
       description: Säkerhet och åtkomst
@@ -131,9 +127,12 @@ spec:
           default: 'Välj...'
           enum:
             - 'Välj...'
-            - 'Aktiv'
-            - 'Inaktiv'
-            - 'Under utveckling'
+            - 'Ska sättas'
+            - 'Raderad'
+            - 'Förslag'
+            - 'Godkänd'
+            - 'Ska avpubliceras'
+            - 'Godkänd - ej sökbar'
 
   steps:
     - id: create-metadata
@@ -148,3 +147,13 @@ spec:
       name: Skapa GeoServer-lager
       action: geoserver:create-layer
       input:
+        name: '{{ parameters.CommonInformation.name }}'
+        workspace: '{{ parameters.Geoserver.workspace }}'
+        datastore: '{{ parameters.Geoserver.datastore }}'
+        nativeName: '{{ parameters.CommonInformation.name }}'
+        title: '{{ parameters.CommonInformation.titel }}'
+        srs: 'EPSG:3006'
+        enabled: true
+        abstract: '{{ parameters.CommonInformation.abstract }}'
+        storeType: 'PostGIS'
+        nativeBoundingBox: '{{ parameters.CommonInformation.boundingboxtyp }}'
