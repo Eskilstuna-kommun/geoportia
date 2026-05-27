@@ -220,13 +220,42 @@ export async function createRouter({
           .object({
             datasetName: z.string().min(1),
             spatialReferenceWkid: z.number().int().positive().optional(),
+            versioning: z
+              .enum(['NONE', 'TRADITIONAL', 'BRANCH'])
+              .optional(),
+            isTraditionalVersioned: z.boolean().optional(),
+            isBranchVersioned: z.boolean().optional(),
+            allowZValues: z.boolean().optional(),
+            zExtent: z
+              .object({
+                min: z.number(),
+                max: z.number(),
+              })
+              .optional(),
           })
           .parse(req.body);
+
+        // Derive enum from booleans if a client only sent the booleans,
+        // and vice versa, so both representations stay in sync downstream.
+        const versioning: 'NONE' | 'TRADITIONAL' | 'BRANCH' | undefined =
+          body.versioning ??
+          (body.isTraditionalVersioned
+            ? 'TRADITIONAL'
+            : body.isBranchVersioned
+              ? 'BRANCH'
+              : undefined);
 
         const result = await createArcgisSdeDataset(arcgisSdeDatabases, {
           databaseResourceName: decodeURIComponent(req.params.database),
           datasetName: body.datasetName,
           spatialReferenceWkid: body.spatialReferenceWkid,
+          versioning,
+          isTraditionalVersioned:
+            body.isTraditionalVersioned ?? versioning === 'TRADITIONAL',
+          isBranchVersioned:
+            body.isBranchVersioned ?? versioning === 'BRANCH',
+          allowZValues: body.allowZValues,
+          zExtent: body.zExtent,
         });
 
         res.status(201).json(result);
