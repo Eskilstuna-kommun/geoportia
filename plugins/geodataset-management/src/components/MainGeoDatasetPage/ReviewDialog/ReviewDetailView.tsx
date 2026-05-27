@@ -31,6 +31,15 @@ export const ReviewDetailView = ({ item }: Props) => {
   const [contactOpen, setContactOpen] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
+  // Extract user name from suggestedBy (e.g. "user:default/anders.andersson" -> "anders.andersson")
+  const suggestedByName = item.suggestedBy?.split('/').pop() ?? '';
+  // Create initials from the name (e.g. "anders.andersson" -> "AA")
+  const initials = suggestedByName
+    .split(/[.\-_]/)
+    .map(part => part.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join('');
+
   const toggleRow = (key: string) =>
     setExpandedRows(prev => ({ ...prev, [key]: !prev[key] }));
 
@@ -136,17 +145,14 @@ export const ReviewDetailView = ({ item }: Props) => {
                       justifyContent="center"
                       style={{ fontWeight: 'bold', fontSize: 14 }}
                     >
-                      AA
+                      {initials || '?'}
                     </Box>
                     <Box>
                       <Typography
                         variant="body2"
                         style={{ fontWeight: 'bold' }}
                       >
-                        Anders Andersson
-                      </Typography>
-                      <Typography variant="caption" color="textSecondary">
-                        KLK/Miljö
+                        {suggestedByName || t('reviewDialog.unknownUser')}
                       </Typography>
                     </Box>
                   </Box>
@@ -157,12 +163,9 @@ export const ReviewDetailView = ({ item }: Props) => {
                     <CloseIcon fontSize="small" />
                   </IconButton>
                 </Box>
-                <Typography variant="body2">
-                  <a href="mailto:anders.andersson@mail.se">
-                    anders.andersson@mail.se
-                  </a>
+                <Typography variant="body2" color="textSecondary">
+                  {item.suggestedBy}
                 </Typography>
-                <Typography variant="body2">+46 70 123 45 67</Typography>
               </Paper>
             </ClickAwayListener>
           )}

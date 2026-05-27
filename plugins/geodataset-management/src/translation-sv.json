@@ -30,5 +30,6 @@
   "content.managementAgreement": "Förvaltningsöverenskommelse innehåll",
   "review.changes": "Du har huvudgeodatamängd som måste granskas",
   "review.startReview": "Starta granskning",
-  "reviewDialog.adminOnly": "Endast administratörer kan granska ändringsförslag."
+  "reviewDialog.adminOnly": "Endast administratörer kan granska ändringsförslag.",
+  "reviewDialog.unknownUser": "Okänd användare"
 }

@@ -31,6 +31,7 @@ export const geoportiaMetadataBackendPlugin = createBackendPlugin({
         discovery,
         permissions,
         rootConfig,
+        userInfo,
       }) {
         const client = await database.getClient();
         if (!database.migrations?.skip) {

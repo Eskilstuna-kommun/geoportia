@@ -3,7 +3,7 @@ import { useApi, configApiRef } from '@backstage/core-plugin-api';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { Box, Button, Tab, Tabs, Typography } from '@material-ui/core';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CreateIcon from '@mui/icons-material/Create';
 import InfoIcon from '@mui/icons-material/Info';
 import { geodatasetManagementTranslationRef } from '../../translation';
@@ -14,6 +14,7 @@ import { DatasetPaginationInfo } from './DatasetPaginationInfo';
 import { DatasetTable } from './DatasetTable';
 import { ReviewDialog } from './ReviewDialog';
 import { useIsGeoportiaAdmin } from '../../hooks/useIsGeoportiaAdmin';
+import { useReviewSuggestions } from '../../hooks/useReviewSuggestions';
 
 // Map security class to color
 const mapSecurityClass = (
@@ -64,6 +65,19 @@ export const MainGeoDatasetPage = () => {
   const [loading, setLoading] = useState(true);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const { isAdmin } = useIsGeoportiaAdmin();
+  const {
+    value: reviewItems = [],
+    loading: reviewItemsLoading,
+    error: reviewItemsError,
+    retry: retryReviewItems,
+  } = useReviewSuggestions();
+
+  // Items pending review (not yet reviewed in this session)
+  const [reviewedIds, setReviewedIds] = useState<string[]>([]);
+  const toReviewItems = useMemo(
+    () => reviewItems.filter(r => !reviewedIds.includes(r.id)),
+    [reviewItems, reviewedIds],
+  );
 
   const fetchDatasets = useCallback(async () => {
     try {
@@ -129,9 +143,9 @@ export const MainGeoDatasetPage = () => {
     <PageWithHeader title={orgName} themeId="home">
       <Content>
         <Box>
-          {isAdmin && (
-            <div className={`${classes.reviewChange}`}>
-              <div className={`${classes.reviewChangeInfo}`}>
+          {isAdmin && toReviewItems.length > 0 && (
+            <div className={classes.reviewChange}>
+              <div className={classes.reviewChangeInfo}>
                 <InfoIcon />
                 {t('review.changes')}
               </div>
@@ -214,6 +228,12 @@ export const MainGeoDatasetPage = () => {
         <ReviewDialog
           open={reviewModalOpen && isAdmin}
           onClose={() => setReviewModalOpen(false)}
+          reviewItems={reviewItems}
+          reviewItemsLoading={reviewItemsLoading}
+          reviewItemsError={reviewItemsError}
+          retryReviewItems={retryReviewItems}
+          reviewedIds={reviewedIds}
+          setReviewedIds={setReviewedIds}
         />
       </Content>
     </PageWithHeader>

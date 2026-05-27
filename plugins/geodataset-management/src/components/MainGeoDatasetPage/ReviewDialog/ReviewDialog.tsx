@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Badge,
   Box,
@@ -20,8 +20,8 @@ import { useApi } from '@backstage/core-plugin-api';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { metadataApiRef } from '@internal/backstage-plugin-geoportia-metadata';
 import { geodatasetManagementTranslationRef } from '../../../translation';
-import { useReviewSuggestions } from '../../../hooks/useReviewSuggestions';
 import { useIsGeoportiaAdmin } from '../../../hooks/useIsGeoportiaAdmin';
+import { ReviewItem } from '../../../data';
 import { ReviewIntro } from './ReviewIntro';
 import { ReviewListTable } from './ReviewListTable';
 import { ReviewDetailView } from './ReviewDetailView';
@@ -36,18 +36,27 @@ import { SuggestChangeDialog } from './SuggestChangeDialog';
 type Props = {
   open: boolean;
   onClose: () => void;
+  reviewItems: ReviewItem[];
+  reviewItemsLoading: boolean;
+  reviewItemsError: Error | undefined;
+  retryReviewItems: () => void;
+  reviewedIds: string[];
+  setReviewedIds: React.Dispatch<React.SetStateAction<string[]>>;
 };
 
-export const ReviewDialog = ({ open, onClose }: Props) => {
+export const ReviewDialog = ({
+  open,
+  onClose,
+  reviewItems,
+  reviewItemsLoading,
+  reviewItemsError,
+  retryReviewItems,
+  reviewedIds,
+  setReviewedIds,
+}: Props) => {
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
   const metadataApi = useApi(metadataApiRef);
   const { isAdmin, loading: adminLoading } = useIsGeoportiaAdmin();
-  const {
-    value: reviewItems = [],
-    loading: itemsLoading,
-    error: itemsError,
-    retry: retryItems,
-  } = useReviewSuggestions();
 
   const [dialogTab, setDialogTab] = useState(0);
   const [expanded, setExpanded] = useState(true);
@@ -57,17 +66,32 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
   const [signConfirmOpen, setSignConfirmOpen] = useState(false);
   const [signSuccessOpen, setSignSuccessOpen] = useState(false);
   const [suggestChangeOpen, setSuggestChangeOpen] = useState(false);
-  const [reviewedIds, setReviewedIds] = useState<string[]>([]);
   const [signSelectedRows, setSignSelectedRows] = useState<string[]>([]);
   const [accepting, setAccepting] = useState(false);
   const [acceptError, setAcceptError] = useState<string | null>(null);
 
-  const detailItem =
-    reviewItems.find(r => r.id === detailItemId) || null;
-  const toReviewItems = reviewItems.filter(
-    r => !reviewedIds.includes(r.id),
+  const { toReviewItems, toSignItems, detailItem } = useMemo(() => {
+    const reviewedSet = new Set(reviewedIds);
+    return {
+      toReviewItems: reviewItems.filter(r => !reviewedSet.has(r.id)),
+      toSignItems: reviewItems.filter(r => reviewedSet.has(r.id)),
+      detailItem: reviewItems.find(r => r.id === detailItemId) ?? null,
+    };
+  }, [reviewItems, reviewedIds, detailItemId]);
+
+  const signItemTitles = useMemo(
+    () =>
+      signSelectedRows.map(
+        id =>
+          toSignItems.find(r => r.id === id)?.title ??
+          t('reviewDialog.specNamePlaceholder'),
+      ),
+    [signSelectedRows, toSignItems, t],
   );
-  const toSignItems = reviewItems.filter(r => reviewedIds.includes(r.id));
+
+  const canShowContent = isAdmin && !reviewItemsLoading;
+  const toggleInList = (list: string[], id: string) =>
+    list.includes(id) ? list.filter(r => r !== id) : [...list, id];
 
   const handleClose = () => {
     setDetailItemId(null);
@@ -83,79 +107,77 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
   };
 
   const toggleRow = (id: string) =>
-    setDialogSelectedRows(prev =>
-      prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id],
-    );
+    setDialogSelectedRows(prev => toggleInList(prev, id));
 
-  const toggleAllReview = () => {
-    if (dialogSelectedRows.length === toReviewItems.length) {
-      setDialogSelectedRows([]);
-    } else {
-      setDialogSelectedRows(toReviewItems.map(r => r.id));
-    }
-  };
+  const toggleAllReview = () =>
+    setDialogSelectedRows(prev =>
+      prev.length === toReviewItems.length ? [] : toReviewItems.map(r => r.id),
+    );
 
   const toggleSignRow = (id: string) =>
+    setSignSelectedRows(prev => toggleInList(prev, id));
+
+  const toggleAllSign = () =>
     setSignSelectedRows(prev =>
-      prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id],
+      prev.length === toSignItems.length ? [] : toSignItems.map(r => r.id),
     );
 
-  const toggleAllSign = () => {
-    if (signSelectedRows.length === toSignItems.length) {
-      setSignSelectedRows([]);
-    } else {
-      setSignSelectedRows(toSignItems.map(r => r.id));
+  const handleConfirmApprove = () => {
+    setApproveConfirmOpen(false);
+    if (!detailItem) return;
+    // Just move item to "Att signera" tab - actual submission happens on sign
+    setReviewedIds(prev => [...prev, detailItem.id]);
+    setDialogSelectedRows(prev => prev.filter(id => id !== detailItem.id));
+    setDetailItemId(null);
+  };
+
+  const acceptOne = async (item: ReviewItem) => {
+    const response = await metadataApi.acceptSuggestion({
+      path: {
+        entityRef: encodeURIComponent(item.uuid),
+        id: Number(item.id),
+      },
+    });
+    if (!response.ok) {
+      const data = (await response.json().catch(() => ({}))) as {
+        error?: { message?: string };
+      };
+      throw new Error(
+        data?.error?.message ||
+          `Failed to accept ${item.title}: ${response.statusText}`,
+      );
     }
   };
 
-  const handleConfirmApprove = async () => {
-    if (!detailItem) {
-      setApproveConfirmOpen(false);
+  const handleConfirmSign = async () => {
+    if (signSelectedRows.length === 0) {
+      setSignConfirmOpen(false);
       return;
     }
     setAccepting(true);
     setAcceptError(null);
+
     try {
-      const suggestionId = Number(detailItem.id);
-      // detailItem.uuid carries the entityRef of the metadata entry.
-      const response = await metadataApi.acceptSuggestion({
-        path: {
-          entityRef: encodeURIComponent(detailItem.uuid),
-          id: suggestionId,
-        },
-      });
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(
-          (data as { error?: { message?: string } })?.error?.message ||
-            `Failed to accept: ${response.statusText}`,
-        );
+      const items = signSelectedRows
+        .map(id => toSignItems.find(r => r.id === id))
+        .filter((item): item is ReviewItem => Boolean(item));
+
+      for (const item of items) {
+        await acceptOne(item);
       }
-      setReviewedIds(prev => [...prev, detailItem.id]);
-      setDialogSelectedRows(prev => prev.filter(id => id !== detailItem.id));
-      setDetailItemId(null);
-      // Refresh list now that the accepted suggestion is removed server-side.
-      retryItems();
+
+      setReviewedIds(prev => prev.filter(id => !signSelectedRows.includes(id)));
+      setSignSelectedRows([]);
+      setSignConfirmOpen(false);
+      setSignSuccessOpen(true);
+      retryReviewItems();
     } catch (err: any) {
       setAcceptError(err?.message ?? 'Unknown error');
+      setSignConfirmOpen(false);
     } finally {
       setAccepting(false);
-      setApproveConfirmOpen(false);
     }
   };
-
-  const handleConfirmSign = () => {
-    setReviewedIds(prev => prev.filter(id => !signSelectedRows.includes(id)));
-    setSignConfirmOpen(false);
-    setSignSelectedRows([]);
-    setSignSuccessOpen(true);
-  };
-
-  const signItemTitles = signSelectedRows.map(
-    id =>
-      toSignItems.find(r => r.id === id)?.title ??
-      t('reviewDialog.specNamePlaceholder'),
-  );
 
   return (
     <>
@@ -213,8 +235,8 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
             </Alert>
           )}
 
-          {isAdmin && itemsError && (
-            <Alert severity="error">{itemsError.message}</Alert>
+          {isAdmin && reviewItemsError && (
+            <Alert severity="error">{reviewItemsError.message}</Alert>
           )}
 
           {isAdmin && acceptError && (
@@ -223,13 +245,13 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
             </Alert>
           )}
 
-          {isAdmin && (itemsLoading || adminLoading) && (
+          {isAdmin && (reviewItemsLoading || adminLoading) && (
             <Box display="flex" justifyContent="center" p={4}>
               <CircularProgress />
             </Box>
           )}
 
-          {isAdmin && !itemsLoading && dialogTab === 0 && !detailItem && (
+          {canShowContent && dialogTab === 0 && !detailItem && (
             <Box>
               <ReviewIntro
                 expanded={expanded}
@@ -245,11 +267,11 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
             </Box>
           )}
 
-          {isAdmin && !itemsLoading && dialogTab === 0 && detailItem && (
+          {canShowContent && dialogTab === 0 && detailItem && (
             <ReviewDetailView item={detailItem} />
           )}
 
-          {isAdmin && !itemsLoading && dialogTab === 1 && (
+          {canShowContent && dialogTab === 1 && (
             <Box>
               <ReviewIntro
                 expanded={expanded}
@@ -294,7 +316,6 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
               <Button
                 variant="outlined"
                 onClick={() => setSuggestChangeOpen(true)}
-                disabled={accepting}
               >
                 {t('reviewDialog.suggestChange')}
               </Button>
@@ -302,8 +323,6 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
                 onClick={() => setApproveConfirmOpen(true)}
                 color="primary"
                 variant="contained"
-                disabled={accepting}
-                startIcon={accepting ? <CircularProgress size={16} /> : undefined}
               >
                 {t('reviewDialog.approve')}
               </Button>
@@ -338,6 +357,7 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
         itemTitles={signItemTitles}
         onClose={() => setSignConfirmOpen(false)}
         onConfirm={handleConfirmSign}
+        loading={accepting}
       />
 
       <SignSuccessDialog

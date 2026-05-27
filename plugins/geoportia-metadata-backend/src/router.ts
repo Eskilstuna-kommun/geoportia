@@ -42,7 +42,8 @@ export async function createRouter({
   const openApiRouter = await createOpenApiRouter();
 
   parentRouter.get('/:entityRef', async (req, res, next) => {
-    if (req.params.entityRef?.includes('/')) {
+    // Skip to OpenAPI router for paths it handles
+    if (req.params.entityRef?.includes('/') || req.params.entityRef === 'suggestions') {
       return next();
     }
     try {

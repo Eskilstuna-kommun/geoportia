@@ -9429,6 +9429,8 @@ __metadata:
     "@backstage/plugin-catalog-react": "npm:^1.15.3"
     "@backstage/test-utils": "npm:^1.7.8"
     "@backstage/theme": "npm:^0.6.6"
+    "@internal/backstage-plugin-geoportia-metadata": "workspace:^"
+    "@internal/backstage-plugin-geoportia-metadata-common": "link:../geoportia-metadata-common"
     "@material-ui/core": "npm:^4.9.13"
     "@material-ui/icons": "npm:^4.9.1"
     "@testing-library/jest-dom": "npm:^6.0.0"
@@ -9486,6 +9488,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@internal/backstage-plugin-geoportia-metadata-common@link:../geoportia-metadata-common::locator=%40internal%2Fbackstage-plugin-geodataset-management%40workspace%3Aplugins%2Fgeodataset-management":
+  version: 0.0.0-use.local
+  resolution: "@internal/backstage-plugin-geoportia-metadata-common@link:../geoportia-metadata-common::locator=%40internal%2Fbackstage-plugin-geodataset-management%40workspace%3Aplugins%2Fgeodataset-management"
+  languageName: node
+  linkType: soft
+
 "@internal/backstage-plugin-geoportia-metadata-common@link:../geoportia-metadata-common::locator=%40internal%2Fbackstage-plugin-geoportia-metadata%40workspace%3Aplugins%2Fgeoportia-metadata":
   version: 0.0.0-use.local
   resolution: "@internal/backstage-plugin-geoportia-metadata-common@link:../geoportia-metadata-common::locator=%40internal%2Fbackstage-plugin-geoportia-metadata%40workspace%3Aplugins%2Fgeoportia-metadata"
@@ -9498,7 +9506,7 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@internal/backstage-plugin-geoportia-metadata@npm:^0.1.0, @internal/backstage-plugin-geoportia-metadata@workspace:plugins/geoportia-metadata":
+"@internal/backstage-plugin-geoportia-metadata@npm:^0.1.0, @internal/backstage-plugin-geoportia-metadata@workspace:^, @internal/backstage-plugin-geoportia-metadata@workspace:plugins/geoportia-metadata":
   version: 0.0.0-use.local
   resolution: "@internal/backstage-plugin-geoportia-metadata@workspace:plugins/geoportia-metadata"
   dependencies:

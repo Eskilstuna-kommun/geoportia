@@ -5,60 +5,61 @@ import { ReviewItem } from '../data';
 
 type AnyRecord = Record<string, unknown>;
 
-const get = (obj: unknown, key: string): unknown =>
-  obj && typeof obj === 'object' ? (obj as AnyRecord)[key] : undefined;
+const asRecord = (value: unknown): AnyRecord =>
+  value && typeof value === 'object' ? (value as AnyRecord) : {};
 
 const getString = (obj: unknown, key: string, fallback = ''): string => {
-  const v = get(obj, key);
+  const v = asRecord(obj)[key];
   return typeof v === 'string' ? v : fallback;
 };
 
 const getBoolean = (obj: unknown, key: string): boolean => {
-  const v = get(obj, key);
+  const v = asRecord(obj)[key];
   return typeof v === 'boolean' ? v : false;
 };
 
-/**
- * Converts a metadata suggestion (as returned by the
- * `geoportia-metadata` backend) into the `ReviewItem` shape consumed by the
- * review dialog UI. Best-effort mapping that pulls common fields from
- * `layerInfo`, `databaseInfo` and `metadata` sections of the suggested
- * metadata payload.
- */
-function suggestionToReviewItem(s: {
+type Suggestion = {
   id: number;
   entityRef: string;
-  metadata: AnyRecord;
-}): ReviewItem {
-  const md = s.metadata ?? {};
-  const layerInfo = get(md, 'layerInfo');
-  const databaseInfo = get(md, 'databaseInfo');
-  const meta = get(md, 'metadata');
+  metadata?: AnyRecord | null;
+  suggestedBy?: string | null;
+};
+
+function suggestionToReviewItem(s: Suggestion): ReviewItem {
+  const md = asRecord(s.metadata);
+  const layerInfo = md.layerInfo;
+  const databaseInfo = md.databaseInfo;
+  const meta = md.metadata;
 
   const title =
     getString(layerInfo, 'title') ||
     getString(layerInfo, 'layerName') ||
     s.entityRef;
+
   const summary =
     getString(layerInfo, 'summary') ||
     getString(layerInfo, 'suggestedTitle') ||
     s.entityRef;
 
-  const history = [
-    getString(meta, 'originHistory'),
-    getString(meta, 'source') && `Källa: ${getString(meta, 'source')}`,
-    getString(meta, 'quality') && `Kvalitet: ${getString(meta, 'quality')}`,
-    getString(meta, 'dataCollectionMethod') &&
-      `Datainsamlingsmetod: ${getString(meta, 'dataCollectionMethod')}`,
-    getString(meta, 'processingMethod') &&
-      `Bearbetningssteg: ${getString(meta, 'processingMethod')}`,
-  ].filter((s2): s2 is string => Boolean(s2));
+  const historyParts: Array<[string, string]> = [
+    ['', getString(meta, 'originHistory')],
+    ['Källa', getString(meta, 'source')],
+    ['Kvalitet', getString(meta, 'quality')],
+    ['Datainsamlingsmetod', getString(meta, 'dataCollectionMethod')],
+    ['Bearbetningssteg', getString(meta, 'processingMethod')],
+  ];
+  const history = historyParts
+    .filter(([, value]) => Boolean(value))
+    .map(([label, value]) => (label ? `${label}: ${value}` : value));
 
   return {
     id: String(s.id),
     title,
     summary,
-    uuid: s.entityRef,
+    uuid:
+      getString(meta, 'uuid') ||
+      getString(layerInfo, 'uuid') ||
+      String(s.id),
     dataType: getString(databaseInfo, 'dataType', '—'),
     owner: getString(layerInfo, 'suggestedOwnerEnhet', '—'),
     adminRoutine: getString(meta, 'administrationRoutine', '—'),
@@ -66,6 +67,7 @@ function suggestionToReviewItem(s: {
     history: history.length > 0 ? history : ['—'],
     protectionClass: getString(layerInfo, 'securityClass', '—'),
     openData: getBoolean(layerInfo, 'openData'),
+    suggestedBy: s.suggestedBy ?? '',
   };
 }
 
@@ -82,12 +84,6 @@ export function useReviewSuggestions() {
       throw new Error(`Failed to fetch suggestions: ${response.statusText}`);
     }
     const data = await response.json();
-    return data.map(s =>
-      suggestionToReviewItem({
-        id: s.id,
-        entityRef: s.entityRef,
-        metadata: (s.metadata ?? {}) as AnyRecord,
-      }),
-    );
+    return data.map(suggestionToReviewItem);
   }, [metadataApi]);
 }
