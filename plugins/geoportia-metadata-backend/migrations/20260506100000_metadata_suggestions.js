@@ -15,6 +15,7 @@ exports.up = async function up(knex) {
     table.timestamp('created_at').defaultTo(knex.fn.now()).notNullable();
 
     table.string('suggested_by').notNullable();
+    table.index('suggested_by', 'idx_geoportia_metadata_suggestions_suggested_by');
   });
 };
 

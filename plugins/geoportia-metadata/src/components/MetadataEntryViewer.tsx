@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback, useRef } from 'react';
 import { Entity } from '@backstage/catalog-model';
-import { useApi, fetchApiRef, discoveryApiRef } from '@backstage/core-plugin-api';
+import { useApi } from '@backstage/core-plugin-api';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { usePermission } from '@backstage/plugin-permission-react';
@@ -26,6 +26,7 @@ import { metadataEntryUpdatePermission } from '@internal/backstage-plugin-geopor
 import { SuggestionsTable, MetadataSuggestion } from './SuggestionsTable';
 import { SuggestionDetailDrawer } from './SuggestionDetailDrawer';
 import { geoportiaMetadataTranslationRef } from '../translation';
+import { metadataApiRef } from '../client';
 
 export interface MetadataEntryViewerProps {
   entityRef: string;
@@ -60,8 +61,7 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
   editable = true,
 }) => {
   const catalogApi = useApi(catalogApiRef);
-  const fetchApi = useApi(fetchApiRef);
-  const discoveryApi = useApi(discoveryApiRef);
+  const metadataApi = useApi(metadataApiRef);
   const { t } = useTranslationRef(geoportiaMetadataTranslationRef);
 
   // Check if user has permission to update metadata
@@ -103,16 +103,21 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
     loading: suggestionsLoading,
     retry: retrySuggestions,
   } = useAsyncRetry(async () => {
-    const baseUrl = await discoveryApi.getBaseUrl('geoportia-metadata');
-    const response = await fetchApi.fetch(
-      `${baseUrl}/${encodeURIComponent(entityRef)}/suggestions`
-    );
+    const response = await metadataApi.getSuggestions({
+      path: { entityRef: encodeURIComponent(entityRef) },
+    });
     if (!response.ok) {
       if (response.status === 404) return [];
       throw new Error(`Failed to fetch suggestions: ${response.statusText}`);
     }
-    return (await response.json()) as MetadataSuggestion[];
-  }, [entityRef, discoveryApi, fetchApi]);
+    const data = await response.json();
+    return data.map(s => ({
+      ...s,
+      createdAt:
+        s.createdAt instanceof Date ? s.createdAt.toISOString() : String(s.createdAt),
+      metadata: s.metadata as Record<string, unknown>,
+    })) as MetadataSuggestion[];
+  }, [entityRef, metadataApi]);
 
   // Handle suggestion row click
   const handleSuggestionClick = useCallback((suggestion: MetadataSuggestion) => {
@@ -234,36 +239,34 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
   const handleSave = useCallback(async () => {
     try {
       setSaving(true);
-      const baseUrl = await discoveryApi.getBaseUrl('geoportia-metadata');
-      const response = await fetchApi.fetch(
-        `${baseUrl}/${encodeURIComponent(entityRef)}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            schema: schema as Record<string, unknown>,
-            metadata: editedMetadata as Record<string, unknown>,
-          }),
+      const response = await metadataApi.updateMetadataEntry({
+        path: { entityRef: encodeURIComponent(entityRef) },
+        body: {
+          schema: schema as Record<string, unknown>,
+          metadata: editedMetadata as Record<string, unknown>,
         },
-      );
+      });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.error?.message || `${t('common.error')}: ${response.statusText}`);
+        throw new Error(
+          (errorData as { error?: { message?: string } })?.error?.message ||
+            `${t('common.error')}: ${response.statusText}`,
+        );
       }
       setSnackbar({ open: true, message: t('metadataViewer.saved'), severity: 'success' });
       setIsEditing(false);
       // Refresh the entity data
       retry();
     } catch (err: any) {
-      setSnackbar({ 
-        open: true, 
-        message: err?.message || t('metadataViewer.saveError'), 
-        severity: 'error' 
+      setSnackbar({
+        open: true,
+        message: err?.message || t('metadataViewer.saveError'),
+        severity: 'error',
       });
     } finally {
       setSaving(false);
     }
-  }, [fetchApi, discoveryApi, entityRef, schema, editedMetadata, retry]);
+  }, [metadataApi, entityRef, schema, editedMetadata, retry, t]);
 
   // Handle snackbar close
   const handleSnackbarClose = useCallback(() => {

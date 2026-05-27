@@ -86,6 +86,7 @@ export const geodatasetManagementTranslationRef = createTranslationRef({
         'Describe what you would like to change in this database specification. The Geodata unit will review your suggestion.',
       suggestChangeLabel: 'Your change suggestion',
       sendSuggestion: 'Send suggestion',
+      adminOnly: 'Only administrators can review change suggestions.',
     },
     views: {
       standard: 'Standard View',

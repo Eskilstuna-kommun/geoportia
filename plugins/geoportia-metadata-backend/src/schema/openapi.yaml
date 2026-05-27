@@ -75,6 +75,25 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /suggestions:
+    get:
+      operationId: "ListAllSuggestions"
+      description: "Get all metadata change suggestions across entries. Admin/Moderator users receive all suggestions; other users only see suggestions for entries where they are listed as contact person or data owner."
+      security:
+        - {}
+        - JWT: []
+      responses:
+        200:
+          description: "List of suggestions visible to the current user"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MetadataSuggestion"
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   /{entityRef}/suggestions:
     get:
       operationId: "GetSuggestions"
