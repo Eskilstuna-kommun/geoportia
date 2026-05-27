@@ -10,6 +10,7 @@ export type ReviewItem = {
   history: string[];
   protectionClass: string;
   openData: boolean;
+  suggestedBy: string;
 };
 
 export const mockReviewItems: ReviewItem[] = [
@@ -31,6 +32,7 @@ export const mockReviewItems: ReviewItem[] = [
     ],
     protectionClass: 'Inget skyddsbehov',
     openData: true,
+    suggestedBy: 'user:default/anders.andersson',
   },
   {
     id: '2',
@@ -44,6 +46,7 @@ export const mockReviewItems: ReviewItem[] = [
     history: ['Källa: Lorem ipsum'],
     protectionClass: 'Inget skyddsbehov',
     openData: true,
+    suggestedBy: 'user:default/maria.svensson',
   },
   {
     id: '3',
@@ -57,5 +60,6 @@ export const mockReviewItems: ReviewItem[] = [
     history: ['Källa: Lorem ipsum'],
     protectionClass: 'Inget skyddsbehov',
     openData: true,
+    suggestedBy: 'user:default/erik.johansson',
   },
 ];

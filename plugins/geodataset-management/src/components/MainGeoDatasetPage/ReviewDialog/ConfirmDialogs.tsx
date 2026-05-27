@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -86,6 +87,7 @@ type SignProps = {
   itemTitles: string[];
   onClose: () => void;
   onConfirm: () => void;
+  loading?: boolean;
 };
 
 export const SignConfirmDialog = ({
@@ -93,10 +95,11 @@ export const SignConfirmDialog = ({
   itemTitles,
   onClose,
   onConfirm,
+  loading = false,
 }: SignProps) => {
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+    <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="xs" fullWidth>
       <DialogHeader title={t('reviewDialog.signTitle')} onClose={onClose} />
       <DialogContent dividers>
         <Typography variant="body2" paragraph>
@@ -110,10 +113,16 @@ export const SignConfirmDialog = ({
         ))}
       </DialogContent>
       <DialogActions>
-        <Button variant="outlined" onClick={onClose}>
+        <Button variant="outlined" onClick={onClose} disabled={loading}>
           {t('review.cancel')}
         </Button>
-        <Button onClick={onConfirm} color="primary" variant="contained">
+        <Button
+          onClick={onConfirm}
+          color="primary"
+          variant="contained"
+          disabled={loading}
+          startIcon={loading ? <CircularProgress size={16} /> : undefined}
+        >
           {t('reviewDialog.confirmSign')}
         </Button>
       </DialogActions>

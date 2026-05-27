@@ -87,6 +87,7 @@ export const geodatasetManagementTranslationRef = createTranslationRef({
       suggestChangeLabel: 'Your change suggestion',
       sendSuggestion: 'Send suggestion',
       adminOnly: 'Only administrators can review change suggestions.',
+      unknownUser: 'Unknown user',
     },
     views: {
       standard: 'Standard View',
