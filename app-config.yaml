@@ -105,7 +105,7 @@ catalog:
         - allow: [Template]
 
     - type: file
-      target: ../../plugins/geoportia-metadata/templates/create-layer-spec.yaml
+      target: ../../plugins/geoportia-metadata/templates/create-geoserver-layer-spec.yaml
     # GeoPortia Metadata suggestion template
     - type: file
       target: ../../plugins/geoportia-metadata/templates/suggest-metadata-change.yaml

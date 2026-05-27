@@ -1,0 +1,150 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: geoportia-layer-spec-template
+  title: Skapa kartlagerspecifikation
+  description: En mall för att skapa en kartlagerspecifikation i Geoportia
+spec:
+  owner: user:guest
+  type: service
+
+  parameters:
+    - title: CommonInformation
+      description: Allmän information
+      required:
+        - databasspecifikation
+        - status
+      properties:
+        databasspecifikation:
+          title: Primärdatamängd
+          type: string
+          description: Välj primärdatamängd för kartlagret
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              kind: MetadataEntry
+            defaultKind: MetadataEntry
+            status:
+        name:
+          type: string
+          title: Namn på kartlagret
+        titel:
+          type: string
+          title: Titel på kartlagret
+        abstract:
+          type: string
+          title: Sammanfattning för kartlagret
+        status:
+          type: string
+          title: Status
+          default: 'Välj...'
+          enum:
+            - 'Välj...'
+            - 'Ska sättas'
+            - 'Raderad'
+            - 'Förslag'
+            - 'Godkänd'
+            - 'Ska avpubliceras'
+            - 'Godkänd - ej sökbar'
+
+    - title: SecurityAndAccess
+      description: Säkerhet och åtkomst
+      required:
+        - availability
+        - protectionClass
+      properties:
+        availability:
+          type: string
+          title: Tillgänglighet
+          default: 'Intern'
+          enum:
+            - 'Intern'
+            - 'Extern'
+        protectionClass:
+          type: string
+          title: Skyddsklass
+          default: 'Välj...'
+          enum:
+            - 'Välj...'
+            - 'Placeholder1'
+            - 'Placeholder2'
+            - 'Placeholder3'
+
+    - title: Database
+      description: Databas
+      properties:
+        name:
+          type: string
+          title: Namn
+        whereClause:
+          type: string
+          title: WHERE-sats för vy i PostGIS
+        updateMethod:
+          type: string
+          title: Uppdateringsrutin i PostGIS
+        attributeSpecification:
+          type: array
+          title: Attributspecifikation
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                title: Namn på attribut
+              type:
+                type: string
+                title: Datatyp för attribut
+          
+    - title: Geoserver
+      description: Geoserver
+      required:
+        - standardStyle
+      properties:
+        workspace:
+          type: string
+          title: Arbetsyta i GeoServer
+        datastore:
+          type: string
+          title: Datastore i GeoServer
+        cachingRoutine:
+          type: string
+          title: Cachinrutin
+        standardStyle:
+          type: string
+          title: Standardstil
+        additionalStyles:
+          type: array
+          title: Ytterligare stilar
+          items:
+            type: string
+            title: Namn på ytterligare stil
+
+    - title: Management
+      description: Förvaltning
+      properties:
+        updateRoutine:
+          type: string
+          title: Uppdateringsrutin
+        status:
+          type: string
+          title: Status
+          default: 'Välj...'
+          enum:
+            - 'Välj...'
+            - 'Aktiv'
+            - 'Inaktiv'
+            - 'Under utveckling'
+
+  steps:
+    - id: create-metadata
+      name: Skapa metadata
+      action: geoportia:metadata:store
+      input:
+    - id: create-postgresql-view
+      name: Skapa PostGIS-sökvy
+      action: postgresql:create-view
+      input:
+    - id: create-geoserver-layer
+      name: Skapa GeoServer-lager
+      action: geoserver:create-layer
+      input:
