@@ -1,5 +1,5 @@
 import express, { Router } from 'express';
-import { HttpAuthService, PermissionsService } from '@backstage/backend-plugin-api';
+import { HttpAuthService, PermissionsService, UserInfoService } from '@backstage/backend-plugin-api';
 import { AuthorizeResult } from '@backstage/plugin-permission-common';
 import { createOpenApiRouter } from './schema/openapi';
 import {
@@ -13,6 +13,7 @@ import {
   metadataEntryUpdatePermission,
   metadataEntryDeletePermission,
 } from '@internal/backstage-plugin-geoportia-metadata-common';
+import { hasAdminLikeRole } from './permissions/roles';
 import { z } from 'zod';
 import {
   ArcgisSdeDatabases,
@@ -22,12 +23,14 @@ import { NotFoundError, InputError } from '@backstage/errors';
 
 export async function createRouter({
   httpAuth,
+  userInfo,
   metadataService,
   suggestionService,
   permissions,
   arcgisSdeDatabases,
 }: {
   httpAuth: HttpAuthService;
+  userInfo: UserInfoService;
   metadataService: MetadataService;
   suggestionService: SuggestionService;
   permissions: PermissionsService;
@@ -143,6 +146,32 @@ export async function createRouter({
 
       await metadataService.deleteMetadataEntry({ entityRef }, { credentials });
       res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  openApiRouter.get('/suggestions', async (req, res, next) => {
+    try {
+      const credentials = await httpAuth.credentials(req, { allow: ['user'] });
+      const info = await userInfo.getUserInfo(credentials);
+
+      const ownershipRefs = info.ownershipEntityRefs;
+      const userEntityRef = info.userEntityRef;
+      const isAdmin = hasAdminLikeRole(ownershipRefs);
+
+      const suggestions = await suggestionService.getAllSuggestions({
+        credentials,
+        userEntityRef,
+        isAdmin,
+      });
+
+      res.json(
+        suggestions.map(s => ({
+          ...s,
+          createdAt: new Date(s.createdAt),
+        })),
+      );
     } catch (error) {
       next(error);
     }

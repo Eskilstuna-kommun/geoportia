@@ -13,6 +13,7 @@ import { DatasetToolbar, RowDensity } from './DatasetToolbar';
 import { DatasetPaginationInfo } from './DatasetPaginationInfo';
 import { DatasetTable } from './DatasetTable';
 import { ReviewDialog } from './ReviewDialog';
+import { useIsGeoportiaAdmin } from '../../hooks/useIsGeoportiaAdmin';
 
 // Map security class to color
 const mapSecurityClass = (
@@ -62,6 +63,7 @@ export const MainGeoDatasetPage = () => {
   const [datasetEntries, setDatasetEntries] = useState<DatasetEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const { isAdmin } = useIsGeoportiaAdmin();
 
   const fetchDatasets = useCallback(async () => {
     try {
@@ -127,19 +129,21 @@ export const MainGeoDatasetPage = () => {
     <PageWithHeader title={orgName} themeId="home">
       <Content>
         <Box>
-          <div className={`${classes.reviewChange}`}>
-            <div className={`${classes.reviewChangeInfo}`}>
-              <InfoIcon />
-              {t('review.changes')}
+          {isAdmin && (
+            <div className={`${classes.reviewChange}`}>
+              <div className={`${classes.reviewChangeInfo}`}>
+                <InfoIcon />
+                {t('review.changes')}
+              </div>
+              <Button
+                onClick={() => setReviewModalOpen(true)}
+                variant="contained"
+              >
+                <CreateIcon />
+                {t('review.startReview')}
+              </Button>
             </div>
-            <Button
-              onClick={() => setReviewModalOpen(true)}
-              variant="contained"
-            >
-              <CreateIcon />
-              {t('review.startReview')}
-            </Button>
-          </div>
+          )}
         </Box>
         <Box className={classes.tabsContainer}>
           <Tabs
@@ -208,7 +212,7 @@ export const MainGeoDatasetPage = () => {
         </Box>
 
         <ReviewDialog
-          open={reviewModalOpen}
+          open={reviewModalOpen && isAdmin}
           onClose={() => setReviewModalOpen(false)}
         />
       </Content>

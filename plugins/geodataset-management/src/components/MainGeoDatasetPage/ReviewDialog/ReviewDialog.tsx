@@ -3,6 +3,7 @@ import {
   Badge,
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -13,10 +14,14 @@ import {
   Tabs,
   Typography,
 } from '@material-ui/core';
+import { Alert } from '@material-ui/lab';
 import CloseIcon from '@mui/icons-material/Close';
+import { useApi } from '@backstage/core-plugin-api';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
+import { metadataApiRef } from '@internal/backstage-plugin-geoportia-metadata';
 import { geodatasetManagementTranslationRef } from '../../../translation';
-import { mockReviewItems } from '../../../data';
+import { useReviewSuggestions } from '../../../hooks/useReviewSuggestions';
+import { useIsGeoportiaAdmin } from '../../../hooks/useIsGeoportiaAdmin';
 import { ReviewIntro } from './ReviewIntro';
 import { ReviewListTable } from './ReviewListTable';
 import { ReviewDetailView } from './ReviewDetailView';
@@ -35,6 +40,14 @@ type Props = {
 
 export const ReviewDialog = ({ open, onClose }: Props) => {
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
+  const metadataApi = useApi(metadataApiRef);
+  const { isAdmin, loading: adminLoading } = useIsGeoportiaAdmin();
+  const {
+    value: reviewItems = [],
+    loading: itemsLoading,
+    error: itemsError,
+    retry: retryItems,
+  } = useReviewSuggestions();
 
   const [dialogTab, setDialogTab] = useState(0);
   const [expanded, setExpanded] = useState(true);
@@ -46,13 +59,15 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
   const [suggestChangeOpen, setSuggestChangeOpen] = useState(false);
   const [reviewedIds, setReviewedIds] = useState<string[]>([]);
   const [signSelectedRows, setSignSelectedRows] = useState<string[]>([]);
+  const [accepting, setAccepting] = useState(false);
+  const [acceptError, setAcceptError] = useState<string | null>(null);
 
   const detailItem =
-    mockReviewItems.find(r => r.id === detailItemId) || null;
-  const toReviewItems = mockReviewItems.filter(
+    reviewItems.find(r => r.id === detailItemId) || null;
+  const toReviewItems = reviewItems.filter(
     r => !reviewedIds.includes(r.id),
   );
-  const toSignItems = mockReviewItems.filter(r => reviewedIds.includes(r.id));
+  const toSignItems = reviewItems.filter(r => reviewedIds.includes(r.id));
 
   const handleClose = () => {
     setDetailItemId(null);
@@ -93,13 +108,40 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
     }
   };
 
-  const handleConfirmApprove = () => {
-    if (detailItemId) {
-      setReviewedIds(prev => [...prev, detailItemId]);
-      setDialogSelectedRows(prev => prev.filter(id => id !== detailItemId));
-      setDetailItemId(null);
+  const handleConfirmApprove = async () => {
+    if (!detailItem) {
+      setApproveConfirmOpen(false);
+      return;
     }
-    setApproveConfirmOpen(false);
+    setAccepting(true);
+    setAcceptError(null);
+    try {
+      const suggestionId = Number(detailItem.id);
+      // detailItem.uuid carries the entityRef of the metadata entry.
+      const response = await metadataApi.acceptSuggestion({
+        path: {
+          entityRef: encodeURIComponent(detailItem.uuid),
+          id: suggestionId,
+        },
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(
+          (data as { error?: { message?: string } })?.error?.message ||
+            `Failed to accept: ${response.statusText}`,
+        );
+      }
+      setReviewedIds(prev => [...prev, detailItem.id]);
+      setDialogSelectedRows(prev => prev.filter(id => id !== detailItem.id));
+      setDetailItemId(null);
+      // Refresh list now that the accepted suggestion is removed server-side.
+      retryItems();
+    } catch (err: any) {
+      setAcceptError(err?.message ?? 'Unknown error');
+    } finally {
+      setAccepting(false);
+      setApproveConfirmOpen(false);
+    }
   };
 
   const handleConfirmSign = () => {
@@ -165,7 +207,29 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
         </Box>
 
         <DialogContent>
-          {dialogTab === 0 && !detailItem && (
+          {!adminLoading && !isAdmin && (
+            <Alert severity="warning">
+              {t('reviewDialog.adminOnly')}
+            </Alert>
+          )}
+
+          {isAdmin && itemsError && (
+            <Alert severity="error">{itemsError.message}</Alert>
+          )}
+
+          {isAdmin && acceptError && (
+            <Alert severity="error" onClose={() => setAcceptError(null)}>
+              {acceptError}
+            </Alert>
+          )}
+
+          {isAdmin && (itemsLoading || adminLoading) && (
+            <Box display="flex" justifyContent="center" p={4}>
+              <CircularProgress />
+            </Box>
+          )}
+
+          {isAdmin && !itemsLoading && dialogTab === 0 && !detailItem && (
             <Box>
               <ReviewIntro
                 expanded={expanded}
@@ -181,11 +245,11 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
             </Box>
           )}
 
-          {dialogTab === 0 && detailItem && (
+          {isAdmin && !itemsLoading && dialogTab === 0 && detailItem && (
             <ReviewDetailView item={detailItem} />
           )}
 
-          {dialogTab === 1 && (
+          {isAdmin && !itemsLoading && dialogTab === 1 && (
             <Box>
               <ReviewIntro
                 expanded={expanded}
@@ -211,7 +275,7 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
             {t('review.cancel')}
           </Link>
 
-          {dialogTab === 0 && !detailItem && (
+          {isAdmin && dialogTab === 0 && !detailItem && (
             <Button
               onClick={() => {
                 const id = dialogSelectedRows[0] || toReviewItems[0]?.id;
@@ -225,11 +289,12 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
             </Button>
           )}
 
-          {dialogTab === 0 && detailItem && (
+          {isAdmin && dialogTab === 0 && detailItem && (
             <>
               <Button
                 variant="outlined"
                 onClick={() => setSuggestChangeOpen(true)}
+                disabled={accepting}
               >
                 {t('reviewDialog.suggestChange')}
               </Button>
@@ -237,13 +302,15 @@ export const ReviewDialog = ({ open, onClose }: Props) => {
                 onClick={() => setApproveConfirmOpen(true)}
                 color="primary"
                 variant="contained"
+                disabled={accepting}
+                startIcon={accepting ? <CircularProgress size={16} /> : undefined}
               >
                 {t('reviewDialog.approve')}
               </Button>
             </>
           )}
 
-          {dialogTab === 1 && (
+          {isAdmin && dialogTab === 1 && (
             <Button
               onClick={() => {
                 if (signSelectedRows.length > 0) setSignConfirmOpen(true);

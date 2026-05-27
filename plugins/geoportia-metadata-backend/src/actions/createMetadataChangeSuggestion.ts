@@ -63,13 +63,10 @@ export function createMetadataChangeSuggestionAction(
         throw new InputError('metadata must be a valid JSON object');
       }
 
-      // Get the user who initiated the template
-      const suggestedBy =
-        ctx.user?.entity?.metadata?.name ||
-        ctx.user?.ref ||
-        'unknown';
-    
-        //TODO: remove debug code after testing
+      const suggestedBy = ctx.user?.entity
+        ? stringifyEntityRef(ctx.user.entity)
+        : ctx.user?.ref ?? 'user:default/unknown';
+
       ctx.logger.info(
         `Creating metadata suggestion for ${normalizedRef} by ${suggestedBy}`,
       );

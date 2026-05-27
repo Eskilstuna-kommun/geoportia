@@ -16,6 +16,7 @@ export const geoportiaMetadataBackendPlugin = createBackendPlugin({
       deps: {
         auth: coreServices.auth,
         httpAuth: coreServices.httpAuth,
+        userInfo: coreServices.userInfo,
         httpRouter: coreServices.httpRouter,
         database: coreServices.database,
         discovery: coreServices.discovery,
@@ -49,6 +50,7 @@ export const geoportiaMetadataBackendPlugin = createBackendPlugin({
         httpRouter.use(
           await createRouter({
             httpAuth,
+            userInfo,
             metadataService: metadata,
             suggestionService: suggestion,
             permissions,

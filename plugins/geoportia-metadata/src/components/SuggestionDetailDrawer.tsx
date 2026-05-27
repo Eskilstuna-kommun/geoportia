@@ -21,9 +21,10 @@ import CloseIcon from '@material-ui/icons/Close';
 import CheckIcon from '@material-ui/icons/Check';
 import PersonIcon from '@material-ui/icons/Person';
 import ScheduleIcon from '@material-ui/icons/Schedule';
-import { useApi, fetchApiRef, discoveryApiRef } from '@backstage/core-plugin-api';
+import { useApi } from '@backstage/core-plugin-api';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { geoportiaMetadataTranslationRef } from '../translation';
+import { metadataApiRef } from '../client';
 import type { MetadataSuggestion } from './SuggestionsTable';
 
 export interface SuggestionDetailDrawerProps {
@@ -183,8 +184,7 @@ export const SuggestionDetailDrawer: React.FC<SuggestionDetailDrawerProps> = ({
   onAccepted,
 }) => {
   const classes = useStyles();
-  const fetchApi = useApi(fetchApiRef);
-  const discoveryApi = useApi(discoveryApiRef);
+  const metadataApi = useApi(metadataApiRef);
   const { t } = useTranslationRef(geoportiaMetadataTranslationRef);
   
   const [accepting, setAccepting] = useState(false);
@@ -231,22 +231,26 @@ export const SuggestionDetailDrawer: React.FC<SuggestionDetailDrawerProps> = ({
 
   const handleAccept = useCallback(async () => {
     if (!suggestion) return;
-    
+
     setAccepting(true);
     setError(null);
-    
+
     try {
-      const baseUrl = await discoveryApi.getBaseUrl('geoportia-metadata');
-      const response = await fetchApi.fetch(
-        `${baseUrl}/${encodeURIComponent(entityRef)}/suggestions/${suggestion.id}/accept`,
-        { method: 'POST' }
-      );
-      
+      const response = await metadataApi.acceptSuggestion({
+        path: {
+          entityRef: encodeURIComponent(entityRef),
+          id: suggestion.id,
+        },
+      });
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.error?.message || `${t('common.error')}: ${response.statusText}`);
+        throw new Error(
+          (errorData as { error?: { message?: string } })?.error?.message ||
+            `${t('common.error')}: ${response.statusText}`,
+        );
       }
-      
+
       onClose();
       onAccepted?.();
     } catch (err: any) {
@@ -254,7 +258,7 @@ export const SuggestionDetailDrawer: React.FC<SuggestionDetailDrawerProps> = ({
     } finally {
       setAccepting(false);
     }
-  }, [suggestion, entityRef, fetchApi, discoveryApi, onClose, onAccepted]);
+  }, [suggestion, entityRef, metadataApi, onClose, onAccepted, t]);
 
   if (!suggestion) return null;
 

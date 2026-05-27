@@ -33,7 +33,13 @@ export interface SuggestionService {
     },
   ): Promise<MetadataSuggestion[]>;
 
-  /** Accept a suggestion and update the metadata entry. */
+
+  getAllSuggestions(options: {
+    credentials: AnyCredentials;
+    userEntityRef?: string;
+    isAdmin: boolean;
+  }): Promise<MetadataSuggestion[]>;
+
   acceptSuggestion(
     suggestionId: number,
     options: {
