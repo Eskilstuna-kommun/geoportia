@@ -72,22 +72,33 @@ export const MainGeoDatasetPage = () => {
       const entries: DatasetEntry[] = response.items.map((entity, index) => {
         const metadata =
           (entity.spec?.metadata as Record<string, unknown>) ?? {};
-        const securityClass = metadata.securityClass as string | undefined;
+        const layerInfo =
+          (metadata.layerInfo as Record<string, unknown>) ?? metadata;
+
+        const securityClass = layerInfo.securityClass as string | undefined;
+        const status = layerInfo.status as string | undefined;
+        const titel =
+          (layerInfo.title as string) ??
+          (layerInfo.layerName as string) ??
+          entity.metadata.title ??
+          entity.metadata.name ??
+          'Untitled';
+        const sammanfattning =
+          (layerInfo.summary as string) ??
+          (layerInfo.description as string) ??
+          '';
+        const oppenData =
+          typeof layerInfo.openData === 'boolean'
+            ? (layerInfo.openData as boolean)
+            : securityClass === 'Öppen data';
 
         return {
           id: entity.metadata.name ?? String(index),
-          signaturstatus: mapStatus(metadata.status as string | undefined),
-          titel:
-            (metadata.title as string) ??
-            entity.metadata.title ??
-            entity.metadata.name ??
-            'Untitled',
+          signaturstatus: mapStatus(status),
+          titel,
           skyddsklass: mapSecurityClass(securityClass),
-          sammanfattning:
-            (metadata.summary as string) ??
-            (metadata.description as string) ??
-            '',
-          oppenData: securityClass === 'Öppen data',
+          sammanfattning,
+          oppenData,
         };
       });
 

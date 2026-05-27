@@ -109,6 +109,10 @@ export function createStoreMetadataAction(options: StoreMetadataActionOptions) {
       }
 
       ctx.output('entityRef', normalizedRef);
+
+      ctx.logger.info(
+        `Metadata stored for ${normalizedRef}; catalog will see it within ~5s via MetadataEntryProvider.`,
+      );
     },
   });
 }

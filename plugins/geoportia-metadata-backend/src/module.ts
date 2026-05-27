@@ -4,6 +4,7 @@ import {
   resolvePackagePath,
 } from '@backstage/backend-plugin-api';
 import { catalogProcessingExtensionPoint } from '@backstage/plugin-catalog-node/alpha';
+import { DatabaseManager } from '@backstage/backend-defaults/database';
 import { MetadataEntryProvider } from './MetadataEntryProvider';
 import { MetadataEntryProcessor } from './MetadataEntryProcessor';
 import { AttributeProvider } from './AttributeProvider';
@@ -16,31 +17,36 @@ const geoportiaMetadataBackendModule = createBackendModule({
     env.registerInit({
       deps: {
         catalog: catalogProcessingExtensionPoint,
-        database: coreServices.database,
+        rootConfig: coreServices.rootConfig,
         scheduler: coreServices.scheduler,
         logger: coreServices.logger,
+        lifecycle: coreServices.lifecycle,
       },
-      async init({ catalog, database, scheduler, logger }) {
-        const client = await database.getClient();
-        
-        // Run migrations if needed (use separate table to avoid conflicts with catalog migrations)
-        if (!database.migrations?.skip) {
+      async init({ catalog, rootConfig, scheduler, logger, lifecycle }) {
+        const geoportiaMetadataDb = DatabaseManager.fromConfig(rootConfig).forPlugin(
+          'geoportia-metadata',
+          { logger, lifecycle },
+        );
+        const client = await geoportiaMetadataDb.getClient();
+
+        // Run migrations on the shared geoportia-metadata DB. Use the same
+        // tableName (knex default) as plugin.ts so they don't conflict.
+        if (!geoportiaMetadataDb.migrations?.skip) {
           await client.migrate.latest({
             directory: resolvePackagePath(
               '@internal/backstage-plugin-geoportia-metadata-backend',
               'migrations',
             ),
-            tableName: 'geoportia_metadata_knex_migrations',
           });
         }
 
         const metadataTaskRunner = scheduler.createScheduledTaskRunner({
-          frequency: { seconds: 30 },
+          frequency: { seconds: 5 },
           timeout: { minutes: 5 },
         });
 
         const attributeTaskRunner = scheduler.createScheduledTaskRunner({
-          frequency: { seconds: 30 },
+          frequency: { seconds: 5 },
           timeout: { minutes: 5 },
         });
 
