@@ -40,10 +40,14 @@ spec:
           default: 'Välj...'
           enum:
             - 'Välj...'
-            - 'Geografisk'
-            - 'Projektionsbaserad'
-
-    - title: SecurityAndAccess
+            - 'Ej definierad'
+            - 'Minimal'
+            - 'Malardalen'
+            - 'Sodermanland'
+            - 'Sverige'
+            - 'Eskilstuna'
+            - '4M'
+    - title: Security and Access
       description: Säkerhet och åtkomst
       required:
         - availability
@@ -62,10 +66,12 @@ spec:
           default: 'Välj...'
           enum:
             - 'Välj...'
-            - 'Placeholder1'
-            - 'Placeholder2'
-            - 'Placeholder3'
-
+            - 'ej definierad'
+            - 'Inget skyddsbehov'
+            - 'Begränsat skydddsbehov'
+            - 'Måttligt skyddsbehov'
+            - 'Högt skyddsbehov'
+            - 'Mycket högt skyddsbehov'
     - title: Database
       description: Databas
       properties:
@@ -78,6 +84,12 @@ spec:
         updateMethod:
           type: string
           title: Uppdateringsrutin i PostGIS
+          enum:
+            - 'unknown'
+            - 'daily'
+            - 'weekly'
+            - 'asNeeded'
+            - 'monthly'
         attributeSpecification:
           type: array
           title: Attributspecifikation
@@ -90,7 +102,6 @@ spec:
               type:
                 type: string
                 title: Datatyp för attribut
-          
     - title: Geoserver
       description: Geoserver
       required:
@@ -135,14 +146,6 @@ spec:
             - 'Godkänd - ej sökbar'
 
   steps:
-    - id: create-metadata
-      name: Skapa metadata
-      action: geoportia:metadata:store
-      input:
-    - id: create-postgresql-view
-      name: Skapa PostGIS-sökvy
-      action: postgresql:create-view
-      input:
     - id: create-geoserver-layer
       name: Skapa GeoServer-lager
       action: geoserver:create-layer
@@ -157,3 +160,10 @@ spec:
         abstract: '{{ parameters.CommonInformation.abstract }}'
         storeType: 'PostGIS'
         nativeBoundingBox: '{{ parameters.CommonInformation.boundingboxtyp }}'
+    - id: create-postgis-view
+      name: Skapa PostGIS-vy
+      action: postgresql:create-view
+      input:
+        distributionName: '{{ parameters.CommonInformation.name }}'
+        tableName: '{{ parameters.Database.name }}'
+        whereClause: '{{ parameters.Database.whereClause }}'

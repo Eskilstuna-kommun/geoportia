@@ -17,44 +17,25 @@ export function createCreatePostgreSQLViewAction(
     schema: {
       input: {
         type: 'object',
-        required: ['viewName', 'schemaName', 'viewTables'],
+        required: ['distributionName', 'tableName', 'whereClause'],
         properties: {
-          viewName: {
+          distributionName: {
             type: 'string',
-            description: 'The name of the view to create.',
+            title: 'Distribution Name',
           },
-          schemaName: {
+          tableName: {
             type: 'string',
-            description: 'The name of the schema to create the view in.',
+            title: 'Table Name',
           },
-          viewTables: {
-            type: 'array',
-            items: {
-              type: 'object',
-              required: ['name', 'columns'],
-              properties: {
-                name: {
-                  type: 'string',
-                  description: 'The name of the table to include in the view.',
-                },
-                columns: {
-                  type: 'array',
-                  items: {
-                    type: 'string',
-                    description:
-                      'The name of the column to include in the view.',
-                  },
-                  description: 'The columns to include from the table.',
-                },
-              },
-              description: 'A table to include in the view.',
-            },
+          whereClause: {
+            type: 'string',
+            title: 'WHERE Clause',
           },
         },
       },
     },
     async handler(ctx) {
-      const { viewName, schemaName, viewTables } = ctx.input;
+      const { distributionName, tableName, whereClause } = ctx.input;
       const { connectionString } = options;
       const databaseService = new PostgreSQLDatabaseService(
         connectionString,
@@ -62,23 +43,24 @@ export function createCreatePostgreSQLViewAction(
       );
 
       try {
-        await databaseService.createView(
-          viewName as string,
-          schemaName as string,
-          viewTables as unknown as ViewTable[],
+        await databaseService.createViewFromQuery(
+          distributionName as string,
+          tableName as string,
+          whereClause as string,
         );
 
-        ctx.output('schemaName', schemaName);
-        ctx.output('viewName', viewName);
+        ctx.output('distributionName', distributionName);
+        ctx.output('tableName', tableName);
+        ctx.output('whereClause', whereClause);
       } catch (error) {
         ctx.logger.error('Error creating PostgreSQL view:', error);
         throw new Error(
-          `Failed to create PostgreSQL view ${viewName} in schema ${schemaName}.`,
+          `Failed to create PostgreSQL view ${distributionName}_view.`,
         );
       }
 
       ctx.logger.info(
-        `PostgreSQL view ${schemaName}.${viewName} created successfully.`,
+        `PostgreSQL view ${distributionName}_view created successfully.`,
       );
     },
   });
