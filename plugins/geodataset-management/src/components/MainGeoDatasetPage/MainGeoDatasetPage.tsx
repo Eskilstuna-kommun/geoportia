@@ -2,7 +2,18 @@ import { Content, PageWithHeader, Progress } from '@backstage/core-components';
 import { useApi, configApiRef } from '@backstage/core-plugin-api';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
-import { Box, Button, Tab, Tabs, Typography } from '@material-ui/core';
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Tab,
+  Tabs,
+  Typography,
+} from '@material-ui/core';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CreateIcon from '@mui/icons-material/Create';
 import InfoIcon from '@mui/icons-material/Info';
@@ -16,6 +27,7 @@ import { ReviewDialog } from './ReviewDialog';
 import { usePermission } from '@backstage/plugin-permission-react';
 import { metadataEntryUpdatePermission } from '@internal/backstage-plugin-geoportia-metadata-common';
 import { useReviewSuggestions } from '../../hooks/useReviewSuggestions';
+import { MainDatasetPreviewDialog } from './MainDatasetPreviewDialog';
 
 // Map security class to color
 const mapSecurityClass = (
@@ -82,6 +94,8 @@ export const MainGeoDatasetPage = () => {
     () => reviewItems.filter(r => !reviewedIds.includes(r.id)),
     [reviewItems, reviewedIds],
   );
+  const [previewEntry, setPreviewEntry] = useState<DatasetEntry | null>(null);
+  const [deleteEntry, setDeleteEntry] = useState<DatasetEntry | null>(null);
 
   const fetchDatasets = useCallback(async () => {
     try {
@@ -91,10 +105,16 @@ export const MainGeoDatasetPage = () => {
       });
 
       const entries: DatasetEntry[] = response.items.map((entity, index) => {
-        const metadata =
+        const specMetadata =
           (entity.spec?.metadata as Record<string, unknown>) ?? {};
         const layerInfo =
-          (metadata.layerInfo as Record<string, unknown>) ?? metadata;
+          (specMetadata.layerInfo as Record<string, unknown>) ?? specMetadata;
+        const databaseInfo =
+          (specMetadata.databaseInfo as Record<string, unknown>) ?? {};
+        const nestedMetadata =
+          (specMetadata.metadata as Record<string, unknown>) ?? {};
+        const attributesRaw =
+          (specMetadata.attributes as Array<Record<string, unknown>>) ?? [];
 
         const securityClass = layerInfo.securityClass as string | undefined;
         const status = layerInfo.status as string | undefined;
@@ -113,6 +133,22 @@ export const MainGeoDatasetPage = () => {
             ? (layerInfo.openData as boolean)
             : securityClass === 'Öppen data';
 
+        const rawContact = layerInfo.contactPerson as unknown;
+        const contactPerson: string[] | undefined = Array.isArray(rawContact)
+          ? (rawContact as string[])
+          : typeof rawContact === 'string' && rawContact.length > 0
+          ? [rawContact]
+          : undefined;
+
+        const source = nestedMetadata.source as string | undefined;
+        const quality = nestedMetadata.quality as string | undefined;
+        const collection = nestedMetadata.dataCollectionMethod as
+          | string
+          | undefined;
+        const processing = nestedMetadata.processingMethod as
+          | string
+          | undefined;
+
         return {
           id: entity.metadata.name ?? String(index),
           signaturstatus: mapStatus(status),
@@ -120,6 +156,47 @@ export const MainGeoDatasetPage = () => {
           skyddsklass: mapSecurityClass(securityClass),
           sammanfattning,
           oppenData,
+          uuid: entity.metadata.uid ?? entity.metadata.name ?? String(index),
+          status,
+          layerName: layerInfo.layerName as string | undefined,
+          suggestedTitle: layerInfo.suggestedTitle as string | undefined,
+          protectionClassLabel: securityClass,
+          contactPerson,
+          owner: layerInfo.suggestedOwnerEnhet as string | undefined,
+          database: databaseInfo.database as string | undefined,
+          dataType: databaseInfo.dataType as string | undefined,
+          dataset: databaseInfo.dataset as string | undefined,
+          allowAttachments:
+            typeof databaseInfo.allowAttachments === 'boolean'
+              ? (databaseInfo.allowAttachments as boolean)
+              : undefined,
+          adminRoutine: nestedMetadata.administrationRoutine as
+            | string
+            | undefined,
+          maintenanceFrequency: nestedMetadata.maintenanceFrequency as
+            | string
+            | undefined,
+          subjectArea: nestedMetadata.subjectArea as string | undefined,
+          originHistory: nestedMetadata.originHistory as string | undefined,
+          source,
+          quality,
+          dataCollectionMethod: collection,
+          processingMethod: processing,
+          boundingBoxType: nestedMetadata.boundingBoxType as string | undefined,
+          datasetStatus: nestedMetadata.datasetStatus as string | undefined,
+          attributes: attributesRaw.map(a => ({
+            name: a.name as string | undefined,
+            alias: a.alias as string | undefined,
+            description: a.description as string | undefined,
+            dataFormat: a.dataFormat as string | undefined,
+            length: a.length as string | undefined,
+            securityClass: a.securityClass as string | undefined,
+            domain: a.domain as string | undefined,
+            allowEmptyValues:
+              typeof a.allowEmptyValues === 'boolean'
+                ? (a.allowEmptyValues as boolean)
+                : undefined,
+          })),
         };
       });
 
@@ -219,6 +296,8 @@ export const MainGeoDatasetPage = () => {
                   pageSize={pageSize}
                   rowDensity={rowDensity}
                   onSelectionChange={setSelectedRows}
+                  onRowClick={setPreviewEntry}
+                  onDelete={setDeleteEntry}
                 />
               )}
             </>
@@ -239,6 +318,39 @@ export const MainGeoDatasetPage = () => {
           reviewedIds={reviewedIds}
           setReviewedIds={setReviewedIds}
         />
+
+        <MainDatasetPreviewDialog
+          open={previewEntry !== null}
+          entry={previewEntry}
+          onClose={() => setPreviewEntry(null)}
+        />
+
+        <Dialog
+          open={deleteEntry !== null}
+          onClose={() => setDeleteEntry(null)}
+        >
+          <DialogTitle>{t('delete.confirmTitle')}</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {t('delete.confirmMessage', { name: deleteEntry?.titel ?? '' })}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteEntry(null)}>
+              {t('delete.cancel')}
+            </Button>
+            <Button
+              onClick={() => {
+                // TODO: wire actual delete logic in a separate branch
+                setDeleteEntry(null);
+              }}
+              color="secondary"
+              variant="contained"
+            >
+              {t('delete.confirm')}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Content>
     </PageWithHeader>
   );
