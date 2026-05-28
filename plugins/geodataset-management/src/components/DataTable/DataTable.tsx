@@ -33,6 +33,7 @@ export type DataTableProps<T extends object> = {
   data: T[];
   actions?: TableProps<T>['actions'];
   onSelectionChange?: (selectedRows: T[]) => void;
+  onRowClick?: (row: T) => void;
   options?: {
     search?: boolean;
     paging?: boolean;
@@ -62,10 +63,10 @@ export const DataTable = <T extends object>({
   actions,
   options,
   onSelectionChange,
+  onRowClick,
 }: DataTableProps<T>) => {
   const classes = useStyles();
   const mergedOptions = { ...defaultOptions, ...options };
-
   const handleRowSelected = onSelectionChange
     ? (rows: T[], _rowData?: T) => {
         onSelectionChange(rows);
@@ -81,6 +82,13 @@ export const DataTable = <T extends object>({
         columns={columns}
         data={data}
         actions={actions}
+        onRowClick={
+          onRowClick
+            ? (_event, rowData) => {
+                if (rowData) onRowClick(rowData);
+              }
+            : undefined
+        }
         onRowSelected={handleRowSelected as TableProps<T>['onRowSelected']}
       />
     </div>

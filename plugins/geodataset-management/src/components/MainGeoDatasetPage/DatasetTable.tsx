@@ -1,10 +1,20 @@
 import { TableColumn } from '@backstage/core-components';
-import { Box, IconButton, Tooltip } from '@material-ui/core';
+import {
+  Box,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Tooltip,
+} from '@material-ui/core';
 import LockIcon from '@material-ui/icons/Lock';
 import CheckIcon from '@material-ui/icons/Check';
 import CloseIcon from '@material-ui/icons/Close';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
-import React from 'react';
+import EditIcon from '@material-ui/icons/Edit';
+import DeleteIcon from '@material-ui/icons/Delete';
+import React, { useState } from 'react';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { geodatasetManagementTranslationRef } from '../../translation';
 import { DataTable } from '../DataTable';
@@ -18,6 +28,9 @@ export type DatasetTableProps = {
   pageSize: number;
   rowDensity?: RowDensity;
   onSelectionChange: (rows: DatasetEntry[]) => void;
+  onRowClick?: (row: DatasetEntry) => void;
+  onEdit?: (row: DatasetEntry) => void;
+  onDelete?: (row: DatasetEntry) => void;
 };
 
 export const DatasetTable = ({
@@ -25,9 +38,28 @@ export const DatasetTable = ({
   pageSize,
   rowDensity = 'comfortable',
   onSelectionChange,
+  onRowClick,
+  onEdit,
+  onDelete,
 }: DatasetTableProps) => {
   const classes = useMainGeoDatasetStyles();
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [menuRow, setMenuRow] = useState<DatasetEntry | null>(null);
+
+  const openMenu = (
+    event: React.MouseEvent<HTMLElement>,
+    row: DatasetEntry,
+  ) => {
+    event.stopPropagation();
+    setMenuAnchor(event.currentTarget);
+    setMenuRow(row);
+  };
+
+  const closeMenu = () => {
+    setMenuAnchor(null);
+    setMenuRow(null);
+  };
 
   const columns: TableColumn<DatasetEntry>[] = [
     {
@@ -77,13 +109,7 @@ export const DatasetTable = ({
       align: 'center',
       render: row => (
         <Tooltip title={t('table.moreOptions')}>
-          <IconButton
-            size="small"
-            onClick={e => {
-              e.stopPropagation();
-              alert(`Options for: ${row.titel}`);
-            }}
-          >
+          <IconButton size="small" onClick={e => openMenu(e, row)}>
             <MoreVertIcon fontSize="small" />
           </IconButton>
         </Tooltip>
@@ -106,7 +132,37 @@ export const DatasetTable = ({
           selection: true,
         }}
         onSelectionChange={onSelectionChange}
+        onRowClick={onRowClick}
       />
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={closeMenu}
+        onClick={e => e.stopPropagation()}
+      >
+        <MenuItem
+          onClick={() => {
+            if (menuRow) onEdit?.(menuRow);
+            closeMenu();
+          }}
+        >
+          <ListItemIcon>
+            <EditIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary={t('table.edit')} />
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            if (menuRow) onDelete?.(menuRow);
+            closeMenu();
+          }}
+        >
+          <ListItemIcon>
+            <DeleteIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary={t('table.delete')} />
+        </MenuItem>
+      </Menu>
     </div>
   );
 };

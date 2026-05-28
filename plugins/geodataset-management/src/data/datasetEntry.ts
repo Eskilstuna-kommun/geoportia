@@ -1,0 +1,42 @@
+export type DatasetAttribute = {
+  name?: string;
+  alias?: string;
+  description?: string;
+  dataFormat?: string;
+  length?: string;
+  securityClass?: string;
+  domain?: string;
+  allowEmptyValues?: boolean;
+};
+
+export type DatasetEntry = {
+  id: string;
+  signaturstatus: 'error' | 'warning' | 'success';
+  titel: string;
+  skyddsklass: 'green' | 'yellow' | 'red';
+  sammanfattning: string;
+  oppenData: boolean;
+  uuid?: string;
+  status?: string;
+  layerName?: string;
+  suggestedTitle?: string;
+  protectionClassLabel?: string;
+  contactPerson?: string[];
+  owner?: string;
+  database?: string;
+  dataType?: string;
+  dataset?: string;
+  allowAttachments?: boolean;
+  adminRoutine?: string;
+  maintenanceFrequency?: string;
+  subjectArea?: string;
+  originHistory?: string;
+  source?: string;
+  quality?: string;
+  dataCollectionMethod?: string;
+  processingMethod?: string;
+  boundingBoxType?: string;
+  datasetStatus?: string;
+  attributes?: DatasetAttribute[];
+  isDeleted?: boolean;
+};
