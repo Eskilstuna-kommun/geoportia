@@ -28,7 +28,7 @@ kind: User
 metadata:
   name: sweco-se1g7y
 spec:
-  memberOf: [users]
+  memberOf: [users, GG-U-Roll-GeoPortia-Admin]
 ---
 ---
 apiVersion: backstage.io/v1alpha1

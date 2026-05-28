@@ -80,3 +80,32 @@ metadata:
 spec:
   type: database
   owner: group:default/geoportia-team
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: daniels-testdatabas
+  title: Daniels testdatabas
+  description: Daniels testdatabas database
+  tags:
+    - database
+  annotations:
+    geoportia.se/status: Godkänd
+spec:
+  type: database
+  owner: group:default/geoportia-team
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: daniels-testdatabas2
+  title: Daniels testdatabas2
+  description: Daniels testdatabas2 database
+  tags:
+    - database
+  annotations:
+    geoportia.se/host-name: AG_Analys
+    geoportia.se/status: Godkänd
+spec:
+  type: database
+  owner: group:default/geoportia-team
