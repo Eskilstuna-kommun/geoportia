@@ -51,6 +51,30 @@ export class PostgreSQLDatabaseService {
   }
 
   /**
+   * Creates a view based on a SQL query with an optional WHERE clause.
+   *
+   * @param distributionName The name of the distribution to create a search view for.
+   * @param tableName The name of the database table to be used.
+   * @param whereClause The WHERE clause to limit the view. Set to empty string to include all records.
+   * @returns A promise that resolves when the view is created.
+   * @description Creates a view based on a SQL query with an optional WHERE clause. The view will be named `${distributionName}_view` and will select all columns from the specified table, filtered by the provided WHERE clause if it is not empty.
+   */
+  async createViewFromQuery(distributionName: string, tableName: string, whereClause: string) {
+    let query = `CREATE VIEW ${distributionName}_view AS SELECT * FROM ${tableName}`;
+
+    if (whereClause && whereClause.trim() !== '') {
+      query += ` WHERE ${whereClause}`;
+    }
+
+    try {
+      await this.pool.query(query);
+      this.logger.info(`View ${distributionName}_view created successfully.`);
+    } catch (err) {
+      this.logger.error(`Error creating view from query: ${err}`);
+    }
+  }
+
+  /**
    * Gets a list of all columns in a specific view within a schema.
    *
    * @param viewName The view name to query.
