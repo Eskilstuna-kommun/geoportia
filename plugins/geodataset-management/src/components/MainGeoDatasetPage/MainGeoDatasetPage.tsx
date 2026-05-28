@@ -1,5 +1,10 @@
 import { Content, PageWithHeader, Progress } from '@backstage/core-components';
-import { useApi, configApiRef } from '@backstage/core-plugin-api';
+import {
+  useApi,
+  configApiRef,
+  fetchApiRef,
+  discoveryApiRef,
+} from '@backstage/core-plugin-api';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import {
@@ -28,6 +33,7 @@ import { usePermission } from '@backstage/plugin-permission-react';
 import { metadataEntryUpdatePermission } from '@internal/backstage-plugin-geoportia-metadata-common';
 import { useReviewSuggestions } from '../../hooks/useReviewSuggestions';
 import { MainDatasetPreviewDialog } from './MainDatasetPreviewDialog';
+import { setMetadataEntryDeleted } from './metadataApi';
 
 // Map security class to color
 const mapSecurityClass = (
@@ -64,6 +70,8 @@ export const MainGeoDatasetPage = () => {
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
   const configApi = useApi(configApiRef);
   const catalogApi = useApi(catalogApiRef);
+  const fetchApi = useApi(fetchApiRef);
+  const discoveryApi = useApi(discoveryApiRef);
   const orgName =
     configApi.getOptionalString('organization.name') ?? 'Backstage';
 
@@ -96,6 +104,7 @@ export const MainGeoDatasetPage = () => {
   );
   const [previewEntry, setPreviewEntry] = useState<DatasetEntry | null>(null);
   const [deleteEntry, setDeleteEntry] = useState<DatasetEntry | null>(null);
+  const [mutating, setMutating] = useState(false);
 
   const fetchDatasets = useCallback(async () => {
     try {
@@ -103,7 +112,6 @@ export const MainGeoDatasetPage = () => {
       const response = await catalogApi.getEntities({
         filter: { kind: 'MetadataEntry' },
       });
-
       const entries: DatasetEntry[] = response.items.map((entity, index) => {
         const specMetadata =
           (entity.spec?.metadata as Record<string, unknown>) ?? {};
@@ -149,8 +157,24 @@ export const MainGeoDatasetPage = () => {
           | string
           | undefined;
 
+        const describedEntityRef =
+          (entity.metadata.annotations?.[
+            'geoportia.se/described-entity-ref'
+          ] as string | undefined) ??
+          (entity.spec?.describedEntityRef as string | undefined);
+        const entityRef =
+          describedEntityRef ??
+          `metadataentry:${entity.metadata.namespace ?? 'default'}/${
+            entity.metadata.name
+          }`;
+        const isDeleted =
+          entity.metadata.annotations?.['geoportia.se/deleted'] === 'true' ||
+          (entity.spec as { deleted?: boolean } | undefined)?.deleted === true;
+
         return {
           id: entity.metadata.name ?? String(index),
+          entityRef,
+          isDeleted,
           signaturstatus: mapStatus(status),
           titel,
           skyddsklass: mapSecurityClass(securityClass),
@@ -212,6 +236,59 @@ export const MainGeoDatasetPage = () => {
   useEffect(() => {
     fetchDatasets();
   }, [fetchDatasets]);
+
+  // Optimistically flip the `isDeleted` flag for one row.
+  const flipDeletedLocally = useCallback(
+    (entityRef: string, deleted: boolean) =>
+      setDatasetEntries(prev =>
+        prev.map(e =>
+          e.entityRef === entityRef ? { ...e, isDeleted: deleted } : e,
+        ),
+      ),
+    [],
+  );
+
+  const setEntryDeleted = useCallback(
+    async (entry: DatasetEntry, deleted: boolean) => {
+      if (!entry.entityRef) return;
+      // Optimistic update — the row moves immediately. The catalog
+      // EntityProvider polls every ~5s; we do NOT refetch here because
+      // the stale catalog read would overwrite this state.
+      flipDeletedLocally(entry.entityRef, deleted);
+      try {
+        setMutating(true);
+        await setMetadataEntryDeleted(
+          { discoveryApi, fetchApi },
+          entry.entityRef,
+          deleted,
+        );
+      } catch (err) {
+        console.error('Soft-delete error:', err);
+        flipDeletedLocally(entry.entityRef, !deleted); // rollback
+      } finally {
+        setMutating(false);
+      }
+    },
+    [discoveryApi, fetchApi, flipDeletedLocally],
+  );
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteEntry) return;
+    const entry = deleteEntry;
+    setDeleteEntry(null);
+    await setEntryDeleted(entry, true);
+  }, [deleteEntry, setEntryDeleted]);
+
+  const handleRestore = useCallback(
+    (entry: DatasetEntry) => setEntryDeleted(entry, false),
+    [setEntryDeleted],
+  );
+
+  const displayedEntries = useMemo(
+    () =>
+      datasetEntries.filter(e => (showDeleted ? e.isDeleted : !e.isDeleted)),
+    [datasetEntries, showDeleted],
+  );
 
   const handleTabChange = (
     _event: React.ChangeEvent<{}>,
@@ -282,7 +359,7 @@ export const MainGeoDatasetPage = () => {
               <DatasetPaginationInfo
                 pageSize={pageSize}
                 onPageSizeChange={setPageSize}
-                totalRows={datasetEntries.length}
+                totalRows={displayedEntries.length}
                 selectedCount={selectedRows.length}
                 showDeleted={showDeleted}
                 onShowDeletedChange={setShowDeleted}
@@ -292,12 +369,13 @@ export const MainGeoDatasetPage = () => {
                 <Progress />
               ) : (
                 <DatasetTable
-                  data={datasetEntries}
+                  data={displayedEntries}
                   pageSize={pageSize}
                   rowDensity={rowDensity}
                   onSelectionChange={setSelectedRows}
                   onRowClick={setPreviewEntry}
                   onDelete={setDeleteEntry}
+                  onRestore={handleRestore}
                 />
               )}
             </>
@@ -326,26 +404,28 @@ export const MainGeoDatasetPage = () => {
         />
 
         <Dialog
-          open={deleteEntry !== null}
-          onClose={() => setDeleteEntry(null)}
+          open={Boolean(deleteEntry)}
+          onClose={() => (mutating ? undefined : setDeleteEntry(null))}
+          maxWidth="xs"
+          fullWidth
         >
           <DialogTitle>{t('delete.confirmTitle')}</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              {t('delete.confirmMessage', { name: deleteEntry?.titel ?? '' })}
+              {t('delete.confirmMessage', {
+                name: deleteEntry?.titel ?? '',
+              })}
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDeleteEntry(null)}>
+            <Button onClick={() => setDeleteEntry(null)} disabled={mutating}>
               {t('delete.cancel')}
             </Button>
             <Button
-              onClick={() => {
-                // TODO: wire actual delete logic in a separate branch
-                setDeleteEntry(null);
-              }}
+              onClick={handleConfirmDelete}
               color="secondary"
               variant="contained"
+              disabled={mutating}
             >
               {t('delete.confirm')}
             </Button>

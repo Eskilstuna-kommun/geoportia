@@ -11,6 +11,7 @@ export type DatasetAttribute = {
 
 export type DatasetEntry = {
   id: string;
+  entityRef?: string;
   signaturstatus: 'error' | 'warning' | 'success';
   titel: string;
   skyddsklass: 'green' | 'yellow' | 'red';
