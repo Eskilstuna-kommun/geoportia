@@ -22,6 +22,7 @@ export interface MetadataEntryData {
   entityRef: string;
   schema: JsonObject;
   metadata: JsonObject;
+  deleted: boolean;
 }
 
 export class MetadataEntryProvider implements EntityProvider {
@@ -65,6 +66,7 @@ export class MetadataEntryProvider implements EntityProvider {
         entityRef: row.entity_ref,
         schema: (typeof row.schema === 'string' ? JSON.parse(row.schema) : row.schema) as JsonObject,
         metadata: (typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata) as JsonObject,
+        deleted: Boolean(row.deleted),
       }));
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -118,6 +120,7 @@ export class MetadataEntryProvider implements EntityProvider {
           [ANNOTATION_LOCATION]: `geoportia-metadata:${entry.entityRef}`,
           [ANNOTATION_ORIGIN_LOCATION]: `geoportia-metadata:${entry.entityRef}`,
           'geoportia.se/described-entity-ref': entry.entityRef,
+          'geoportia.se/deleted': String(Boolean(entry.deleted)),
         },
       },
       spec: {
@@ -125,8 +128,8 @@ export class MetadataEntryProvider implements EntityProvider {
         describedEntityKind: describedEntityApiVersion,
         schema: schemaObj,
         metadata: metadataObj,
+        deleted: Boolean(entry.deleted),
       },
-      // Relations are emitted by MetadataEntryProcessor for bidirectional linking
     };
 
     return entity;

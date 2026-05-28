@@ -106,6 +106,7 @@ export class MetadataService implements IMetadataService {
       entityRef: row.entity_ref,
       schema: (typeof row.schema === 'string' ? JSON.parse(row.schema) : row.schema) as JsonObject,
       metadata: (typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata) as JsonObject,
+      deleted: Boolean(row.deleted),
     };
   }
 
@@ -189,6 +190,48 @@ export class MetadataService implements IMetadataService {
     await this.refreshCatalogEntity(input.entityRef);
   }
 
+  async setMetadataEntryDeleted(
+    input: { entityRef: string; deleted: boolean },
+    _options: {
+      credentials: AnyCredentials;
+    },
+  ): Promise<MetadataEntry> {
+    if (!input?.entityRef) {
+      throw new InputError('entityRef is required');
+    }
+
+    let updatedRow: TableRow | undefined;
+    await this.database.transaction(async db => {
+      const existing = await db<TableRow>('geoportia_metadata')
+        .where({ entity_ref: input.entityRef })
+        .first();
+      if (!existing) {
+        throw new NotFoundError('Metadata entry not found');
+      }
+
+      await db<TableRow>('geoportia_metadata')
+        .where({ entity_ref: input.entityRef })
+        .update({ deleted: input.deleted });
+
+      updatedRow = await db<TableRow>('geoportia_metadata')
+        .where({ entity_ref: input.entityRef })
+        .first();
+    });
+
+    await this.refreshCatalogEntity(input.entityRef);
+
+    if (!updatedRow) {
+      throw new NotFoundError('Metadata entry not found');
+    }
+
+    return {
+      entityRef: updatedRow.entity_ref,
+      schema: (typeof updatedRow.schema === 'string' ? JSON.parse(updatedRow.schema) : updatedRow.schema) as JsonObject,
+      metadata: (typeof updatedRow.metadata === 'string' ? JSON.parse(updatedRow.metadata) : updatedRow.metadata) as JsonObject,
+      deleted: Boolean(updatedRow.deleted),
+    };
+  }
+
   async getMetadataEntriesPublic(): Promise<MetadataEntry[]> {
     const rows = await this.database<TableRow>('geoportia_metadata')
       .select('*')
@@ -198,6 +241,7 @@ export class MetadataService implements IMetadataService {
       entityRef: row.entity_ref,
       schema: (typeof row.schema === 'string' ? JSON.parse(row.schema) : row.schema) as JsonObject,
       metadata: (typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata) as JsonObject,
+      deleted: Boolean(row.deleted),
     }));
   }
 }

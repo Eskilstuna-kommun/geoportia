@@ -14,6 +14,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
+import RestoreIcon from '@material-ui/icons/Restore';
 import React, { useState } from 'react';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { geodatasetManagementTranslationRef } from '../../translation';
@@ -31,6 +32,7 @@ export type DatasetTableProps = {
   onRowClick?: (row: DatasetEntry) => void;
   onEdit?: (row: DatasetEntry) => void;
   onDelete?: (row: DatasetEntry) => void;
+  onRestore?: (row: DatasetEntry) => void;
 };
 
 export const DatasetTable = ({
@@ -41,6 +43,7 @@ export const DatasetTable = ({
   onRowClick,
   onEdit,
   onDelete,
+  onRestore,
 }: DatasetTableProps) => {
   const classes = useMainGeoDatasetStyles();
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
@@ -140,28 +143,44 @@ export const DatasetTable = ({
         onClose={closeMenu}
         onClick={e => e.stopPropagation()}
       >
-        <MenuItem
-          onClick={() => {
-            if (menuRow) onEdit?.(menuRow);
-            closeMenu();
-          }}
-        >
-          <ListItemIcon>
-            <EditIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText primary={t('table.edit')} />
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            if (menuRow) onDelete?.(menuRow);
-            closeMenu();
-          }}
-        >
-          <ListItemIcon>
-            <DeleteIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText primary={t('table.delete')} />
-        </MenuItem>
+        {!menuRow?.isDeleted && (
+          <MenuItem
+            onClick={() => {
+              if (menuRow) onEdit?.(menuRow);
+              closeMenu();
+            }}
+          >
+            <ListItemIcon>
+              <EditIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary={t('table.edit')} />
+          </MenuItem>
+        )}
+        {menuRow?.isDeleted ? (
+          <MenuItem
+            onClick={() => {
+              if (menuRow) onRestore?.(menuRow);
+              closeMenu();
+            }}
+          >
+            <ListItemIcon>
+              <RestoreIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary={t('table.restore')} />
+          </MenuItem>
+        ) : (
+          <MenuItem
+            onClick={() => {
+              if (menuRow) onDelete?.(menuRow);
+              closeMenu();
+            }}
+          >
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary={t('table.delete')} />
+          </MenuItem>
+        )}
       </Menu>
     </div>
   );
