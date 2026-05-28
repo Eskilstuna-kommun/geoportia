@@ -41,6 +41,7 @@ export type DataTableProps<T extends object> = {
     actionsColumnIndex?: number;
     padding?: 'default' | 'dense';
     selection?: boolean;
+    rowStyle?: React.CSSProperties;
   };
 };
 

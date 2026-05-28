@@ -13,18 +13,23 @@ import SearchIcon from '@material-ui/icons/Search';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import ViewColumnIcon from '@material-ui/icons/ViewColumn';
 import AddIcon from '@material-ui/icons/Add';
-import ViewListIcon from '@material-ui/icons/ViewList';
-import ViewModuleIcon from '@material-ui/icons/ViewModule';
+import ViewHeadlineIcon from '@material-ui/icons/ViewHeadline';
+import ViewStreamIcon from '@material-ui/icons/ViewStream';
+import MenuIcon from '@mui/icons-material/Menu';
 import React from 'react';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { geodatasetManagementTranslationRef } from '../../translation';
 import { useMainGeoDatasetStyles } from './styles';
+
+export type RowDensity = 'compact' | 'standard' | 'comfortable';
 
 export type DatasetToolbarProps = {
   searchText: string;
   onSearchChange: (value: string) => void;
   selectedView: string;
   onViewChange: (value: string) => void;
+  rowDensity: RowDensity;
+  onRowDensityChange: (value: RowDensity) => void;
 };
 
 export const DatasetToolbar = ({
@@ -32,6 +37,8 @@ export const DatasetToolbar = ({
   onSearchChange,
   selectedView,
   onViewChange,
+  rowDensity,
+  onRowDensityChange,
 }: DatasetToolbarProps) => {
   const classes = useMainGeoDatasetStyles();
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
@@ -56,40 +63,70 @@ export const DatasetToolbar = ({
       </Box>
 
       <Box className={classes.toolbarRight}>
-        <TextField
-          variant="outlined"
-          size="small"
-          placeholder={t('toolbar.search')}
-          value={searchText}
-          onChange={e => onSearchChange(e.target.value)}
-          className={classes.searchField}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon />
-              </InputAdornment>
-            ),
-          }}
-        />
-        <Button variant="outlined" startIcon={<FilterListIcon />}>
-          {t('toolbar.filter')}
-        </Button>
-        <Button variant="outlined" startIcon={<ViewColumnIcon />}>
-          {t('toolbar.columns')}
-        </Button>
-        <Button variant="outlined" startIcon={<AddIcon />}>
-          {t('toolbar.addView')}
-        </Button>
-        <Tooltip title={t('toolbar.listView')}>
-          <IconButton size="small">
-            <ViewListIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title={t('toolbar.gridView')}>
-          <IconButton size="small">
-            <ViewModuleIcon />
-          </IconButton>
-        </Tooltip>
+        <div className={classes.toolbarButton}>
+          <TextField
+            variant="outlined"
+            size="small"
+            placeholder={t('toolbar.search')}
+            value={searchText}
+            onChange={e => onSearchChange(e.target.value)}
+            className={classes.searchField}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Button variant="outlined" startIcon={<FilterListIcon />}>
+            {t('toolbar.filter')}
+          </Button>
+          <Button variant="outlined" startIcon={<ViewColumnIcon />}>
+            {t('toolbar.columns')}
+          </Button>
+          <Button variant="outlined" startIcon={<AddIcon />}>
+            {t('toolbar.addView')}
+          </Button>{' '}
+        </div>
+
+        <div className={classes.toolbarIcon}>
+          <div className={classes.densityGroup}>
+            <Tooltip title={t('toolbar.compactRows')}>
+              <IconButton
+                size="small"
+                className={`${classes.densityButton} ${
+                  rowDensity === 'compact' ? classes.densityButtonActive : ''
+                }`}
+                onClick={() => onRowDensityChange('compact')}
+              >
+                <ViewHeadlineIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t('toolbar.standardRows')}>
+              <IconButton
+                size="small"
+                className={`${classes.densityButton} ${
+                  rowDensity === 'standard' ? classes.densityButtonActive : ''
+                }`}
+                onClick={() => onRowDensityChange('standard')}
+              >
+                <MenuIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t('toolbar.comfortableRows')}>
+              <IconButton
+                size="small"
+                className={`${classes.densityButton} ${
+                  rowDensity === 'comfortable' ? classes.densityButtonActive : ''
+                }`}
+                onClick={() => onRowDensityChange('comfortable')}
+              >
+                <ViewStreamIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </div>
+        </div>
       </Box>
     </Box>
   );

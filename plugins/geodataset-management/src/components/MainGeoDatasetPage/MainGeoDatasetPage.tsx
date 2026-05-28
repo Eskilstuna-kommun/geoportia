@@ -9,7 +9,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import { geodatasetManagementTranslationRef } from '../../translation';
 import { DatasetEntry } from '../../data';
 import { useMainGeoDatasetStyles } from './styles';
-import { DatasetToolbar } from './DatasetToolbar';
+import { DatasetToolbar, RowDensity } from './DatasetToolbar';
 import { DatasetPaginationInfo } from './DatasetPaginationInfo';
 import { DatasetTable } from './DatasetTable';
 import { ReviewDialog } from './ReviewDialog';
@@ -55,6 +55,7 @@ export const MainGeoDatasetPage = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [searchText, setSearchText] = useState('');
   const [selectedView, setSelectedView] = useState('standard');
+  const [rowDensity, setRowDensity] = useState<RowDensity>('comfortable');
   const [showDeleted, setShowDeleted] = useState(false);
   const [pageSize, setPageSize] = useState(25);
   const [selectedRows, setSelectedRows] = useState<DatasetEntry[]>([]);
@@ -175,6 +176,8 @@ export const MainGeoDatasetPage = () => {
                 onSearchChange={setSearchText}
                 selectedView={selectedView}
                 onViewChange={setSelectedView}
+                rowDensity={rowDensity}
+                onRowDensityChange={setRowDensity}
               />
 
               <DatasetPaginationInfo
@@ -192,6 +195,7 @@ export const MainGeoDatasetPage = () => {
                 <DatasetTable
                   data={datasetEntries}
                   pageSize={pageSize}
+                  rowDensity={rowDensity}
                   onSelectionChange={setSelectedRows}
                 />
               )}

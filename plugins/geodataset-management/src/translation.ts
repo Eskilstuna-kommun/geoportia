@@ -16,8 +16,9 @@ export const geodatasetManagementTranslationRef = createTranslationRef({
       filter: 'Filter',
       columns: 'Columns',
       addView: 'Add View',
-      listView: 'List View',
-      gridView: 'Grid View',
+      compactRows: 'Compact rows',
+      standardRows: 'Standard rows',
+      comfortableRows: 'Comfortable rows',
     },
     review: {
       changes: 'You have been assigned as a reviewer for changes for main geo dataset',
