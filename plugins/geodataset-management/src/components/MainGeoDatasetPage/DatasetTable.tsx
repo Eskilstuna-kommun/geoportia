@@ -11,16 +11,19 @@ import { DataTable } from '../DataTable';
 import { DatasetEntry } from '../../data';
 import { useMainGeoDatasetStyles } from './styles';
 import { ShieldIcon, StatusBadge } from './indicators';
+import { RowDensity } from './DatasetToolbar';
 
 export type DatasetTableProps = {
   data: DatasetEntry[];
   pageSize: number;
+  rowDensity?: RowDensity;
   onSelectionChange: (rows: DatasetEntry[]) => void;
 };
 
 export const DatasetTable = ({
   data,
   pageSize,
+  rowDensity = 'comfortable',
   onSelectionChange,
 }: DatasetTableProps) => {
   const classes = useMainGeoDatasetStyles();
@@ -89,19 +92,21 @@ export const DatasetTable = ({
   ];
 
   return (
-    <DataTable<DatasetEntry>
-      title=""
-      columns={columns}
-      data={data}
-      options={{
-        search: false,
-        paging: true,
-        pageSize: pageSize,
-        sorting: true,
-        padding: 'dense',
-        selection: true,
-      }}
-      onSelectionChange={onSelectionChange}
-    />
+    <div className={classes[`density_${rowDensity}` as const]}>
+      <DataTable<DatasetEntry>
+        title=""
+        columns={columns}
+        data={data}
+        options={{
+          search: false,
+          paging: true,
+          pageSize: pageSize,
+          sorting: true,
+          padding: rowDensity === 'compact' ? 'dense' : 'default',
+          selection: true,
+        }}
+        onSelectionChange={onSelectionChange}
+      />
+    </div>
   );
 };

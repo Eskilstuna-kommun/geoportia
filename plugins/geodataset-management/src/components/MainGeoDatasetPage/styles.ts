@@ -24,7 +24,7 @@ export const useMainGeoDatasetStyles = makeStyles((theme: Theme) => ({
   },
   toolbar: {
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: theme.spacing(2),
     flexWrap: 'wrap',
@@ -39,6 +39,55 @@ export const useMainGeoDatasetStyles = makeStyles((theme: Theme) => ({
     display: 'flex',
     alignItems: 'center',
     gap: theme.spacing(1),
+    flexDirection: 'column',
+  },
+  toolbarButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+  },
+  toolbarIcon: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+    justifyContent: 'flex-end',
+    width: '100%',
+  },
+  densityGroup: {
+    display: 'inline-flex',
+    border: `1px solid ${theme.palette.divider}`,
+    borderRadius: theme.shape.borderRadius,
+    overflow: 'hidden',
+  },
+  densityButton: {
+    borderRadius: 0,
+    padding: theme.spacing(0.75),
+    '&:not(:last-child)': {
+      borderRight: `1px solid ${theme.palette.divider}`,
+    },
+  },
+  densityButtonActive: {
+    backgroundColor: theme.palette.action.selected,
+    color: theme.palette.primary.main,
+  },
+  density_compact: {
+    '& [class*="MuiTableCell-root"]': {
+      paddingTop: '2px !important',
+      paddingBottom: '2px !important',
+      lineHeight: 1.2,
+    },
+  },
+  density_standard: {
+    '& [class*="MuiTableCell-root"]': {
+      paddingTop: '10px !important',
+      paddingBottom: '10px !important',
+    },
+  },
+  density_comfortable: {
+    '& [class*="MuiTableCell-root"]': {
+      paddingTop: '20px !important',
+      paddingBottom: '20px !important',
+    },
   },
   searchField: {
     minWidth: 200,
