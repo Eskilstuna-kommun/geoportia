@@ -12,6 +12,7 @@ export interface MetadataEntry {
   entityRef: string;
   schema: JsonObject;
   metadata: JsonObject;
+  deleted?: boolean;
 }
 
 export interface MetadataEntryCreate extends MetadataEntry {}
@@ -54,6 +55,14 @@ export interface MetadataService {
       credentials: AnyCredentials;
     },
   ): Promise<void>;
+
+  /** Mark a metadata entry as deleted or restore it (soft delete). */
+  setMetadataEntryDeleted(
+    input: { entityRef: string; deleted: boolean },
+    options: {
+      credentials: AnyCredentials;
+    },
+  ): Promise<MetadataEntry>;
 
   /** Get all metadata entries (no authentication required). */
   getMetadataEntriesPublic(): Promise<MetadataEntry[]>;

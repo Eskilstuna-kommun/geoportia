@@ -104,6 +104,18 @@ export const geodatasetManagementTranslationRef = createTranslationRef({
       summary: 'Summary',
       openData: 'Open Data',
       moreOptions: 'More Options',
+      edit: 'Edit',
+      delete: 'Delete',
+      restore: 'Restore',
+    },
+    delete: {
+      confirmTitle: 'Move to deleted?',
+      confirmMessage: 'Move "{{name}}" to deleted?',
+      confirm: 'Delete',
+      cancel: 'Cancel',
+      success: 'Entry moved to deleted',
+      restored: 'Entry restored',
+      error: 'Failed to update entry',
     },
     pageTitle: {
       dataOwner: 'Data Owner',

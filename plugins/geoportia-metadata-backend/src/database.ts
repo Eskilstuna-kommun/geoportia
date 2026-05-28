@@ -3,6 +3,7 @@ export interface TableRow {
   entity_ref: string;
   schema: unknown;
   metadata: unknown;
+  deleted: boolean;
 }
 
 export interface SuggestionTableRow {

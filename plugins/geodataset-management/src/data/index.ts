@@ -1,2 +1,2 @@
-export { sampleDatasetEntries, type DatasetEntry } from './mockData';
+export { type DatasetEntry } from './datasetEntry';
 export { mockReviewItems, type ReviewItem } from './reviewItems';

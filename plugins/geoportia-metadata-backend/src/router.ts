@@ -38,6 +38,34 @@ export async function createRouter({
 
   const openApiRouter = await createOpenApiRouter();
 
+  parentRouter.put('/:entityRef/deleted', async (req, res, next) => {
+    try {
+      const credentials = await httpAuth.credentials(req, { allow: ['user'] });
+      const entityRef = decodeURIComponent(req.params.entityRef);
+
+      // Soft-delete reuses the update permission.
+      const decision = await permissions.authorize(
+        [{ permission: metadataEntryUpdatePermission, resourceRef: entityRef }],
+        { credentials },
+      );
+      if (decision[0].result !== AuthorizeResult.ALLOW) {
+        res.status(403).send();
+        return;
+      }
+
+      const body = z.object({ deleted: z.boolean() }).parse(req.body);
+
+      const result = await metadataService.setMetadataEntryDeleted(
+        { entityRef, deleted: body.deleted },
+        { credentials },
+      );
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  });
+
   parentRouter.get('/:entityRef', async (req, res, next) => {
     if (req.params.entityRef?.includes('/')) {
       return next();
