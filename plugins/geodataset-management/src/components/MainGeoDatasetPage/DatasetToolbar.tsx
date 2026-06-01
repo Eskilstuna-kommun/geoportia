@@ -19,8 +19,6 @@ import AddIcon from '@material-ui/icons/Add';
 import ViewHeadlineIcon from '@material-ui/icons/ViewHeadline';
 import ViewStreamIcon from '@material-ui/icons/ViewStream';
 import MenuIcon from '@mui/icons-material/Menu';
-import ViewListIcon from '@material-ui/icons/ViewList';
-import ViewModuleIcon from '@material-ui/icons/ViewModule';
 import React, { useState } from 'react';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { geodatasetManagementTranslationRef } from '../../translation';
@@ -39,9 +37,7 @@ export type DatasetToolbarProps = {
   onViewChange: (value: string) => void;
   rowDensity: RowDensity;
   onRowDensityChange: (value: RowDensity) => void;
-  /** All columns the user can toggle on/off. */
   columnOptions?: ColumnOption[];
-  /** Field-names of the columns currently rendered. */
   visibleColumns?: string[];
   onVisibleColumnsChange?: (next: string[]) => void;
 };
@@ -108,9 +104,40 @@ export const DatasetToolbar = ({
           <Button variant="outlined" startIcon={<FilterListIcon />}>
             {t('toolbar.filter')}
           </Button>
-          <Button variant="outlined" startIcon={<ViewColumnIcon />}>
+          <Button
+            variant="outlined"
+            startIcon={<ViewColumnIcon />}
+            onClick={e => setColumnsAnchor(e.currentTarget)}
+            disabled={!columnOptions || columnOptions.length === 0}
+          >
             {t('toolbar.columns')}
           </Button>
+          <Menu
+            anchorEl={columnsAnchor}
+            open={Boolean(columnsAnchor)}
+            onClose={() => setColumnsAnchor(null)}
+          >
+            {(columnOptions ?? []).map(opt => {
+              const checked = visibleColumns?.includes(opt.field) ?? false;
+              return (
+                <MenuItem
+                  key={opt.field}
+                  onClick={() => toggleColumn(opt.field)}
+                  dense
+                >
+                  <Checkbox
+                    checked={checked}
+                    size="small"
+                    color="primary"
+                    edge="start"
+                    tabIndex={-1}
+                    disableRipple
+                  />
+                  <ListItemText primary={opt.label} />
+                </MenuItem>
+              );
+            })}
+          </Menu>
           <Button variant="outlined" startIcon={<AddIcon />}>
             {t('toolbar.addView')}
           </Button>{' '}

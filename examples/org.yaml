@@ -60,7 +60,7 @@ kind: User
 metadata:
   name: sweco-se1c8x
 spec:
-  memberOf: [users, GG-U-Roll-GeoPortia-Admin]
+  memberOf: [users, GG-U-Roll-GeoPortia-SuperAdmin]
 ---
 # https://backstage.io/docs/features/software-catalog/descriptor-format#kind-group
 apiVersion: backstage.io/v1alpha1
