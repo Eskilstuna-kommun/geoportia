@@ -1,5 +1,6 @@
 // Schema-driven edit dialog for a single MetadataEntry.
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useAsync, useAsyncFn } from 'react-use';
 import {
   Button,
   CircularProgress,
@@ -39,56 +40,42 @@ export const EditDatasetDialog = ({
   const discoveryApi = useApi(discoveryApiRef);
   const fetchApi = useApi(fetchApiRef);
 
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [dto, setDto] = useState<MetadataEntryDto | null>(null);
-  const [metadata, setMetadata] = useState<Record<string, unknown>>({});
-
   const open = Boolean(entry);
+  const entityRef = entry?.entityRef;
 
-  useEffect(() => {
-    if (!entry?.entityRef) return undefined;
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setDto(null);
-    setMetadata({});
-    getMetadataEntry({ discoveryApi, fetchApi }, entry.entityRef)
-      .then(result => {
-        if (cancelled) return;
-        setDto(result);
-        setMetadata((result.metadata ?? {}) as Record<string, unknown>);
-      })
-      .catch(err => {
-        if (!cancelled) setError(String(err.message ?? err));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [entry, discoveryApi, fetchApi]);
+  // Load the metadata entry whenever the dialog targets a different entity.
+  const {
+    value: dto,
+    loading: dtoLoading,
+    error: loadError,
+  } = useAsync(async (): Promise<MetadataEntryDto | undefined> => {
+    if (!entityRef) return undefined;
+    return getMetadataEntry({ discoveryApi, fetchApi }, entityRef);
+  }, [entityRef, discoveryApi, fetchApi]);
 
-  const handleSave = async () => {
-    if (!entry?.entityRef || !dto) return;
-    setSaving(true);
-    setError(null);
-    try {
+  // Local edit buffer, seeded from the loaded dto.
+  const [metadata, setMetadata] = React.useState<Record<string, unknown>>({});
+  React.useEffect(() => {
+    setMetadata((dto?.metadata ?? {}) as Record<string, unknown>);
+  }, [dto]);
+
+  const [saveState, save] = useAsyncFn(
+    async (next: Record<string, unknown>) => {
+      if (!entry?.entityRef || !dto) return;
       await updateMetadataEntry(
         { discoveryApi, fetchApi },
         entry.entityRef,
-        { schema: dto.schema, metadata },
+        { schema: dto.schema, metadata: next },
       );
-      onSaved(entry, metadata);
+      onSaved(entry, next);
       onClose();
-    } catch (err: any) {
-      setError(String(err.message ?? err));
-    } finally {
-      setSaving(false);
-    }
-  };
+    },
+    [entry, dto, discoveryApi, fetchApi, onSaved, onClose],
+  );
+
+  const saving = saveState.loading;
+  const error =
+    saveState.error?.message ?? loadError?.message ?? null;
 
   return (
     <Dialog
@@ -101,7 +88,7 @@ export const EditDatasetDialog = ({
         {t('edit.title', { name: entry?.titel ?? '' })}
       </DialogTitle>
       <DialogContent dividers>
-        {loading && <CircularProgress />}
+        {dtoLoading && <CircularProgress />}
         {error && (
           <div
             style={{ color: 'red', marginBottom: 8, whiteSpace: 'pre-wrap' }}
@@ -109,7 +96,7 @@ export const EditDatasetDialog = ({
             {error}
           </div>
         )}
-        {!loading && dto && (
+        {!dtoLoading && dto && (
           <SchemaForm
             schema={dto.schema as JsonSchema}
             value={metadata}
@@ -124,10 +111,10 @@ export const EditDatasetDialog = ({
           {t('edit.cancel')}
         </Button>
         <Button
-          onClick={handleSave}
+          onClick={() => save(metadata)}
           color="primary"
           variant="contained"
-          disabled={saving || loading || !dto}
+          disabled={saving || dtoLoading || !dto}
         >
           {saving ? <CircularProgress size={20} /> : t('edit.save')}
         </Button>

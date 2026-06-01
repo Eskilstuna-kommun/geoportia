@@ -28,6 +28,10 @@ export type DatasetTableProps = {
   data: DatasetEntry[];
   pageSize: number;
   rowDensity?: RowDensity;
+  /** Subset of column field-names to render (excluding the action menu, which is always shown). */
+  visibleColumns?: string[];
+  /** When false, the row menu hides edit/delete/restore actions. */
+  canManage?: boolean;
   onSelectionChange: (rows: DatasetEntry[]) => void;
   onRowClick?: (row: DatasetEntry) => void;
   onEdit?: (row: DatasetEntry) => void;
@@ -39,6 +43,8 @@ export const DatasetTable = ({
   data,
   pageSize,
   rowDensity = 'comfortable',
+  visibleColumns,
+  canManage = true,
   onSelectionChange,
   onRowClick,
   onEdit,
@@ -64,7 +70,7 @@ export const DatasetTable = ({
     setMenuRow(null);
   };
 
-  const columns: TableColumn<DatasetEntry>[] = [
+  const allColumns: TableColumn<DatasetEntry>[] = [
     {
       title: t('table.signatureStatus'),
       field: 'signaturstatus',
@@ -110,15 +116,22 @@ export const DatasetTable = ({
       filtering: false,
       width: '56px',
       align: 'center',
-      render: row => (
-        <Tooltip title={t('table.moreOptions')}>
-          <IconButton size="small" onClick={e => openMenu(e, row)}>
-            <MoreVertIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      ),
+      render: row =>
+        canManage ? (
+          <Tooltip title={t('table.moreOptions')}>
+            <IconButton size="small" onClick={e => openMenu(e, row)}>
+              <MoreVertIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        ) : null,
     },
   ];
+
+  const columns = visibleColumns
+    ? allColumns.filter(
+        c => c.field === 'actions' || visibleColumns.includes(String(c.field)),
+      )
+    : allColumns;
 
   return (
     <div className={classes[`density_${rowDensity}` as const]}>
@@ -143,7 +156,7 @@ export const DatasetTable = ({
         onClose={closeMenu}
         onClick={e => e.stopPropagation()}
       >
-        {!menuRow?.isDeleted && (
+        {!menuRow?.isDeleted && canManage && (
           <MenuItem
             onClick={() => {
               if (menuRow) onEdit?.(menuRow);
@@ -156,31 +169,32 @@ export const DatasetTable = ({
             <ListItemText primary={t('table.edit')} />
           </MenuItem>
         )}
-        {menuRow?.isDeleted ? (
-          <MenuItem
-            onClick={() => {
-              if (menuRow) onRestore?.(menuRow);
-              closeMenu();
-            }}
-          >
-            <ListItemIcon>
-              <RestoreIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText primary={t('table.restore')} />
-          </MenuItem>
-        ) : (
-          <MenuItem
-            onClick={() => {
-              if (menuRow) onDelete?.(menuRow);
-              closeMenu();
-            }}
-          >
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText primary={t('table.delete')} />
-          </MenuItem>
-        )}
+        {canManage &&
+          (menuRow?.isDeleted ? (
+            <MenuItem
+              onClick={() => {
+                if (menuRow) onRestore?.(menuRow);
+                closeMenu();
+              }}
+            >
+              <ListItemIcon>
+                <RestoreIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary={t('table.restore')} />
+            </MenuItem>
+          ) : (
+            <MenuItem
+              onClick={() => {
+                if (menuRow) onDelete?.(menuRow);
+                closeMenu();
+              }}
+            >
+              <ListItemIcon>
+                <DeleteIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary={t('table.delete')} />
+            </MenuItem>
+          ))}
       </Menu>
     </div>
   );
