@@ -1,9 +1,12 @@
 import {
   Box,
   Button,
+  Checkbox,
   FormControl,
   IconButton,
   InputAdornment,
+  ListItemText,
+  Menu,
   MenuItem,
   Select,
   TextField,
@@ -16,12 +19,18 @@ import AddIcon from '@material-ui/icons/Add';
 import ViewHeadlineIcon from '@material-ui/icons/ViewHeadline';
 import ViewStreamIcon from '@material-ui/icons/ViewStream';
 import MenuIcon from '@mui/icons-material/Menu';
-import React from 'react';
+import ViewListIcon from '@material-ui/icons/ViewList';
+import ViewModuleIcon from '@material-ui/icons/ViewModule';
+import React, { useState } from 'react';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { geodatasetManagementTranslationRef } from '../../translation';
 import { useMainGeoDatasetStyles } from './styles';
 
 export type RowDensity = 'compact' | 'standard' | 'comfortable';
+export type ColumnOption = {
+  field: string;
+  label: string;
+};
 
 export type DatasetToolbarProps = {
   searchText: string;
@@ -30,6 +39,11 @@ export type DatasetToolbarProps = {
   onViewChange: (value: string) => void;
   rowDensity: RowDensity;
   onRowDensityChange: (value: RowDensity) => void;
+  /** All columns the user can toggle on/off. */
+  columnOptions?: ColumnOption[];
+  /** Field-names of the columns currently rendered. */
+  visibleColumns?: string[];
+  onVisibleColumnsChange?: (next: string[]) => void;
 };
 
 export const DatasetToolbar = ({
@@ -39,9 +53,21 @@ export const DatasetToolbar = ({
   onViewChange,
   rowDensity,
   onRowDensityChange,
+  columnOptions,
+  visibleColumns,
+  onVisibleColumnsChange,
 }: DatasetToolbarProps) => {
   const classes = useMainGeoDatasetStyles();
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
+  const [columnsAnchor, setColumnsAnchor] = useState<HTMLElement | null>(null);
+
+  const toggleColumn = (field: string) => {
+    if (!visibleColumns || !onVisibleColumnsChange) return;
+    const next = visibleColumns.includes(field)
+      ? visibleColumns.filter(f => f !== field)
+      : [...visibleColumns, field];
+    onVisibleColumnsChange(next);
+  };
 
   return (
     <Box className={classes.toolbar}>

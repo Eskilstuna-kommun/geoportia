@@ -35,6 +35,7 @@ import { useReviewSuggestions } from '../../hooks/useReviewSuggestions';
 import { MainDatasetPreviewDialog } from './MainDatasetPreviewDialog';
 import { EditDatasetDialog } from './EditDatasetDialog';
 import { setMetadataEntryDeleted } from './metadataApi';
+import { metadataEntryDeletePermission } from '@internal/backstage-plugin-geoportia-metadata-common';
 
 // Map security class to color
 const mapSecurityClass = (
@@ -107,6 +108,26 @@ export const MainGeoDatasetPage = () => {
   const [deleteEntry, setDeleteEntry] = useState<DatasetEntry | null>(null);
   const [editEntry, setEditEntry] = useState<DatasetEntry | null>(null);
   const [mutating, setMutating] = useState(false);
+
+  const columnOptions = useMemo(
+    () => [
+      { field: 'signaturstatus', label: t('table.signatureStatus') },
+      { field: 'titel', label: t('table.title') },
+      { field: 'skyddsklass', label: t('table.protectionClass') },
+      { field: 'sammanfattning', label: t('table.summary') },
+      { field: 'oppenData', label: t('table.openData') },
+    ],
+    [t],
+  );
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(() =>
+    columnOptions.map(c => c.field),
+  );
+
+
+  const { allowed: canManage } = usePermission({
+    permission: metadataEntryDeletePermission,
+    resourceRef: undefined,
+  });
 
   const fetchDatasets = useCallback(async () => {
     try {
@@ -386,6 +407,9 @@ export const MainGeoDatasetPage = () => {
                 onViewChange={setSelectedView}
                 rowDensity={rowDensity}
                 onRowDensityChange={setRowDensity}
+                columnOptions={columnOptions}
+                visibleColumns={visibleColumns}
+                onVisibleColumnsChange={setVisibleColumns}
               />
 
               <DatasetPaginationInfo
@@ -404,6 +428,8 @@ export const MainGeoDatasetPage = () => {
                   data={displayedEntries}
                   pageSize={pageSize}
                   rowDensity={rowDensity}
+                  visibleColumns={visibleColumns}
+                  canManage={canManage}
                   onSelectionChange={setSelectedRows}
                   onRowClick={setPreviewEntry}
                   onEdit={setEditEntry}
