@@ -33,6 +33,7 @@ import { usePermission } from '@backstage/plugin-permission-react';
 import { metadataEntryUpdatePermission } from '@internal/backstage-plugin-geoportia-metadata-common';
 import { useReviewSuggestions } from '../../hooks/useReviewSuggestions';
 import { MainDatasetPreviewDialog } from './MainDatasetPreviewDialog';
+import { EditDatasetDialog } from './EditDatasetDialog';
 import { setMetadataEntryDeleted } from './metadataApi';
 
 // Map security class to color
@@ -104,6 +105,7 @@ export const MainGeoDatasetPage = () => {
   );
   const [previewEntry, setPreviewEntry] = useState<DatasetEntry | null>(null);
   const [deleteEntry, setDeleteEntry] = useState<DatasetEntry | null>(null);
+  const [editEntry, setEditEntry] = useState<DatasetEntry | null>(null);
   const [mutating, setMutating] = useState(false);
 
   const fetchDatasets = useCallback(async () => {
@@ -284,6 +286,36 @@ export const MainGeoDatasetPage = () => {
     [setEntryDeleted],
   );
 
+  // Apply edited metadata to the local row so the table updates instantly.
+  // We derive display fields from the new metadata using the same
+  // conventions as entityToDatasetEntry (layerInfo.title/summary/…).
+  const handleSaved: React.ComponentProps<typeof EditDatasetDialog>['onSaved'] =
+    useCallback((entry, metadata) => {
+      const layerInfo =
+        ((metadata.layerInfo as Record<string, unknown>) ?? metadata) ?? {};
+      const pick = (key: string): string | undefined => {
+        const v = layerInfo[key];
+        return typeof v === 'string' ? v : undefined;
+      };
+      const openData = layerInfo.openData;
+      setDatasetEntries(prev =>
+        prev.map(e =>
+          e.entityRef === entry.entityRef
+            ? {
+                ...e,
+                titel: pick('title') ?? pick('layerName') ?? e.titel,
+                sammanfattning:
+                  pick('summary') ?? pick('description') ?? e.sammanfattning,
+                skyddsklass: mapSecurityClass(pick('securityClass')),
+                signaturstatus: mapStatus(pick('status')),
+                oppenData:
+                  typeof openData === 'boolean' ? openData : e.oppenData,
+              }
+            : e,
+        ),
+      );
+    }, []);
+
   const displayedEntries = useMemo(
     () =>
       datasetEntries.filter(e => (showDeleted ? e.isDeleted : !e.isDeleted)),
@@ -374,6 +406,7 @@ export const MainGeoDatasetPage = () => {
                   rowDensity={rowDensity}
                   onSelectionChange={setSelectedRows}
                   onRowClick={setPreviewEntry}
+                  onEdit={setEditEntry}
                   onDelete={setDeleteEntry}
                   onRestore={handleRestore}
                 />
@@ -401,6 +434,12 @@ export const MainGeoDatasetPage = () => {
           open={previewEntry !== null}
           entry={previewEntry}
           onClose={() => setPreviewEntry(null)}
+        />
+
+        <EditDatasetDialog
+          entry={editEntry}
+          onClose={() => setEditEntry(null)}
+          onSaved={handleSaved}
         />
 
         <Dialog
