@@ -13,7 +13,8 @@ import { DatasetToolbar, RowDensity } from './DatasetToolbar';
 import { DatasetPaginationInfo } from './DatasetPaginationInfo';
 import { DatasetTable } from './DatasetTable';
 import { ReviewDialog } from './ReviewDialog';
-import { useIsGeoportiaAdmin } from '../../hooks/useIsGeoportiaAdmin';
+import { usePermission } from '@backstage/plugin-permission-react';
+import { metadataEntryUpdatePermission } from '@internal/backstage-plugin-geoportia-metadata-common';
 import { useReviewSuggestions } from '../../hooks/useReviewSuggestions';
 
 // Map security class to color
@@ -64,7 +65,10 @@ export const MainGeoDatasetPage = () => {
   const [datasetEntries, setDatasetEntries] = useState<DatasetEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
-  const { isAdmin } = useIsGeoportiaAdmin();
+  const { allowed: canReview } = usePermission({
+    permission: metadataEntryUpdatePermission,
+    resourceRef: undefined,
+  });
   const {
     value: reviewItems = [],
     loading: reviewItemsLoading,
@@ -143,7 +147,7 @@ export const MainGeoDatasetPage = () => {
     <PageWithHeader title={orgName} themeId="home">
       <Content>
         <Box>
-          {isAdmin && toReviewItems.length > 0 && (
+          {canReview && toReviewItems.length > 0 && (
             <div className={classes.reviewChange}>
               <div className={classes.reviewChangeInfo}>
                 <InfoIcon />
@@ -226,7 +230,7 @@ export const MainGeoDatasetPage = () => {
         </Box>
 
         <ReviewDialog
-          open={reviewModalOpen && isAdmin}
+          open={reviewModalOpen && canReview}
           onClose={() => setReviewModalOpen(false)}
           reviewItems={reviewItems}
           reviewItemsLoading={reviewItemsLoading}

@@ -27,6 +27,7 @@
     "@backstage/core-components": "^0.17.2",
     "@backstage/core-plugin-api": "^1.10.7",
     "@backstage/plugin-catalog-react": "^1.15.3",
+    "@backstage/plugin-permission-react": "^0.4.34",
     "@backstage/theme": "^0.6.6",
     "@internal/backstage-plugin-geoportia-metadata-common": "link:../geoportia-metadata-common",
     "@internal/backstage-plugin-geoportia-metadata": "workspace:^",
