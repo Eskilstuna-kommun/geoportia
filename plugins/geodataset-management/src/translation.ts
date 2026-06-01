@@ -151,6 +151,17 @@ export const geodatasetManagementTranslationRef = createTranslationRef({
       restored: 'Dataset restored',
       error: 'Failed to delete dataset',
     },
+    edit: {
+      title: 'Edit "{{name}}"',
+      titleField: 'Title',
+      summary: 'Summary',
+      securityClass: 'Protection class',
+      status: 'Status',
+      openData: 'Open data',
+      save: 'Save',
+      cancel: 'Cancel',
+      error: 'Failed to save changes',
+    },
     pageTitle: {
       dataOwner: 'Data Owner',
     },

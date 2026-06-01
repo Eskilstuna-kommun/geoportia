@@ -1,7 +1,7 @@
 import { Entity } from '@backstage/catalog-model';
 import { DatasetEntry } from '../../data';
 
-const mapSecurityClass = (
+export const mapSecurityClass = (
   securityClass?: string,
 ): DatasetEntry['skyddsklass'] => {
   switch (securityClass) {
@@ -16,7 +16,9 @@ const mapSecurityClass = (
   }
 };
 
-const mapStatus = (status?: string): DatasetEntry['signaturstatus'] => {
+export const mapStatus = (
+  status?: string,
+): DatasetEntry['signaturstatus'] => {
   switch (status) {
     case 'Godkänd':
       return 'success';
