@@ -24,7 +24,6 @@ spec:
             catalogFilter:
               kind: MetadataEntry
             defaultKind: MetadataEntry
-            status:
         name:
           type: string
           title: Namn på kartlagret
