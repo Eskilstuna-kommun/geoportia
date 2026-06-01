@@ -19,8 +19,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useApi } from '@backstage/core-plugin-api';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { metadataApiRef } from '@internal/backstage-plugin-geoportia-metadata';
+import { metadataEntryUpdatePermission } from '@internal/backstage-plugin-geoportia-metadata-common';
+import { usePermission } from '@backstage/plugin-permission-react';
 import { geodatasetManagementTranslationRef } from '../../../translation';
-import { useIsGeoportiaAdmin } from '../../../hooks/useIsGeoportiaAdmin';
 import { ReviewItem } from '../../../data';
 import { ReviewIntro } from './ReviewIntro';
 import { ReviewListTable } from './ReviewListTable';
@@ -56,7 +57,13 @@ export const ReviewDialog = ({
 }: Props) => {
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
   const metadataApi = useApi(metadataApiRef);
-  const { isAdmin, loading: adminLoading } = useIsGeoportiaAdmin();
+  // Whether the current user is allowed to review/accept change suggestions.
+  // Resolved via the Backstage permission framework so the gate stays in
+  // sync with the backend policy.
+  const { allowed: canReview, loading: permissionLoading } = usePermission({
+    permission: metadataEntryUpdatePermission,
+    resourceRef: undefined,
+  });
 
   const [dialogTab, setDialogTab] = useState(0);
   const [expanded, setExpanded] = useState(true);
@@ -89,7 +96,7 @@ export const ReviewDialog = ({
     [signSelectedRows, toSignItems, t],
   );
 
-  const canShowContent = isAdmin && !reviewItemsLoading;
+  const canShowContent = canReview && !reviewItemsLoading;
   const toggleInList = (list: string[], id: string) =>
     list.includes(id) ? list.filter(r => r !== id) : [...list, id];
 
@@ -229,23 +236,23 @@ export const ReviewDialog = ({
         </Box>
 
         <DialogContent>
-          {!adminLoading && !isAdmin && (
+          {!permissionLoading && !canReview && (
             <Alert severity="warning">
               {t('reviewDialog.adminOnly')}
             </Alert>
           )}
 
-          {isAdmin && reviewItemsError && (
+          {canReview && reviewItemsError && (
             <Alert severity="error">{reviewItemsError.message}</Alert>
           )}
 
-          {isAdmin && acceptError && (
+          {canReview && acceptError && (
             <Alert severity="error" onClose={() => setAcceptError(null)}>
               {acceptError}
             </Alert>
           )}
 
-          {isAdmin && (reviewItemsLoading || adminLoading) && (
+          {canReview && (reviewItemsLoading || permissionLoading) && (
             <Box display="flex" justifyContent="center" p={4}>
               <CircularProgress />
             </Box>
@@ -297,7 +304,7 @@ export const ReviewDialog = ({
             {t('review.cancel')}
           </Link>
 
-          {isAdmin && dialogTab === 0 && !detailItem && (
+          {canReview && dialogTab === 0 && !detailItem && (
             <Button
               onClick={() => {
                 const id = dialogSelectedRows[0] || toReviewItems[0]?.id;
@@ -311,7 +318,7 @@ export const ReviewDialog = ({
             </Button>
           )}
 
-          {isAdmin && dialogTab === 0 && detailItem && (
+          {canReview && dialogTab === 0 && detailItem && (
             <>
               <Button
                 variant="outlined"
@@ -329,7 +336,7 @@ export const ReviewDialog = ({
             </>
           )}
 
-          {isAdmin && dialogTab === 1 && (
+          {canReview && dialogTab === 1 && (
             <Button
               onClick={() => {
                 if (signSelectedRows.length > 0) setSignConfirmOpen(true);
