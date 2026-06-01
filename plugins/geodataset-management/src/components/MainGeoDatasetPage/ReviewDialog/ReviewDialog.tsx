@@ -57,12 +57,9 @@ export const ReviewDialog = ({
 }: Props) => {
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
   const metadataApi = useApi(metadataApiRef);
-  // Whether the current user is allowed to review/accept change suggestions.
-  // Resolved via the Backstage permission framework so the gate stays in
-  // sync with the backend policy.
   const { allowed: canReview, loading: permissionLoading } = usePermission({
     permission: metadataEntryUpdatePermission,
-    resourceRef: undefined,
+    resourceRef: "GG-U-Roll-GeoPortia-Admin",
   });
 
   const [dialogTab, setDialogTab] = useState(0);

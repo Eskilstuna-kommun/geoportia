@@ -126,7 +126,7 @@ export const MainGeoDatasetPage = () => {
 
   const { allowed: canManage } = usePermission({
     permission: metadataEntryDeletePermission,
-    resourceRef: undefined,
+    resourceRef: "GG-U-Roll-GeoPortia-SuperAdmin",
   });
 
   const fetchDatasets = useCallback(async () => {
@@ -260,7 +260,6 @@ export const MainGeoDatasetPage = () => {
     fetchDatasets();
   }, [fetchDatasets]);
 
-  // Optimistically flip the `isDeleted` flag for one row.
   const flipDeletedLocally = useCallback(
     (entityRef: string, deleted: boolean) =>
       setDatasetEntries(prev =>
@@ -274,9 +273,6 @@ export const MainGeoDatasetPage = () => {
   const setEntryDeleted = useCallback(
     async (entry: DatasetEntry, deleted: boolean) => {
       if (!entry.entityRef) return;
-      // Optimistic update — the row moves immediately. The catalog
-      // EntityProvider polls every ~5s; we do NOT refetch here because
-      // the stale catalog read would overwrite this state.
       flipDeletedLocally(entry.entityRef, deleted);
       try {
         setMutating(true);
@@ -287,7 +283,7 @@ export const MainGeoDatasetPage = () => {
         );
       } catch (err) {
         console.error('Soft-delete error:', err);
-        flipDeletedLocally(entry.entityRef, !deleted); // rollback
+        flipDeletedLocally(entry.entityRef, !deleted);
       } finally {
         setMutating(false);
       }
@@ -307,9 +303,6 @@ export const MainGeoDatasetPage = () => {
     [setEntryDeleted],
   );
 
-  // Apply edited metadata to the local row so the table updates instantly.
-  // We derive display fields from the new metadata using the same
-  // conventions as entityToDatasetEntry (layerInfo.title/summary/…).
   const handleSaved: React.ComponentProps<typeof EditDatasetDialog>['onSaved'] =
     useCallback((entry, metadata) => {
       const layerInfo =

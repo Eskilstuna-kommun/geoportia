@@ -67,7 +67,7 @@ export const MetadataEntryViewer: React.FC<MetadataEntryViewerProps> = ({
   // Check if user has permission to update metadata
   const { allowed: canUpdate, loading: permissionLoading } = usePermission({
     permission: metadataEntryUpdatePermission,
-    resourceRef: entityRef,
+    resourceRef: "GG-U-Roll-GeoPortia-Admin",
   });
 
   // User can edit if both the prop allows it AND they have permission
