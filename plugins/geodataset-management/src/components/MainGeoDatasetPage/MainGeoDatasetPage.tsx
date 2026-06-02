@@ -140,12 +140,6 @@ export const MainGeoDatasetPage = () => {
           (entity.spec?.metadata as Record<string, unknown>) ?? {};
         const layerInfo =
           (specMetadata.layerInfo as Record<string, unknown>) ?? specMetadata;
-        const databaseInfo =
-          (specMetadata.databaseInfo as Record<string, unknown>) ?? {};
-        const nestedMetadata =
-          (specMetadata.metadata as Record<string, unknown>) ?? {};
-        const attributesRaw =
-          (specMetadata.attributes as Array<Record<string, unknown>>) ?? [];
 
         const securityClass = layerInfo.securityClass as string | undefined;
         const status = layerInfo.status as string | undefined;
@@ -171,15 +165,6 @@ export const MainGeoDatasetPage = () => {
           ? [rawContact]
           : undefined;
 
-        const source = nestedMetadata.source as string | undefined;
-        const quality = nestedMetadata.quality as string | undefined;
-        const collection = nestedMetadata.dataCollectionMethod as
-          | string
-          | undefined;
-        const processing = nestedMetadata.processingMethod as
-          | string
-          | undefined;
-
         const describedEntityRef =
           (entity.metadata.annotations?.[
             'geoportia.se/described-entity-ref'
@@ -204,46 +189,10 @@ export const MainGeoDatasetPage = () => {
           sammanfattning,
           oppenData,
           uuid: entity.metadata.uid ?? entity.metadata.name ?? String(index),
-          status,
-          layerName: layerInfo.layerName as string | undefined,
-          suggestedTitle: layerInfo.suggestedTitle as string | undefined,
           protectionClassLabel: securityClass,
           contactPerson,
-          owner: layerInfo.suggestedOwnerEnhet as string | undefined,
-          database: databaseInfo.database as string | undefined,
-          dataType: databaseInfo.dataType as string | undefined,
-          dataset: databaseInfo.dataset as string | undefined,
-          allowAttachments:
-            typeof databaseInfo.allowAttachments === 'boolean'
-              ? (databaseInfo.allowAttachments as boolean)
-              : undefined,
-          adminRoutine: nestedMetadata.administrationRoutine as
-            | string
-            | undefined,
-          maintenanceFrequency: nestedMetadata.maintenanceFrequency as
-            | string
-            | undefined,
-          subjectArea: nestedMetadata.subjectArea as string | undefined,
-          originHistory: nestedMetadata.originHistory as string | undefined,
-          source,
-          quality,
-          dataCollectionMethod: collection,
-          processingMethod: processing,
-          boundingBoxType: nestedMetadata.boundingBoxType as string | undefined,
-          datasetStatus: nestedMetadata.datasetStatus as string | undefined,
-          attributes: attributesRaw.map(a => ({
-            name: a.name as string | undefined,
-            alias: a.alias as string | undefined,
-            description: a.description as string | undefined,
-            dataFormat: a.dataFormat as string | undefined,
-            length: a.length as string | undefined,
-            securityClass: a.securityClass as string | undefined,
-            domain: a.domain as string | undefined,
-            allowEmptyValues:
-              typeof a.allowEmptyValues === 'boolean'
-                ? (a.allowEmptyValues as boolean)
-                : undefined,
-          })),
+          schema: entity.spec?.schema as Record<string, unknown> | undefined,
+          metadataValues: specMetadata,
         };
       });
 

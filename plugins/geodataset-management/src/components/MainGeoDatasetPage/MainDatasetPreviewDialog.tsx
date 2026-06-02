@@ -28,6 +28,14 @@ export type MainDatasetPreviewDialogProps = {
   onClose: () => void;
 };
 
+type JsonSchemaNode = {
+  type?: string | string[];
+  title?: string;
+  properties?: Record<string, JsonSchemaNode>;
+  items?: JsonSchemaNode;
+  enum?: unknown[];
+};
+
 const shieldColor = (level: DatasetEntry['skyddsklass']): string => {
   switch (level) {
     case 'red':
@@ -39,6 +47,19 @@ const shieldColor = (level: DatasetEntry['skyddsklass']): string => {
   }
 };
 
+const getType = (schema: JsonSchemaNode): string => {
+  if (Array.isArray(schema.type)) {
+    return schema.type.find(t => t !== 'null') ?? 'string';
+  }
+  return schema.type ?? 'string';
+};
+
+const isEmpty = (value: unknown): boolean =>
+  value === undefined ||
+  value === null ||
+  (typeof value === 'string' && value.trim() === '') ||
+  (Array.isArray(value) && value.length === 0);
+
 const Field = ({
   label,
   value,
@@ -46,13 +67,7 @@ const Field = ({
   label: string;
   value?: React.ReactNode;
 }) => {
-  if (
-    value === undefined ||
-    value === null ||
-    (typeof value === 'string' && value.trim() === '')
-  ) {
-    return null;
-  }
+  if (isEmpty(value)) return null;
   return (
     <TableRow>
       <TableCell
@@ -65,6 +80,150 @@ const Field = ({
   );
 };
 
+const renderPrimitive = (
+  value: unknown,
+  yes: string,
+  no: string,
+): React.ReactNode => {
+  if (typeof value === 'boolean') return value ? yes : no;
+  if (Array.isArray(value)) return value.join(', ');
+  if (value === undefined || value === null) return undefined;
+  return String(value);
+};
+
+const ArraySection: React.FC<{
+  title: string;
+  schema: JsonSchemaNode;
+  values: unknown[];
+  yes: string;
+  no: string;
+}> = ({ title, schema, values, yes, no }) => {
+  const itemSchema = schema.items;
+  if (!itemSchema || !itemSchema.properties) return null;
+  const columns = Object.entries(itemSchema.properties);
+
+  return (
+    <Box mt={3}>
+      <Typography
+        variant="subtitle1"
+        style={{ fontWeight: 'bold', marginBottom: 8 }}
+      >
+        {title}
+      </Typography>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            {columns.map(([key, sub]) => (
+              <TableCell key={key}>{sub.title ?? key}</TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {values.map((row, i) => {
+            const rowObj = (row ?? {}) as Record<string, unknown>;
+            return (
+              <TableRow key={i}>
+                {columns.map(([key]) => (
+                  <TableCell key={key}>
+                    {renderPrimitive(rowObj[key], yes, no)}
+                  </TableCell>
+                ))}
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </Box>
+  );
+};
+
+const ObjectSection: React.FC<{
+  title?: string;
+  schema: JsonSchemaNode;
+  values: Record<string, unknown>;
+  yes: string;
+  no: string;
+  skipKeys?: Set<string>;
+}> = ({ title, schema, values, yes, no, skipKeys }) => {
+  if (!schema.properties) return null;
+  const rows = Object.entries(schema.properties).filter(
+    ([key]) => !skipKeys?.has(key),
+  );
+  if (rows.length === 0) return null;
+
+  return (
+    <Box mt={title ? 2 : 0}>
+      {title && (
+        <Typography
+          variant="subtitle1"
+          style={{ fontWeight: 'bold', marginBottom: 8 }}
+        >
+          {title}
+        </Typography>
+      )}
+      <Table size="small">
+        <TableBody>
+          {rows.map(([key, sub]) => (
+            <Field
+              key={key}
+              label={sub.title ?? key}
+              value={renderPrimitive(values[key], yes, no)}
+            />
+          ))}
+        </TableBody>
+      </Table>
+    </Box>
+  );
+};
+
+
+const SchemaSections: React.FC<{
+  schema: JsonSchemaNode;
+  values: Record<string, unknown>;
+  yes: string;
+  no: string;
+  headerKeys: Set<string>;
+}> = ({ schema, values, yes, no, headerKeys }) => {
+  if (!schema.properties) return null;
+  return (
+    <>
+      {Object.entries(schema.properties).map(([key, sub]) => {
+        const subValue = values[key];
+        const subType = getType(sub);
+
+        if (subType === 'object') {
+          return (
+            <ObjectSection
+              key={key}
+              title={sub.title ?? key}
+              schema={sub}
+              values={(subValue as Record<string, unknown>) ?? {}}
+              yes={yes}
+              no={no}
+              skipKeys={headerKeys}
+            />
+          );
+        }
+
+        if (subType === 'array' && Array.isArray(subValue)) {
+          return (
+            <ArraySection
+              key={key}
+              title={sub.title ?? key}
+              schema={sub}
+              values={subValue}
+              yes={yes}
+              no={no}
+            />
+          );
+        }
+
+        return null;
+      })}
+    </>
+  );
+};
+
 export const MainDatasetPreviewDialog = ({
   open,
   entry,
@@ -73,6 +232,19 @@ export const MainDatasetPreviewDialog = ({
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
 
   if (!entry) return null;
+
+  const yes = t('preview.yes');
+  const no = t('preview.no');
+
+  const headerKeys = new Set([
+    'title',
+    'securityClass',
+    'openData',
+    'contactPerson',
+  ]);
+
+  const schema = entry.schema as JsonSchemaNode | undefined;
+  const values = entry.metadataValues ?? {};
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -141,94 +313,14 @@ export const MainDatasetPreviewDialog = ({
           )}
         </Box>
 
-        <Table size="small">
-          <TableBody>
-            <Field label={t('preview.status')} value={entry.status} />
-            <Field label={t('preview.layerName')} value={entry.layerName} />
-            <Field
-              label={t('preview.suggestedTitle')}
-              value={entry.suggestedTitle}
-            />
-            <Field label={t('preview.summary')} value={entry.sammanfattning} />
-            <Field label={t('preview.dataType')} value={entry.dataType} />
-            <Field label={t('preview.database')} value={entry.database} />
-            <Field label={t('preview.dataset')} value={entry.dataset} />
-            <Field
-              label={t('preview.allowAttachments')}
-              value={
-                entry.allowAttachments === undefined
-                  ? undefined
-                  : entry.allowAttachments
-                  ? t('preview.yes')
-                  : t('preview.no')
-              }
-            />
-            <Field label={t('preview.owner')} value={entry.owner} />
-            <Field
-              label={t('preview.adminRoutine')}
-              value={entry.adminRoutine}
-            />
-            <Field
-              label={t('preview.maintenanceFrequency')}
-              value={entry.maintenanceFrequency}
-            />
-            <Field label={t('preview.subjectArea')} value={entry.subjectArea} />
-            <Field
-              label={t('preview.originHistory')}
-              value={entry.originHistory}
-            />
-            <Field label={t('preview.source')} value={entry.source} />
-            <Field label={t('preview.quality')} value={entry.quality} />
-            <Field
-              label={t('preview.dataCollectionMethod')}
-              value={entry.dataCollectionMethod}
-            />
-            <Field
-              label={t('preview.processingMethod')}
-              value={entry.processingMethod}
-            />
-            <Field
-              label={t('preview.boundingBoxType')}
-              value={entry.boundingBoxType}
-            />
-            <Field
-              label={t('preview.datasetStatus')}
-              value={entry.datasetStatus}
-            />
-          </TableBody>
-        </Table>
-
-        {entry.attributes && entry.attributes.length > 0 && (
-          <Box mt={3}>
-            <Typography
-              variant="subtitle1"
-              style={{ fontWeight: 'bold', marginBottom: 8 }}
-            >
-              {t('preview.attributes')}
-            </Typography>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>{t('preview.attrName')}</TableCell>
-                  <TableCell>{t('preview.attrAlias')}</TableCell>
-                  <TableCell>{t('preview.attrDataFormat')}</TableCell>
-                  <TableCell>{t('preview.attrLength')}</TableCell>
-                  <TableCell>{t('preview.attrSecurityClass')}</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {entry.attributes.map((a, i) => (
-                  <TableRow key={`${a.name ?? 'attr'}-${i}`}>
-                    <TableCell>{a.name}</TableCell>
-                    <TableCell>{a.alias}</TableCell>
-                    <TableCell>{a.dataFormat}</TableCell>
-                    <TableCell>{a.length}</TableCell>
-                    <TableCell>{a.securityClass}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Box>
+        {schema && (
+          <SchemaSections
+            schema={schema}
+            values={values}
+            yes={yes}
+            no={no}
+            headerKeys={headerKeys}
+          />
         )}
       </DialogContent>
     </Dialog>
