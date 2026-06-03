@@ -20,6 +20,7 @@ import {
   createArcgisSdeDataset,
 } from './arcgisSde/arcgisSdeConfig';
 import { NotFoundError, InputError } from '@backstage/errors';
+import { arcGISSDEProviderRegistry } from '@internal/backstage-plugin-catalog-backend-module-arcgis-sde-data';
 
 export async function createRouter({
   httpAuth,
@@ -316,6 +317,12 @@ export async function createRouter({
           zExtent: body.zExtent,
         });
 
+        // Trigger Entity Provider refresh so the new dataset appears in the catalog
+        const databaseName = decodeURIComponent(req.params.database);
+        arcGISSDEProviderRegistry.refreshProvider(databaseName).catch(() => {
+          // best-effort refresh, don't fail the request if this fails
+        });
+
         res.status(201).json(result);
       } catch (error) {
         if (error instanceof NotFoundError) {
@@ -326,6 +333,33 @@ export async function createRouter({
           res.status(400).json({ error: error.message });
           return;
         }
+        next(error);
+      }
+    },
+  );
+
+  // POST /arcgis-sde/databases/:database/refresh
+  // Manually triggers the Entity Provider to re-sync datasets from SDE.
+  parentRouter.post(
+    '/arcgis-sde/databases/:database/refresh',
+    async (req, res, next) => {
+      try {
+        await httpAuth.credentials(req, { allow: ['user'] });
+
+        const databaseName = decodeURIComponent(req.params.database);
+        const refreshed = await arcGISSDEProviderRegistry.refreshProvider(
+          databaseName,
+        );
+
+        if (!refreshed) {
+          res.status(404).json({
+            error: `No Entity Provider registered for database "${databaseName}".`,
+          });
+          return;
+        }
+
+        res.json({ success: true, database: databaseName });
+      } catch (error) {
         next(error);
       }
     },

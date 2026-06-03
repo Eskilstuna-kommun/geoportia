@@ -154,3 +154,4 @@ export const isArcGISSDEFeatureClassFieldEntity = (
     data.apiVersion === 'geoportia.se/v1alpha1' &&
     data.kind === 'Schema' &&
     data.spec?.dialect === 'arcgis';
+

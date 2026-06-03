@@ -16,3 +16,12 @@ export const GeoDatasetManagementPage = geodatasetManagementPlugin.provide(
     mountPoint: rootRouteRef,
   }),
 );
+
+export const GeoDatasetListPage = geodatasetManagementPlugin.provide(
+  createRoutableExtension({
+    name: 'GeoDatasetListPage',
+    component: () =>
+      import('./components/DatasetListPage').then(m => m.DatasetListPage),
+    mountPoint: rootRouteRef,
+  }),
+);

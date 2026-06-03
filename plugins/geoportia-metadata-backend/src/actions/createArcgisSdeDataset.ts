@@ -3,6 +3,7 @@ import {
   ArcgisSdeDatabaseConfig,
   createArcgisSdeDataset,
 } from '../arcgisSde/arcgisSdeConfig';
+import { arcGISSDEProviderRegistry } from '@internal/backstage-plugin-catalog-backend-module-arcgis-sde-data';
 
 export type { ArcgisSdeDatabaseConfig } from '../arcgisSde/arcgisSdeConfig';
 
@@ -126,6 +127,11 @@ export function createCreateArcgisSdeDatasetAction(
       ctx.logger.info(
         `Created ArcGIS SDE dataset "${result.datasetName}" in database "${result.database}".`,
       );
+
+      // Trigger Entity Provider refresh so the new dataset appears in the catalog
+      arcGISSDEProviderRegistry.refreshProvider(result.database).catch(() => {
+        // best-effort refresh, don't fail the action if this fails
+      });
 
       ctx.output('database', result.database);
       ctx.output('datasetName', result.datasetName);

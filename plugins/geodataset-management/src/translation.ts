@@ -171,5 +171,35 @@ export const geodatasetManagementTranslationRef = createTranslationRef({
       manageActiveProposals: 'Manage Active Proposals Content',
       managementAgreement: 'Management Agreement Content',
     },
+    datasetList: {
+      pageTitle: 'Dataset',
+      create: 'Lägg till dataset',
+      columns: {
+        namn: 'Namn',
+        beskrivning: 'Beskrivning',
+        databas: 'Databas',
+        skapad: 'Skapad',
+        andrad: 'Ändrad',
+      },
+      toolbar: {
+        search: 'Sök',
+        showDeleted: 'Visa borttagna',
+        show: 'Visa',
+        rows: 'rader',
+      },
+      actions: {
+        delete: 'Ta bort',
+        restore: 'Återställ',
+      },
+      dialog: {
+        title: 'Skapa nytt dataset',
+        namn: 'Namn',
+        beskrivning: 'Beskrivning',
+        databas: 'Databas',
+        save: 'Spara',
+        cancel: 'Avbryt',
+        errorRequired: 'Namn krävs',
+      },
+    },
   },
 });

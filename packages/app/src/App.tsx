@@ -46,7 +46,10 @@ import WbSunny from '@material-ui/icons/WbSunny';
 import { CustomIndexPage } from './components/custompage/CustomIndexPage';
 import { DatabaseIndexPage } from './components/custompage/DatabaseIndexPage';
 import { allSwedishTranslations } from './translations';
-import { GeoDatasetManagementPage } from '@internal/backstage-plugin-geodataset-management';
+import {
+  GeoDatasetManagementPage,
+  GeoDatasetListPage,
+} from '@internal/backstage-plugin-geodataset-management';
 
 const app = createApp({
   apis,
@@ -141,10 +144,7 @@ const routes = (
       path="/value"
       element={<CatalogIndexPage key="value" initialKind="value" />}
     />
-    <Route
-      path="/dataset"
-      element={<CatalogIndexPage key="dataset" initialKind="dataset" />}
-    />
+    <Route path="/dataset" element={<GeoDatasetListPage />} />
     <Route
       path="/database"
       element={<DatabaseIndexPage key="database" />}

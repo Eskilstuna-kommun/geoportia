@@ -6,3 +6,4 @@
  */
 
 export { catalogModuleArcGISData as default } from './module';
+export { arcGISSDEProviderRegistry } from './providerRegistry';
