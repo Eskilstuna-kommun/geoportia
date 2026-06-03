@@ -19,3 +19,6 @@ export { geoportiaMetadataTranslationRef } from './translation';
 
 export { metadataApiRef, MetadataClient } from './client';
 export type { MetadataApi } from './client';
+
+export { CreateDatasetDialog } from './components/CreateDatasetDialog';
+export type { CreateDatasetDialogProps } from './components/CreateDatasetDialog';

@@ -182,7 +182,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
               spec: {
                 dialect: 'arcgis',
                 dependencyOf: [],
-              } as any,
+              },
             };
 
             entities.push(ArcGISField);
@@ -210,7 +210,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
               dependencyOf: fields.map(field => {
                 return this.featureClassFieldToDependency(field);
               }),
-            } as any,
+            },
           };
 
           entities.push(ArcGISFeatureClassEntity);
@@ -247,7 +247,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
                   featureClassNamespace,
                 );
               }),
-            } as any,
+            },
           };
           entities.push(ArcGISDataSetEntity);
         }
@@ -281,7 +281,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
             spec: {
               dialect: 'arcgis',
               dependencyOf: [],
-            } as any,
+            },
           };
 
           entities.push(ArcGISDomainValueEntity);
@@ -304,7 +304,7 @@ export class ArcGISSDEDataProvider implements EntityProvider {
             dependencyOf: domainValues.map(domainValue => {
               return this.domainValueToDependency(domainValue, domain.name);
             }),
-          } as any,
+          },
         };
         entities.push(ArcGISDomainEntity);
       }
