@@ -1,20 +1,24 @@
 import { createTemplateAction } from '@backstage/plugin-scaffolder-node';
+import { CatalogApi } from '@backstage/catalog-client';
+import { AuthService } from '@backstage/backend-plugin-api';
+import { stringifyEntityRef } from '@backstage/catalog-model';
 import {
   ArcgisSdeDatabaseConfig,
   createArcgisSdeDataset,
 } from '../arcgisSde/arcgisSdeConfig';
-import { arcGISSDEProviderRegistry } from '@internal/backstage-plugin-catalog-backend-module-arcgis-sde-data';
 
 export type { ArcgisSdeDatabaseConfig } from '../arcgisSde/arcgisSdeConfig';
 
 export interface CreateArcgisSdeDatasetActionOptions {
   databases: Record<string, ArcgisSdeDatabaseConfig>;
+  catalogApi: CatalogApi;
+  auth: AuthService;
 }
 
 export function createCreateArcgisSdeDatasetAction(
   options: CreateArcgisSdeDatasetActionOptions,
 ) {
-  const { databases } = options;
+  const { databases, catalogApi, auth } = options;
 
   return createTemplateAction({
     id: 'geoportia:arcgis-sde:create-dataset',
@@ -128,10 +132,22 @@ export function createCreateArcgisSdeDatasetAction(
         `Created ArcGIS SDE dataset "${result.datasetName}" in database "${result.database}".`,
       );
 
-      // Trigger Entity Provider refresh so the new dataset appears in the catalog
-      arcGISSDEProviderRegistry.refreshProvider(result.database).catch(() => {
+      // Refresh the database Resource entity in the catalog so any related
+      // processing picks up the change.
+      try {
+        const databaseEntityRef = stringifyEntityRef({
+          kind: 'Resource',
+          namespace: 'default',
+          name: result.database,
+        });
+        const { token } = await auth.getPluginRequestToken({
+          onBehalfOf: await auth.getOwnServiceCredentials(),
+          targetPluginId: 'catalog',
+        });
+        await catalogApi.refreshEntity(databaseEntityRef, { token });
+      } catch (_e) {
         // best-effort refresh, don't fail the action if this fails
-      });
+      }
 
       ctx.output('database', result.database);
       ctx.output('datasetName', result.datasetName);

@@ -19,11 +19,11 @@ import { RowDensity } from '../MainGeoDatasetPage/DatasetToolbar';
 
 export type DatasetRow = {
   id: string;
-  namn: string;
-  beskrivning: string;
-  databas: string;
-  skapad: string;
-  andrad: string;
+  name: string;
+  description: string;
+  database: string;
+  createdAt: string;
+  updatedAt: string;
   isDeleted?: boolean;
 };
 
@@ -76,30 +76,30 @@ export const DatasetListTable = ({
 
   const allColumns: TableColumn<DatasetRow>[] = [
     {
-      title: t('datasetList.columns.namn'),
-      field: 'namn',
+      title: t('datasetList.columns.name'),
+      field: 'name',
       highlight: true,
     },
     {
-      title: t('datasetList.columns.beskrivning'),
-      field: 'beskrivning',
+      title: t('datasetList.columns.description'),
+      field: 'description',
     },
     {
-      title: t('datasetList.columns.databas'),
-      field: 'databas',
+      title: t('datasetList.columns.database'),
+      field: 'database',
       width: '160px',
     },
     {
-      title: t('datasetList.columns.skapad'),
-      field: 'skapad',
+      title: t('datasetList.columns.createdAt'),
+      field: 'createdAt',
       width: '120px',
-      render: row => formatDate(row.skapad),
+      render: row => formatDate(row.createdAt),
     },
     {
-      title: t('datasetList.columns.andrad'),
-      field: 'andrad',
+      title: t('datasetList.columns.updatedAt'),
+      field: 'updatedAt',
       width: '120px',
-      render: row => formatDate(row.andrad),
+      render: row => formatDate(row.updatedAt),
     },
     {
       title: '',
