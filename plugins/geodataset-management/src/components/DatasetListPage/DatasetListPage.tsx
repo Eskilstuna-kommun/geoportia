@@ -44,11 +44,11 @@ export const DatasetListPage = () => {
 
   const columnOptions = useMemo(
     () => [
-      { field: 'namn', label: t('datasetList.columns.namn') },
-      { field: 'beskrivning', label: t('datasetList.columns.beskrivning') },
-      { field: 'databas', label: t('datasetList.columns.databas') },
-      { field: 'skapad', label: t('datasetList.columns.skapad') },
-      { field: 'andrad', label: t('datasetList.columns.andrad') },
+      { field: 'name', label: t('datasetList.columns.name') },
+      { field: 'description', label: t('datasetList.columns.description') },
+      { field: 'database', label: t('datasetList.columns.database') },
+      { field: 'createdAt', label: t('datasetList.columns.createdAt') },
+      { field: 'updatedAt', label: t('datasetList.columns.updatedAt') },
     ],
     [t],
   );
@@ -73,11 +73,12 @@ export const DatasetListPage = () => {
       const annotations = entity.metadata.annotations ?? {};
       return {
         id: `${entity.metadata.namespace ?? 'default'}/${entity.metadata.name}`,
-        namn: entity.metadata.title ?? entity.metadata.name,
-        beskrivning: entity.metadata.description ?? '',
-        databas: (entity.spec as { database?: string } | undefined)?.database ?? '',
-        skapad: annotations['geoportia.se/created-at'] ?? '',
-        andrad: annotations['geoportia.se/updated-at'] ?? '',
+        name: entity.metadata.title ?? entity.metadata.name,
+        description: entity.metadata.description ?? '',
+        database:
+          (entity.spec as { database?: string } | undefined)?.database ?? '',
+        createdAt: annotations['geoportia.se/created-at'] ?? '',
+        updatedAt: annotations['geoportia.se/updated-at'] ?? '',
         isDeleted: annotations['geoportia.se/deleted'] === 'true',
       };
     });
@@ -85,16 +86,16 @@ export const DatasetListPage = () => {
 
   const allRows: DatasetRow[] = useMemo(() => {
     const real = catalogRows ?? [];
-    const realNames = new Set(real.map(r => r.namn));
+    const realNames = new Set(real.map(r => r.name));
     const stubRows: DatasetRow[] = stubs
       .filter(s => !realNames.has(s.name))
       .map(s => ({
         id: `stub-${s.name}`,
-        namn: s.name,
-        beskrivning: '',
-        databas: s.database,
-        skapad: s.createdAt,
-        andrad: s.createdAt,
+        name: s.name,
+        description: '',
+        database: s.database,
+        createdAt: s.createdAt,
+        updatedAt: s.createdAt,
         isDeleted: false,
       }));
     return [...real, ...stubRows];
@@ -107,9 +108,9 @@ export const DatasetListPage = () => {
       .filter(r => {
         if (!q) return true;
         return (
-          r.namn.toLowerCase().includes(q) ||
-          r.beskrivning.toLowerCase().includes(q) ||
-          r.databas.toLowerCase().includes(q)
+          r.name.toLowerCase().includes(q) ||
+          r.description.toLowerCase().includes(q) ||
+          r.database.toLowerCase().includes(q)
         );
       });
   }, [allRows, searchText, showDeleted]);
@@ -125,7 +126,7 @@ export const DatasetListPage = () => {
   };
 
   const handleDelete = (row: DatasetRow) =>
-    setStubs(prev => prev.filter(s => s.name !== row.namn));
+    setStubs(prev => prev.filter(s => s.name !== row.name));
   const handleRestore = (_row: DatasetRow) => {
   };
 

@@ -1,6 +1,13 @@
 import express, { Router } from 'express';
-import { HttpAuthService, PermissionsService, UserInfoService } from '@backstage/backend-plugin-api';
+import {
+  AuthService,
+  HttpAuthService,
+  PermissionsService,
+  UserInfoService,
+} from '@backstage/backend-plugin-api';
 import { AuthorizeResult } from '@backstage/plugin-permission-common';
+import { CatalogApi } from '@backstage/catalog-client';
+import { stringifyEntityRef } from '@backstage/catalog-model';
 import { createOpenApiRouter } from './schema/openapi';
 import {
   MetadataEntryCreate,
@@ -20,7 +27,6 @@ import {
   createArcgisSdeDataset,
 } from './arcgisSde/arcgisSdeConfig';
 import { NotFoundError, InputError } from '@backstage/errors';
-import { arcGISSDEProviderRegistry } from '@internal/backstage-plugin-catalog-backend-module-arcgis-sde-data';
 
 export async function createRouter({
   httpAuth,
@@ -29,6 +35,8 @@ export async function createRouter({
   suggestionService,
   permissions,
   arcgisSdeDatabases,
+  catalogApi,
+  auth,
 }: {
   httpAuth: HttpAuthService;
   userInfo: UserInfoService;
@@ -36,6 +44,8 @@ export async function createRouter({
   suggestionService: SuggestionService;
   permissions: PermissionsService;
   arcgisSdeDatabases: ArcgisSdeDatabases;
+  catalogApi: CatalogApi;
+  auth: AuthService;
 }): Promise<express.Router> {
   const parentRouter = Router();
   parentRouter.use(express.json());
@@ -317,11 +327,23 @@ export async function createRouter({
           zExtent: body.zExtent,
         });
 
-        // Trigger Entity Provider refresh so the new dataset appears in the catalog
+        // Refresh the database Resource entity in the catalog so any related
+        // processing picks up the change.
         const databaseName = decodeURIComponent(req.params.database);
-        arcGISSDEProviderRegistry.refreshProvider(databaseName).catch(() => {
+        try {
+          const databaseEntityRef = stringifyEntityRef({
+            kind: 'Resource',
+            namespace: 'default',
+            name: databaseName,
+          });
+          const { token } = await auth.getPluginRequestToken({
+            onBehalfOf: await auth.getOwnServiceCredentials(),
+            targetPluginId: 'catalog',
+          });
+          await catalogApi.refreshEntity(databaseEntityRef, { token });
+        } catch (_e) {
           // best-effort refresh, don't fail the request if this fails
-        });
+        }
 
         res.status(201).json(result);
       } catch (error) {
@@ -333,33 +355,6 @@ export async function createRouter({
           res.status(400).json({ error: error.message });
           return;
         }
-        next(error);
-      }
-    },
-  );
-
-  // POST /arcgis-sde/databases/:database/refresh
-  // Manually triggers the Entity Provider to re-sync datasets from SDE.
-  parentRouter.post(
-    '/arcgis-sde/databases/:database/refresh',
-    async (req, res, next) => {
-      try {
-        await httpAuth.credentials(req, { allow: ['user'] });
-
-        const databaseName = decodeURIComponent(req.params.database);
-        const refreshed = await arcGISSDEProviderRegistry.refreshProvider(
-          databaseName,
-        );
-
-        if (!refreshed) {
-          res.status(404).json({
-            error: `No Entity Provider registered for database "${databaseName}".`,
-          });
-          return;
-        }
-
-        res.json({ success: true, database: databaseName });
-      } catch (error) {
         next(error);
       }
     },

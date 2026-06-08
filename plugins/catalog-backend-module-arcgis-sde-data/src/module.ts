@@ -6,7 +6,6 @@ import { catalogProcessingExtensionPoint } from '@backstage/plugin-catalog-node/
 import { ArcGISSDEDataProvider } from './ArcGISSDEDataProvider';
 import { ArcGISSDEClient } from './ArcGISSDEClient';
 import { ArcGISSDEEntitiesProcessor } from './ArcGISSDEEntitiesProcessor';
-import { arcGISSDEProviderRegistry } from './providerRegistry';
 
 export const catalogModuleArcGISData = createBackendModule({
   pluginId: 'catalog',
@@ -63,9 +62,6 @@ export const catalogModuleArcGISData = createBackendModule({
             databaseName,
           );
           catalog.addEntityProvider(provider);
-
-          // Register provider so it can be refreshed manually
-          arcGISSDEProviderRegistry.register(databaseName, provider);
         }
       },
     });
