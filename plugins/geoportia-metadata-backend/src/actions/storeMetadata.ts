@@ -40,6 +40,12 @@ export function createStoreMetadataAction(options: StoreMetadataActionOptions) {
             title: 'Metadata',
             description: 'The actual metadata values conforming to the schema',
           },
+          sourceType: {
+            type: 'string',
+            title: 'Data Source Type',
+            description:
+              'Optional hint about which data source type the metadata describes (e.g. "file" or "db"). Stored as part of the metadata for traceability; does not affect storage logic.',
+          },
         },
       },
       output: {
@@ -56,7 +62,14 @@ export function createStoreMetadataAction(options: StoreMetadataActionOptions) {
     async handler(ctx) {
       const entityRef = ctx.input.entityRef as string;
       const schema = ctx.input.schema as JsonObject;
-      const metadata = ctx.input.metadata as JsonObject;
+      const metadataInput = ctx.input.metadata as JsonObject;
+      const sourceType = ctx.input.sourceType as string | undefined;
+
+      // Embed sourceType inside the metadata object so it's stored alongside
+      // everything else without altering DB schema or kind.
+      const metadata: JsonObject = sourceType
+        ? { ...metadataInput, sourceType }
+        : metadataInput;
 
       ctx.logger.info(`Storing metadata for entityRef: ${entityRef}`);
 
