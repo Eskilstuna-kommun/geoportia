@@ -5,6 +5,8 @@ import { makeStyles } from '@material-ui/core/styles';
 import { DatasetSelectWithModal } from './DatasetSelectWithModal';
 import { DatabaseSelectWidget } from './DatabaseSelectWidget';
 import { UserSearchWidget } from './UserSearchWidget';
+import { TableSelectWidget } from './TableSelectWidget';
+import { GroupSearchWidget } from './GroupSearchWidget';
 
 const useMultiSelectStyles = makeStyles((theme) => ({
   chips: {
@@ -145,4 +147,6 @@ export const customWidgets = {
   DatasetSelectWidget: DatasetSelectWithModal,
   DatabaseSelectWidget: DatabaseSelectWidget,
   UserSearchWidget: UserSearchWidget,
+  TableSelectWidget: TableSelectWidget,
+  GroupSearchWidget: GroupSearchWidget,
 };

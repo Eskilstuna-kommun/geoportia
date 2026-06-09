@@ -98,9 +98,15 @@ catalog:
 #    - type: file
 #      target: ../../examples/entities.yaml
 
-    # GeoPortia Metadata template
+    # GeoPortia Metadata template — file-based dataset
     - type: file
-      target: ../../plugins/geoportia-metadata/templates/template.yaml
+      target: ../../plugins/geoportia-metadata/templates/mainDataset-file.yaml
+      rules:
+        - allow: [Template]
+
+    # GeoPortia Metadata template — database-based dataset
+    - type: file
+      target: ../../plugins/geoportia-metadata/templates/mainDataset-db.yaml
       rules:
         - allow: [Template]
 

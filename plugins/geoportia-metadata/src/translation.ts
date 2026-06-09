@@ -94,6 +94,16 @@ export const geoportiaMetadataTranslationRef = createTranslationRef({
             'Z min must be smaller than Z max.',
         },
       },
+      tableSelect: {
+        placeholder: 'Select a table...',
+        loadingTables: 'Loading tables...',
+        selectDatabaseHelper: 'Select a database to see available tables',
+        noTables: 'No tables found for the selected database',
+      },
+      groupSelect: {
+        placeholder: 'Search group...',
+        placeholderMultiple: 'Search and select groups...',
+      },
     },
     metadataViewer: {
       saved: 'Metadata saved!',
