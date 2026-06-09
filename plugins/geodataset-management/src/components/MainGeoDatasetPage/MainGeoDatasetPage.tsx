@@ -135,9 +135,37 @@ export const MainGeoDatasetPage = () => {
       const response = await catalogApi.getEntities({
         filter: { kind: 'MetadataEntry' },
       });
-      const entries: DatasetEntry[] = response.items.map((entity, index) => {
+
+      // Show entries that have any metadata stored. Entries with no
+      // metadata at all (legacy stubs / empty rows) are hidden so the list
+      // reflects real datasets. The mapper handles both the new template
+      // structure (generalInfo / dataSource / ownership / history /
+      // security / sourceType) and the legacy layer-spec shape.
+      const newTemplateEntities = response.items.filter(entity => {
+        const m =
+          (entity.spec?.metadata as Record<string, unknown> | undefined) ?? {};
+        return Object.keys(m).length > 0;
+      });
+
+      const entries: DatasetEntry[] = newTemplateEntities.map((entity, index) => {
         const specMetadata =
           (entity.spec?.metadata as Record<string, unknown>) ?? {};
+
+        // --- New template structure (huvuddatamängd file/db) ---
+        const generalInfo =
+          (specMetadata.generalInfo as Record<string, unknown>) ?? {};
+        const dataSourceNew =
+          (specMetadata.dataSource as Record<string, unknown>) ?? {};
+        const ownership =
+          (specMetadata.ownership as Record<string, unknown>) ?? {};
+        const history =
+          (specMetadata.history as Record<string, unknown>) ?? {};
+        const security =
+          (specMetadata.security as Record<string, unknown>) ?? {};
+        const sourceType = specMetadata.sourceType as string | undefined;
+
+        // --- Legacy / layer-spec template structure (kept so old entries
+        // still show up in the list and can be deleted) ---
         const layerInfo =
           (specMetadata.layerInfo as Record<string, unknown>) ?? specMetadata;
         const databaseInfo =
@@ -147,38 +175,91 @@ export const MainGeoDatasetPage = () => {
         const attributesRaw =
           (specMetadata.attributes as Array<Record<string, unknown>>) ?? [];
 
-        const securityClass = layerInfo.securityClass as string | undefined;
-        const status = layerInfo.status as string | undefined;
+        // Vector/table attributes from new DB template, if present.
+        const vectorBlock =
+          (dataSourceNew.vector as Record<string, unknown>) ?? {};
+        const tableBlock =
+          (dataSourceNew.table as Record<string, unknown>) ?? {};
+        const newAttributesRaw =
+          (vectorBlock.attributes as Array<Record<string, unknown>>) ??
+          (tableBlock.attributes as Array<Record<string, unknown>>) ??
+          [];
+
+        // Treat 'Välj...' (placeholder) as missing.
+        const cleanString = (v: unknown): string | undefined => {
+          if (typeof v !== 'string') return undefined;
+          if (v === '' || v === 'Välj...') return undefined;
+          return v;
+        };
+
+        const securityClass =
+          cleanString(security.securityClass) ??
+          cleanString(layerInfo.securityClass);
+        const status =
+          cleanString(generalInfo.metadataStatus) ??
+          cleanString(layerInfo.status);
         const titel =
-          (layerInfo.title as string) ??
-          (layerInfo.layerName as string) ??
+          cleanString(generalInfo.title) ??
+          cleanString(layerInfo.title) ??
+          cleanString(layerInfo.layerName) ??
           entity.metadata.title ??
           entity.metadata.name ??
           'Untitled';
         const sammanfattning =
-          (layerInfo.summary as string) ??
-          (layerInfo.description as string) ??
+          cleanString(generalInfo.summary) ??
+          cleanString(layerInfo.summary) ??
+          cleanString(layerInfo.description) ??
           '';
         const oppenData =
           typeof layerInfo.openData === 'boolean'
             ? (layerInfo.openData as boolean)
-            : securityClass === 'Öppen data';
+            : securityClass?.startsWith('Inget skyddsbehov') ?? false;
 
-        const rawContact = layerInfo.contactPerson as unknown;
+        const rawContact =
+          ownership.mainDatasetContact ??
+          ownership.metadataContact ??
+          layerInfo.contactPerson;
         const contactPerson: string[] | undefined = Array.isArray(rawContact)
           ? (rawContact as string[])
           : typeof rawContact === 'string' && rawContact.length > 0
           ? [rawContact]
           : undefined;
 
-        const source = nestedMetadata.source as string | undefined;
-        const quality = nestedMetadata.quality as string | undefined;
-        const collection = nestedMetadata.dataCollectionMethod as
-          | string
-          | undefined;
-        const processing = nestedMetadata.processingMethod as
-          | string
-          | undefined;
+        const source =
+          cleanString(history.source) ?? cleanString(nestedMetadata.source);
+        const quality =
+          cleanString(history.quality) ?? cleanString(nestedMetadata.quality);
+        const collection =
+          cleanString(history.dataCollectionMethod) ??
+          cleanString(nestedMetadata.dataCollectionMethod);
+        const processing =
+          cleanString(history.processingSteps) ??
+          cleanString(nestedMetadata.processingMethod);
+
+        const subjectAreaRaw = generalInfo.subjectArea ?? nestedMetadata.subjectArea;
+        const subjectArea = Array.isArray(subjectAreaRaw)
+          ? (subjectAreaRaw as string[]).join(', ')
+          : (cleanString(subjectAreaRaw) as string | undefined);
+
+        // Database / dataset info — prefer new dataSource block, fall back to
+        // legacy databaseInfo. For file templates, dataType is derived from
+        // sourceType + fileType.
+        const database =
+          cleanString(dataSourceNew.database) ??
+          cleanString(databaseInfo.database);
+        const dataType =
+          cleanString(dataSourceNew.dataType) ??
+          cleanString(dataSourceNew.fileType) ??
+          cleanString(databaseInfo.dataType);
+        const dataset =
+          cleanString(vectorBlock.dataset) ??
+          cleanString(databaseInfo.dataset);
+        const allowAttachments =
+          typeof vectorBlock.allowAttachments === 'boolean'
+            ? (vectorBlock.allowAttachments as boolean)
+            : typeof databaseInfo.allowAttachments === 'boolean'
+            ? (databaseInfo.allowAttachments as boolean)
+            : undefined;
 
         const describedEntityRef =
           (entity.metadata.annotations?.[
@@ -193,6 +274,9 @@ export const MainGeoDatasetPage = () => {
         const isDeleted =
           entity.metadata.annotations?.['geoportia.se/deleted'] === 'true' ||
           (entity.spec as { deleted?: boolean } | undefined)?.deleted === true;
+
+        const mergedAttributesRaw =
+          newAttributesRaw.length > 0 ? newAttributesRaw : attributesRaw;
 
         return {
           id: entity.metadata.name ?? String(index),
@@ -209,29 +293,30 @@ export const MainGeoDatasetPage = () => {
           suggestedTitle: layerInfo.suggestedTitle as string | undefined,
           protectionClassLabel: securityClass,
           contactPerson,
-          owner: layerInfo.suggestedOwnerEnhet as string | undefined,
-          database: databaseInfo.database as string | undefined,
-          dataType: databaseInfo.dataType as string | undefined,
-          dataset: databaseInfo.dataset as string | undefined,
-          allowAttachments:
-            typeof databaseInfo.allowAttachments === 'boolean'
-              ? (databaseInfo.allowAttachments as boolean)
-              : undefined,
-          adminRoutine: nestedMetadata.administrationRoutine as
-            | string
-            | undefined,
-          maintenanceFrequency: nestedMetadata.maintenanceFrequency as
-            | string
-            | undefined,
-          subjectArea: nestedMetadata.subjectArea as string | undefined,
-          originHistory: nestedMetadata.originHistory as string | undefined,
+          owner:
+            cleanString(ownership.owner) ??
+            (layerInfo.suggestedOwnerEnhet as string | undefined),
+          database,
+          dataType: sourceType === 'file' && dataType ? `Fil — ${dataType}` : dataType,
+          dataset,
+          allowAttachments,
+          adminRoutine:
+            cleanString(ownership.administrationRoutine) ??
+            cleanString(nestedMetadata.administrationRoutine),
+          maintenanceFrequency:
+            cleanString(ownership.maintenanceFrequency) ??
+            cleanString(nestedMetadata.maintenanceFrequency),
+          subjectArea,
+          originHistory: cleanString(nestedMetadata.originHistory),
           source,
           quality,
           dataCollectionMethod: collection,
           processingMethod: processing,
-          boundingBoxType: nestedMetadata.boundingBoxType as string | undefined,
-          datasetStatus: nestedMetadata.datasetStatus as string | undefined,
-          attributes: attributesRaw.map(a => ({
+          boundingBoxType: cleanString(nestedMetadata.boundingBoxType),
+          datasetStatus:
+            cleanString(ownership.datasetStatus) ??
+            cleanString(nestedMetadata.datasetStatus),
+          attributes: mergedAttributesRaw.map(a => ({
             name: a.name as string | undefined,
             alias: a.alias as string | undefined,
             description: a.description as string | undefined,

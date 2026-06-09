@@ -70,8 +70,11 @@ export async function createRouter({
   });
 
   parentRouter.get('/:entityRef', async (req, res, next) => {
-    // Skip to OpenAPI router for paths it handles
-    if (req.params.entityRef?.includes('/') || req.params.entityRef === 'suggestions') {
+    // Defer the literal `/suggestions` path to the OpenAPI router that owns it.
+    // Note: real entity refs (e.g. `metadataentry:default/foo`) are URL-encoded
+    // by the client, so Express delivers them as a single param value that may
+    // contain a `/` after decoding — that is expected and must NOT be skipped.
+    if (req.params.entityRef === 'suggestions') {
       return next();
     }
     try {

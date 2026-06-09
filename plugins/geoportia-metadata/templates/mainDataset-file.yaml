@@ -1,9 +1,9 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: geoportia-metadata-template
-  title: Main dataset template
-  description: En mall för att samla in och hantera metadata för en huvuddatamängd
+  name: geoportia-metadata-template-file
+  title: Huvuddatamängd — Filbaserad
+  description: Mall för att samla in metadata för en filbaserad huvuddatamängd
 spec:
   owner: user:guest
   type: service
@@ -100,9 +100,9 @@ spec:
     # ============================================================
     # 2. Datakälla — Fil
     # ============================================================
-    - title: Datakälla — Fil
+    - title: Datakälla
       properties:
-        dataSourceFile:
+        dataSource:
           title: Datakälla — Fil
           type: object
           ui:field: GeoPortiaMetadataField
@@ -121,7 +121,7 @@ spec:
                   description: Kan innehålla wildcard (t.ex. * för tilad bild).
                 fileType:
                   type: string
-                  title: Filtyp (Raster / Filbaserad databas / Fil)
+                  title: Filtyp
                   enum:
                     - 'Välj...'
                     - 'Raster'
@@ -129,404 +129,131 @@ spec:
                     - 'Fil'
                   default: 'Välj...'
 
-                # --- a. Raster (visas när fileType = Raster) ---
-                raster:
-                  type: object
-                  title: Raster
-                  properties:
-                    rasterFileFormat:
-                      type: string
-                      title: Rasterfilformat
-                      enum:
-                        - 'Välj...'
-                        - 'GeoTIFF'
-                        - 'ECW'
-                        - 'JPEG2000'
-                        - 'IMG (ERDAS)'
-                        - 'PNG'
-                        - 'JPG'
-                        - 'MrSID'
-                        - 'Annat'
-                      default: 'Välj...'
-                    resolution:
-                      type: string
-                      title: Upplösning
-                    bands:
-                      type: string
-                      title: Band
-                      description: Specifikation av band (väntar på förtydligande av datamodell).
-                    nullValue:
-                      type: string
-                      title: Null-värde
-                      description: Den siffra som motsvarar null.
-                    temporalResolution:
-                      type: string
-                      title: Temporal upplösning
-
-                # --- b. Filbaserad databas (visas när fileType = Filbaserad databas) ---
-                fileBasedDatabase:
-                  type: object
-                  title: Filbaserad databas
-                  properties:
-                    uniqueIdentifier:
-                      type: string
-                      title: Unik identifierare för huvuddatamängden
-                    geometryType:
-                      type: string
-                      title: Geometrityp
-                      enum:
-                        - 'Välj...'
-                        - 'Linje'
-                        - 'Yta'
-                        - 'Punkt'
-                        - 'Ingen geometri'
-                      default: 'Välj...'
-
-                # --- c. Fil (visas när fileType = Fil) ---
-                file:
-                  type: object
-                  title: Fil
-                  properties:
-                    # NOTE: vallista för Format behöver fastställas av kunden.
-                    format:
-                      type: string
-                      title: Format
-                      enum:
-                        - 'Välj...'
-                        - 'SHP'
-                        - 'GeoJSON'
-                        - 'KML'
-                        - 'GML'
-                        - 'CSV'
-                        - 'TAB'
-                        - 'Annat'
-                      default: 'Välj...'
-                    geometryType:
-                      type: string
-                      title: Geometrityp
-                      enum:
-                        - 'Välj...'
-                        - 'Linje'
-                        - 'Yta'
-                        - 'Punkt'
-                        - 'Ingen geometri'
-                      default: 'Välj...'
-
-                # Spatialt referenssystem (plan och höjd) - SKA INTE VISAS NÄR INGEN GEOMETRI ÄR VALD
+                # Spatialt referenssystem (lagras som EPSG-kod)
                 spatialReferenceSystem:
-                  type: object
-                  title: Spatialt referenssystem (plan och höjd)
-                  properties:
-                    horizontal:
-                      type: string
-                      title: Plan
-                      description: Lagras som EPSG-kod.
-                      enum:
-                        - ''
-                        - 'EPSG:3006'
-                        - 'EPSG:4326'
-                        - 'EPSG:3010'
-                      enumNames:
-                        - 'Välj...'
-                        - 'SWEREF99 TM (EPSG:3006)'
-                        - 'WGS 84 (EPSG:4326)'
-                        - 'SWEREF99 16 30 (EPSG:3010)'
-                      default: ''
-                    vertical:
-                      type: string
-                      title: Höjd
-                      description: Lagras som EPSG-kod.
-                      enum:
-                        - ''
-                        - 'EPSG:5613'
-                        - 'EPSG:5701'
-                      enumNames:
-                        - 'Välj...'
-                        - 'RH 2000 (EPSG:5613)'
-                        - 'RH 70 (EPSG:5701)'
-                      default: ''
+                  type: string
+                  title: Spatialt referenssystem
+                  description: Lagras som EPSG-kod.
+                  enum:
+                    - ''
+                    - 'EPSG:3006'
+                    - 'EPSG:4326'
+                    - 'EPSG:3010'
+                  enumNames:
+                    - 'Välj...'
+                    - 'SWEREF99 TM (EPSG:3006)'
+                    - 'WGS 84 (EPSG:4326)'
+                    - 'SWEREF99 16 30 (EPSG:3010)'
+                  default: ''
+              # Conditional subsections: only render the block matching the
+              # selected fileType. RJSF merges the matching `oneOf` branch into
+              # the form schema.
+              dependencies:
+                fileType:
+                  oneOf:
+                    # Placeholder branch — nothing extra rendered for "Välj..."
+                    - properties:
+                        fileType:
+                          enum:
+                            - 'Välj...'
+
+                    # --- Raster ---
+                    - properties:
+                        fileType:
+                          enum:
+                            - 'Raster'
+                        raster:
+                          type: object
+                          title: Raster
+                          properties:
+                            rasterFileFormat:
+                              type: string
+                              title: Rasterfilformat
+                              enum:
+                                - 'Välj...'
+                                - 'GeoTIFF'
+                                - 'ECW'
+                                - 'JPEG2000'
+                                - 'IMG (ERDAS)'
+                                - 'PNG'
+                                - 'JPG'
+                                - 'MrSID'
+                                - 'Annat'
+                              default: 'Välj...'
+                            resolution:
+                              type: string
+                              title: Upplösning
+                            bands:
+                              type: string
+                              title: Band
+                              description: Specifikation av band (väntar på förtydligande av datamodell).
+                            nullValue:
+                              type: string
+                              title: Null-värde
+                              description: Den siffra som motsvarar null.
+                            temporalResolution:
+                              type: string
+                              title: Temporal upplösning
+
+                    # --- Filbaserad databas ---
+                    - properties:
+                        fileType:
+                          enum:
+                            - 'Filbaserad databas'
+                        fileBasedDatabase:
+                          type: object
+                          title: Filbaserad databas
+                          properties:
+                            uniqueIdentifier:
+                              type: string
+                              title: Unik identifierare för huvuddatamängden
+                            geometryType:
+                              type: string
+                              title: Geometrityp
+                              enum:
+                                - 'Välj...'
+                                - 'Linje'
+                                - 'Yta'
+                                - 'Punkt'
+                                - 'Ingen geometri'
+                              default: 'Välj...'
+
+                    # --- Fil ---
+                    - properties:
+                        fileType:
+                          enum:
+                            - 'Fil'
+                        file:
+                          type: object
+                          title: Fil
+                          properties:
+                            format:
+                              type: string
+                              title: Format
+                              enum:
+                                - 'Välj...'
+                                - 'SHP'
+                                - 'GeoJSON'
+                                - 'KML'
+                                - 'GML'
+                                - 'CSV'
+                                - 'TAB'
+                                - 'Annat'
+                              default: 'Välj...'
+                            geometryType:
+                              type: string
+                              title: Geometrityp
+                              enum:
+                                - 'Välj...'
+                                - 'Linje'
+                                - 'Yta'
+                                - 'Punkt'
+                                - 'Ingen geometri'
+                              default: 'Välj...'
             geoportiaMetadataUiSchema: {}
 
     # ============================================================
-    # 3. Datakälla — DB
-    # ============================================================
-    - title: Datakälla — DB
-      properties:
-        dataSourceDb:
-          title: Datakälla — DB
-          type: object
-          ui:field: GeoPortiaMetadataField
-          ui:options:
-            headerTitle: Datakälla — DB
-            showSidebar: true
-            geoportiaMetadataSchema:
-              properties:
-                database:
-                  type: string
-                  title: Databas
-                databaseOwner:
-                  type: string
-                  title: Databasanvändare (dataägare)
-                dataType:
-                  type: string
-                  title: Datatyp (Raster / Vektor / Tabell)
-                  enum:
-                    - 'Välj...'
-                    - 'Raster'
-                    - 'Vektor'
-                    - 'Tabell'
-                  default: 'Välj...'
-
-                # --- a. Raster (visas när dataType = Raster) ---
-                raster:
-                  type: object
-                  title: Raster
-                  properties:
-                    resolution:
-                      type: string
-                      title: Upplösning
-                    bands:
-                      type: string
-                      title: Band
-                      description: Specifikation av band (väntar på förtydligande av datamodell).
-                    nullValue:
-                      type: string
-                      title: Null-värde
-                    temporalResolution:
-                      type: string
-                      title: Temporal upplösning
-                    spatialReferenceSystem:
-                      type: object
-                      title: Spatialt referenssystem (plan och höjd)
-                      properties:
-                        horizontal:
-                          type: string
-                          title: Plan
-                          enum:
-                            - ''
-                            - 'EPSG:3006'
-                            - 'EPSG:4326'
-                            - 'EPSG:3010'
-                          enumNames:
-                            - 'Välj...'
-                            - 'SWEREF99 TM (EPSG:3006)'
-                            - 'WGS 84 (EPSG:4326)'
-                            - 'SWEREF99 16 30 (EPSG:3010)'
-                          default: ''
-                        vertical:
-                          type: string
-                          title: Höjd
-                          enum:
-                            - ''
-                            - 'EPSG:5613'
-                            - 'EPSG:5701'
-                          enumNames:
-                            - 'Välj...'
-                            - 'RH 2000 (EPSG:5613)'
-                            - 'RH 70 (EPSG:5701)'
-                          default: ''
-
-                # --- b. Vektor (visas när dataType = Vektor) ---
-                vector:
-                  type: object
-                  title: Vektor
-                  properties:
-                    geometryType:
-                      type: string
-                      title: Geometrityp
-                      description: ESRI-/PostGIS-specifika alternativ.
-                      enum:
-                        - 'Välj...'
-                        - 'Punkt'
-                        - 'Linje'
-                        - 'Yta'
-                        - 'Multipoint'
-                        - 'Multilinje'
-                        - 'Multipolygon'
-                        - 'Ingen geometri'
-                      default: 'Välj...'
-                    allowAttachments:
-                      type: boolean
-                      title: Tillåt bilagor
-                      description: ESRI-specifikt.
-                      default: false
-                    spatialReferenceSystem:
-                      type: object
-                      title: Spatialt referenssystem (plan och höjd)
-                      description: Styr filtrering av datasetslistan och skapande av nytt dataset.
-                      properties:
-                        horizontal:
-                          type: string
-                          title: Plan
-                          enum:
-                            - ''
-                            - 'EPSG:3006'
-                            - 'EPSG:4326'
-                            - 'EPSG:3010'
-                          enumNames:
-                            - 'Välj...'
-                            - 'SWEREF99 TM (EPSG:3006)'
-                            - 'WGS 84 (EPSG:4326)'
-                            - 'SWEREF99 16 30 (EPSG:3010)'
-                          default: ''
-                        vertical:
-                          type: string
-                          title: Höjd
-                          enum:
-                            - ''
-                            - 'EPSG:5613'
-                            - 'EPSG:5701'
-                          enumNames:
-                            - 'Välj...'
-                            - 'RH 2000 (EPSG:5613)'
-                            - 'RH 70 (EPSG:5701)'
-                          default: ''
-                    # Dataset (ESRI-specifikt) - välj eller skapa nytt
-                    dataset:
-                      type: string
-                      title: Dataset
-                      description: Välj befintligt eller skapa nytt (ESRI-specifikt).
-                    # Attributspecifikation - knappar (Skapa i databas / Hämta /
-                    # Översikt) implementeras i widgeten.
-                    attributes:
-                      type: array
-                      title: Attributspecifikation
-                      items:
-                        type: object
-                        properties:
-                          name:
-                            type: string
-                            title: Namn
-                          alias:
-                            type: string
-                            title: Alias (FTL-namn)
-                          description:
-                            type: string
-                            title: Beskrivning
-                          dataFormat:
-                            type: string
-                            title: Dataformat
-                          length:
-                            type: string
-                            title: Längd
-                          securityClass:
-                            type: string
-                            title: Skyddsklass
-                            enum:
-                              - 'Välj...'
-                              - 'Inget skyddsbehov'
-                              - 'Begränsat skyddsbehov'
-                              - 'Måttligt skyddsbehov'
-                              - 'Högt skyddsbehov'
-                              - 'Mycket högt skyddsbehov'
-                            default: 'Välj...'
-                          domain:
-                            type: string
-                            title: Domän
-                          allowEmptyValues:
-                            type: boolean
-                            title: Tillåt tomma värden
-                            default: false
-
-                # --- c. Tabell (visas när dataType = Tabell) ---
-                table:
-                  type: object
-                  title: Tabell
-                  properties:
-                    tableEntity:
-                      type: string
-                      title: Tabell
-                      description: Välj från befintliga Table-entiteter som refererar vald databas.
-                    # Attributspecifikation - knappar (Skapa databas / Hämta /
-                    # Översikt) implementeras i widgeten.
-                    attributes:
-                      type: array
-                      title: Attributspecifikation
-                      items:
-                        type: object
-                        properties:
-                          name:
-                            type: string
-                            title: Namn
-                          alias:
-                            type: string
-                            title: Alias (FTL-namn)
-                          description:
-                            type: string
-                            title: Beskrivning
-                          dataFormat:
-                            type: string
-                            title: Dataformat
-                          length:
-                            type: string
-                            title: Längd
-                          securityClass:
-                            type: string
-                            title: Skyddsklass
-                            enum:
-                              - 'Välj...'
-                              - 'Inget skyddsbehov'
-                              - 'Begränsat skyddsbehov'
-                              - 'Måttligt skyddsbehov'
-                              - 'Högt skyddsbehov'
-                              - 'Mycket högt skyddsbehov'
-                            default: 'Välj...'
-                          domain:
-                            type: string
-                            title: Domän
-                          allowEmptyValues:
-                            type: boolean
-                            title: Tillåt tomma värden
-                            default: false
-
-                # Datamängdsnamn - databas, användare, dataset är redan kända
-                datasetName:
-                  type: string
-                  title: Datamängdsnamn
-            geoportiaMetadataUiSchema:
-              database:
-                'ui:widget': DatabaseSelectWidget
-              databaseOwner:
-                'ui:widget': UserSearchWidget
-              vector:
-                dataset:
-                  'ui:widget': DatasetSelectWidget
-                attributes:
-                  'ui:options':
-                    addButtonText: Skapa nytt attribut
-                    emptyMessage: Inga attribut än. Klicka på knappen ovan för att lägga till ett.
-                    tableColumns:
-                      - name
-                      - alias
-                      - securityClass
-                      - description
-                      - domain
-                  items:
-                    description:
-                      'ui:widget': 'textarea'
-                      'ui:options':
-                        rows: 3
-              table:
-                tableEntity:
-                  'ui:widget': TableSelectWidget
-                attributes:
-                  'ui:options':
-                    addButtonText: Skapa nytt attribut
-                    emptyMessage: Inga attribut än. Klicka på knappen ovan för att lägga till ett.
-                    tableColumns:
-                      - name
-                      - alias
-                      - securityClass
-                      - description
-                      - domain
-                  items:
-                    description:
-                      'ui:widget': 'textarea'
-                      'ui:options':
-                        rows: 3
-
-    # ============================================================
-    # 4. Ägarskap och förvaltning
+    # 3. Ägarskap och förvaltning
     # ============================================================
     - title: Ägarskap och förvaltning
       required:
@@ -616,7 +343,7 @@ spec:
                 'ui:widget': UserSearchWidget
 
     # ============================================================
-    # 5. Tillkomsthistorik
+    # 4. Tillkomsthistorik
     # ============================================================
     - title: Tillkomsthistorik
       required:
@@ -706,7 +433,7 @@ spec:
                   rows: 4
 
     # ============================================================
-    # 6. Säkerhet och åtkomst (inkluderar Restriktioner + Behörigheter)
+    # 5. Säkerhet och åtkomst
     # ============================================================
     - title: Säkerhet och åtkomst
       required:
@@ -742,13 +469,10 @@ spec:
                 legalBasis:
                   type: string
                   title: Lagrum
-
-                # --- 4. Restriktioner och behörigheter ---
                 restrictionsAndPermissions:
                   type: object
                   title: Restriktioner och behörigheter
                   properties:
-                    # a. Restriktioner
                     restrictions:
                       type: object
                       title: Restriktioner
@@ -779,8 +503,6 @@ spec:
                         otherRestrictions:
                           type: string
                           title: Övriga restriktioner
-
-                    # b. Behörigheter
                     permissions:
                       type: object
                       title: Behörigheter
@@ -832,9 +554,6 @@ spec:
                           title: Enskilda redigeringsbehörigheter
                           items:
                             type: string
-                        # NOTE: "Visa behörigheter att läsa/redigera" är
-                        # render-only vy som ska implementeras i UI, ej i
-                        # template-input.
             geoportiaMetadataUiSchema:
               legalBasis:
                 'ui:widget': 'textarea'
@@ -873,7 +592,7 @@ spec:
       name: Log values
       action: debug:log
       input:
-        message: 'Metadata collected'
+        message: 'Metadata collected (file-based)'
 
     - id: store-metadata
       name: Store Metadata
@@ -884,18 +603,17 @@ spec:
           type: object
           properties:
             generalInfo: ${{ parameters.generalInfo.schema }}
-            dataSourceFile: ${{ parameters.dataSourceFile.schema }}
-            dataSourceDb: ${{ parameters.dataSourceDb.schema }}
+            dataSource: ${{ parameters.dataSource.schema }}
             ownership: ${{ parameters.ownership.schema }}
             history: ${{ parameters.history.schema }}
             security: ${{ parameters.security.schema }}
         metadata:
           generalInfo: ${{ parameters.generalInfo.metadata }}
-          dataSourceFile: ${{ parameters.dataSourceFile.metadata }}
-          dataSourceDb: ${{ parameters.dataSourceDb.metadata }}
+          dataSource: ${{ parameters.dataSource.metadata }}
           ownership: ${{ parameters.ownership.metadata }}
           history: ${{ parameters.history.metadata }}
           security: ${{ parameters.security.metadata }}
+        sourceType: file
 
   output:
     links:
