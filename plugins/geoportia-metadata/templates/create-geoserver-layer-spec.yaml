@@ -11,26 +11,35 @@ spec:
   parameters:
     - title: CommonInformation
       description: Allmän information
-      required:
-        - databasspecifikation
-        - status
       properties:
-        databasspecifikation:
-          title: Primärdatamängd
+        entityRef:
+          title: Metadatapost
           type: string
-          description: Välj primärdatamängd för kartlagret
+          description: Välj den huvuddatamängd du vill basera kartlagerspecifikationen på
           ui:field: EntityPicker
           ui:options:
             catalogFilter:
               kind: MetadataEntry
             defaultKind: MetadataEntry
-            status:
+        metadata:
+          title: Föreslagen metadata
+          type: object
+          ui:field: GeoserverCommonInformationField
+          ui:options:
+            headerTitle: Föreslagen metadata
+            headerDescription: Redigera fälten nedan för att skapa kartlagerspecifikationen
+            showSidebar: true
+            requireEntityRef: true
+            geoserverMetadataSchema:
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  title: Titel på kartlagret
         name:
           type: string
           title: Namn på kartlagret
-        titel:
-          type: string
-          title: Titel på kartlagret
         abstract:
           type: string
           title: Sammanfattning för kartlagret
@@ -154,7 +163,7 @@ spec:
         workspace: '{{ parameters.Geoserver.workspace }}'
         datastore: '{{ parameters.Geoserver.datastore }}'
         nativeName: '{{ parameters.CommonInformation.name }}'
-        title: '{{ parameters.CommonInformation.titel }}'
+        title: '{{ parameters.CommonInformation.metadata.layerInfo.title }}'
         srs: 'EPSG:3006'
         enabled: true
         abstract: '{{ parameters.CommonInformation.abstract }}'
