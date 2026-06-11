@@ -1,14 +1,14 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FieldExtensionComponentProps } from '@backstage/plugin-scaffolder-react';
 import { useApi } from '@backstage/core-plugin-api';
 import { catalogApiRef } from '@backstage/plugin-catalog-react';
 import { useAsync } from 'react-use';
 import { JsonObject } from '@backstage/types';
-
 import type {
   GeoserverCommonInformationFieldUiOptions,
   GeoserverCommonInformationFieldValue,
 } from './types';
+import { Input } from '@material-ui/core';
 
 export const GeoserverCommonInformationField = (
   props: FieldExtensionComponentProps<GeoserverCommonInformationFieldValue>,
@@ -50,10 +50,7 @@ export const GeoserverCommonInformationField = (
   const [title, setTitle] = useState<string>('');
 
   useEffect(() => {
-    if (
-      prefillData?.metadata &&
-      rawMetadataSchema
-    ) {
+    if (prefillData?.metadata && rawMetadataSchema) {
       onChange({
         schema: { type: 'object', ...rawMetadataSchema },
         metadata: {
@@ -76,14 +73,11 @@ export const GeoserverCommonInformationField = (
   }, [prefillData]);
 
   return (
-    <div>
-      <input
-        type="text"
-        placeholder="Enter layer title"
-        value={title}
-        onChange={e => setTitle(e.target.value)}
-        style={{ marginBottom: '1rem', width: '100%' }}
-      />
-    </div>
+    <Input
+      type="text"
+      placeholder="Titel på kartlagret"
+      value={title}
+      onChange={e => setTitle(e.target.value)}
+    />
   );
 };

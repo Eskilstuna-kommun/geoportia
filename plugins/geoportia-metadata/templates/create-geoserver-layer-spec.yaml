@@ -15,7 +15,7 @@ spec:
         entityRef:
           title: Metadatapost
           type: string
-          description: Välj den metadatapost du vill basera kartlagerspecifikationen på
+          description: Välj den huvuddatamängd du vill basera kartlagerspecifikationen på
           ui:field: EntityPicker
           ui:options:
             catalogFilter:
@@ -40,9 +40,6 @@ spec:
         name:
           type: string
           title: Namn på kartlagret
-        title:
-          type: string
-          title: Titel på kartlagret
         abstract:
           type: string
           title: Sammanfattning för kartlagret
