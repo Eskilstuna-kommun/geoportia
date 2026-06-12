@@ -104,6 +104,9 @@ export const geoportiaMetadataTranslationRef = createTranslationRef({
         placeholder: 'Search group...',
         placeholderMultiple: 'Search and select groups...',
       },
+      entitySelect: {
+        placeholder: 'Select...',
+      },
     },
     metadataViewer: {
       saved: 'Metadata saved!',

@@ -7,6 +7,7 @@ import {
   Typography,
   Box,
 } from '@material-ui/core';
+import { DISCRIMINATOR_MAPPINGS } from '../../config';
 
 type JsonObject = Record<string, unknown>;
 
@@ -58,41 +59,13 @@ const resolveDependencyBranch = (
   return {};
 };
 
-/**
- * Legacy-data fallback for schemas that were saved BEFORE the templates were
- * restructured to use `dependencies`. Those rows still have `raster`, `vector`,
- * `table`, `fileBasedDatabase`, `file` as plain root properties next to a
- * `dataType` / `fileType` discriminator. Without this, every subsection would
- * render unconditionally on edit.
- *
- * Maps: discriminator field name -> { enum value -> subsection property name }.
- * The keys/values mirror the new template structure so existing data lines up.
- */
-const LEGACY_DISCRIMINATORS: Record<string, Record<string, string>> = {
-  dataType: {
-    Raster: 'raster',
-    Vektor: 'vector',
-    Tabell: 'table',
-  },
-  fileType: {
-    Raster: 'raster',
-    'Filbaserad databas': 'fileBasedDatabase',
-    Fil: 'file',
-  },
-};
 
-/**
- * Given an object's static properties and the current values, return the set
- * of property keys that should be hidden because they belong to an inactive
- * legacy discriminator branch. Properties not referenced by any discriminator
- * are never hidden.
- */
 const legacyHiddenKeys = (
   properties: Record<string, JsonSchema>,
   obj: JsonObject,
 ): Set<string> => {
   const hidden = new Set<string>();
-  for (const [discriminatorKey, branchMap] of Object.entries(LEGACY_DISCRIMINATORS)) {
+  for (const [discriminatorKey, branchMap] of Object.entries(DISCRIMINATOR_MAPPINGS)) {
     if (!(discriminatorKey in properties)) continue;
     const selected = obj[discriminatorKey];
     const activeKey =

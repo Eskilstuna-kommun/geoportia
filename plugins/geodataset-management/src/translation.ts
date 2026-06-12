@@ -171,5 +171,10 @@ export const geodatasetManagementTranslationRef = createTranslationRef({
       manageActiveProposals: 'Manage Active Proposals Content',
       managementAgreement: 'Management Agreement Content',
     },
+    placeholders: {
+      select: 'Select',
+      selectEllipsis: 'Select...',
+      dash: '—',
+    },
   },
 });
