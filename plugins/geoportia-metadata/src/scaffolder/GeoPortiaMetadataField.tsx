@@ -33,7 +33,7 @@ const SmartArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
 export const GeoPortiaMetadataField = (
   props: FieldExtensionComponentProps<GeoPortiaMetadataFieldValue>,
 ) => {
-  const { onChange, formData, uiSchema, formContext } = props;
+  const { onChange, formData, uiSchema, formContext, registry } = props;
 
   const { t } = useTranslationRef(geoportiaMetadataTranslationRef);
   const catalogApi = useApi(catalogApiRef);
@@ -270,6 +270,7 @@ export const GeoPortiaMetadataField = (
         idPrefix="geoportia-metadata"
         templates={templates}
         widgets={customWidgets}
+        fields={registry?.fields}
         formContext={rjsfFormContext}
         liveValidate
         showErrorList={false}

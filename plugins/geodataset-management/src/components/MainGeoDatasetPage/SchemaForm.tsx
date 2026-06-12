@@ -7,6 +7,7 @@ import {
   Typography,
   Box,
 } from '@material-ui/core';
+import { DISCRIMINATOR_MAPPINGS } from '../../config';
 
 type JsonObject = Record<string, unknown>;
 
@@ -19,6 +20,14 @@ export type JsonSchema = {
   enum?: unknown[];
   items?: JsonSchema;
   format?: string;
+  dependencies?: Record<
+    string,
+    {
+      oneOf?: Array<{
+        properties?: Record<string, JsonSchema & { enum?: unknown[] }>;
+      }>;
+    }
+  >;
 };
 
 const getType = (schema: JsonSchema): string => {
@@ -28,12 +37,47 @@ const getType = (schema: JsonSchema): string => {
   return schema.type ?? 'string';
 };
 
-/**
- * Render a small set of plain Material-UI inputs from a JSON schema.
- * Object properties get a section heading + recursive render.
- * Anything we can't handle (arrays of objects, oneOf/anyOf, …) is shown
- * read-only as JSON so the user knows it's there but isn't editable here.
- */
+const resolveDependencyBranch = (
+  dep: { oneOf?: Array<{ properties?: Record<string, JsonSchema & { enum?: unknown[] }> }> },
+  discriminatorKey: string,
+  currentValue: unknown,
+): Record<string, JsonSchema> => {
+  const branches = dep.oneOf ?? [];
+  for (const branch of branches) {
+    const discriminator = branch.properties?.[discriminatorKey];
+    const allowed = discriminator?.enum;
+    if (!Array.isArray(allowed)) continue;
+    if (!allowed.includes(currentValue)) continue;
+    // Found the matching branch — return the *extra* properties it adds.
+    const extras: Record<string, JsonSchema> = {};
+    for (const [k, v] of Object.entries(branch.properties ?? {})) {
+      if (k === discriminatorKey) continue;
+      extras[k] = v;
+    }
+    return extras;
+  }
+  return {};
+};
+
+
+const legacyHiddenKeys = (
+  properties: Record<string, JsonSchema>,
+  obj: JsonObject,
+): Set<string> => {
+  const hidden = new Set<string>();
+  for (const [discriminatorKey, branchMap] of Object.entries(DISCRIMINATOR_MAPPINGS)) {
+    if (!(discriminatorKey in properties)) continue;
+    const selected = obj[discriminatorKey];
+    const activeKey =
+      typeof selected === 'string' ? branchMap[selected] : undefined;
+    for (const subsectionKey of Object.values(branchMap)) {
+      if (subsectionKey === activeKey) continue;
+      if (subsectionKey in properties) hidden.add(subsectionKey);
+    }
+  }
+  return hidden;
+};
+
 export const SchemaForm: React.FC<{
   schema: JsonSchema;
   value: unknown;
@@ -44,6 +88,23 @@ export const SchemaForm: React.FC<{
 
   if (type === 'object' && schema.properties) {
     const obj = (value as JsonObject) ?? {};
+
+    const extras: Record<string, JsonSchema> = {};
+    if (schema.dependencies) {
+      for (const [discriminatorKey, dep] of Object.entries(schema.dependencies)) {
+        const currentValue = obj[discriminatorKey];
+        Object.assign(extras, resolveDependencyBranch(dep, discriminatorKey, currentValue));
+      }
+    }
+
+    // Hide inactive subsections from legacy (pre-`dependencies`) schemas.
+    const hidden = legacyHiddenKeys(schema.properties, obj);
+
+    const allEntries: Array<[string, JsonSchema]> = [
+      ...Object.entries(schema.properties).filter(([key]) => !hidden.has(key)),
+      ...Object.entries(extras),
+    ];
+
     return (
       <Box ml={level === 0 ? 0 : 2} mt={level === 0 ? 0 : 1}>
         {schema.title && level > 0 && (
@@ -51,7 +112,7 @@ export const SchemaForm: React.FC<{
             {schema.title}
           </Typography>
         )}
-        {Object.entries(schema.properties).map(([key, sub]) => (
+        {allEntries.map(([key, sub]) => (
           <SchemaForm
             key={key}
             schema={{ ...sub, title: sub.title ?? key }}
@@ -134,8 +195,6 @@ export const SchemaForm: React.FC<{
     );
   }
 
-  // Fallback: read-only JSON preview for things we don't render (arrays,
-  // unions, etc.). The value is preserved untouched on save.
   return (
     <Box mt={1}>
       <Typography variant="caption" color="textSecondary">

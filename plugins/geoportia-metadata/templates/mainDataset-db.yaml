@@ -1,0 +1,734 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: geoportia-metadata-template-db
+  title: Huvuddatamängd — Databasbaserad
+  description: Mall för att samla in metadata för en databasbaserad huvuddatamängd
+spec:
+  owner: user:guest
+  type: service
+
+  parameters:
+    # ============================================================
+    # 1. Allmän information
+    # ============================================================
+    - title: Allmän information
+      required:
+        - generalInfo
+      properties:
+        generalInfo:
+          title: Allmän information
+          type: object
+          ui:field: GeoPortiaMetadataField
+          ui:options:
+            headerTitle: Allmän information
+            showSidebar: true
+            geoportiaMetadataSchema:
+              required:
+                - title
+                - summary
+                - subjectArea
+                - geographicExtent
+                - metadataStatus
+              properties:
+                title:
+                  type: string
+                  title: Titel
+                summary:
+                  type: string
+                  title: Sammanfattning
+                subjectArea:
+                  type: array
+                  title: Ämnesområde
+                  uniqueItems: true
+                  items:
+                    type: string
+                    enum:
+                      - 'Administrativa gränser - offentligt bestämda avgränsningar av ett område'
+                      - 'Arealtäckande bilder och baskartor - arealtäckande bilder och topografiska kartor'
+                      - 'Areella näringar - skötsel av djur eller odling av grödor'
+                      - 'Atmosfär, klimatologi och meteorologi - processer och fenomen i atmosfären'
+                      - 'Biologi och ekologi - flora och fauna i naturlig miljö'
+                      - 'Byggnader och byggnadskonstruktioner - konstruktioner skapade av människohand'
+                      - 'Ekonomi - ekonomiska aktiviteter, förhållanden och sysselsättning'
+                      - 'Fastigheter och fysisk planering - fastighetsinformation och planinformation för framtida markanvändning'
+                      - 'Försvar - militär infrastruktur och aktiviteter'
+                      - 'Geovetenskap - geovetenskap'
+                      - 'Hälsa hälsa, sjuk- och hälsovård - human ekologi och säkerhet'
+                      - 'Höjddata - höjd över eller under havsytan'
+                      - 'Kust och hav - havs- och kustområden och dess egenskaper'
+                      - 'Miljö - miljöresurser, miljöskydd och bevarande'
+                      - 'Positionering - positionsbestämmande information och tjänster'
+                      - 'Samhälle och kultur - samhällsförhållanden och kultur'
+                      - 'Sjöar och vattendrag - insjövatten, dräneringssystem och deras egenskaper'
+                      - 'Tekniska försörjningssystem - energi-, vatten- och avloppssystem, och infrastruktur och tjänster för kommunikation'
+                      - 'Transporter - infrastruktur och hjälpmedel för att transportera människor och gods'
+                  default: []
+                geographicExtent:
+                  type: string
+                  title: Geografisk utbredning
+                  enum:
+                    - 'Välj...'
+                    - 'Inte applicerbart'
+                    - 'Ej definierad'
+                    - 'Minimal'
+                    - 'Mälardalen'
+                    - 'Södermanland'
+                    - 'Sverige'
+                    - 'Eskilstuna'
+                    - '4M'
+                  default: 'Välj...'
+                metadataStatus:
+                  type: string
+                  title: Status metadata
+                  enum:
+                    - 'Välj...'
+                    - 'Ska sättas'
+                    - 'Raderad'
+                    - 'Förslagen'
+                    - 'Godkänd'
+                    - 'Ska avpubliceras'
+                  default: 'Välj...'
+            geoportiaMetadataUiSchema:
+              summary:
+                'ui:widget': 'textarea'
+                'ui:options':
+                  rows: 4
+              subjectArea:
+                'ui:widget': MultiSelectWidget
+
+    # ============================================================
+    # 2. Datakälla — DB
+    # ============================================================
+    - title: Datakälla
+      properties:
+        dataSource:
+          title: Datakälla — DB
+          type: object
+          ui:field: GeoPortiaMetadataField
+          ui:options:
+            headerTitle: Datakälla — DB
+            showSidebar: true
+            geoportiaMetadataSchema:
+              properties:
+                database:
+                  type: string
+                  title: Databas
+                databaseOwner:
+                  type: string
+                  title: Databasanvändare (dataägare)
+                dataType:
+                  type: string
+                  title: Datatyp
+                  enum:
+                    - 'Välj...'
+                    - 'Raster'
+                    - 'Vektor'
+                    - 'Tabell'
+                  default: 'Välj...'
+                datasetName:
+                  type: string
+                  title: Datamängdsnamn
+              # Conditional subsections: only render the block matching the
+              # selected dataType. RJSF merges the matching `oneOf` branch into
+              # the form schema.
+              dependencies:
+                dataType:
+                  oneOf:
+                    # Placeholder branch — nothing extra rendered for "Välj..."
+                    - properties:
+                        dataType:
+                          enum:
+                            - 'Välj...'
+
+                    # --- Raster ---
+                    - properties:
+                        dataType:
+                          enum:
+                            - 'Raster'
+                        raster:
+                          type: object
+                          title: Raster
+                          properties:
+                            resolution:
+                              type: string
+                              title: Upplösning
+                            bands:
+                              type: string
+                              title: Band
+                              description: Specifikation av band (väntar på förtydligande av datamodell).
+                            nullValue:
+                              type: string
+                              title: Null-värde
+                            temporalResolution:
+                              type: string
+                              title: Temporal upplösning
+                            spatialReferenceSystem:
+                              type: string
+                              title: Spatialt referenssystem
+                              description: Lagras som EPSG-kod.
+                              enum:
+                                - ''
+                                - 'EPSG:3006'
+                                - 'EPSG:4326'
+                                - 'EPSG:3010'
+                              enumNames:
+                                - 'Välj...'
+                                - 'SWEREF99 TM (EPSG:3006)'
+                                - 'WGS 84 (EPSG:4326)'
+                                - 'SWEREF99 16 30 (EPSG:3010)'
+                              default: ''
+
+                    # --- Vektor ---
+                    - properties:
+                        dataType:
+                          enum:
+                            - 'Vektor'
+                        vector:
+                          type: object
+                          title: Vektor
+                          properties:
+                            geometryType:
+                              type: string
+                              title: Geometrityp
+                              description: ESRI-/PostGIS-specifika alternativ.
+                              enum:
+                                - 'Välj...'
+                                - 'Punkt'
+                                - 'Linje'
+                                - 'Yta'
+                                - 'Multipoint'
+                                - 'Multilinje'
+                                - 'Multipolygon'
+                                - 'Ingen geometri'
+                              default: 'Välj...'
+                            allowAttachments:
+                              type: boolean
+                              title: Tillåt bilagor
+                              description: ESRI-specifikt.
+                              default: false
+                            spatialReferenceSystem:
+                              type: string
+                              title: Spatialt referenssystem
+                              description: Lagras som EPSG-kod. Styr filtrering av datasetslistan och skapande av nytt dataset.
+                              enum:
+                                - ''
+                                - 'EPSG:3006'
+                                - 'EPSG:4326'
+                                - 'EPSG:3010'
+                              enumNames:
+                                - 'Välj...'
+                                - 'SWEREF99 TM (EPSG:3006)'
+                                - 'WGS 84 (EPSG:4326)'
+                                - 'SWEREF99 16 30 (EPSG:3010)'
+                              default: ''
+                            dataset:
+                              type: string
+                              title: Dataset
+                              description: Välj befintligt eller skapa nytt (ESRI-specifikt).
+                            attributes:
+                              type: array
+                              title: Attributspecifikation
+                              items:
+                                type: object
+                                properties:
+                                  name:
+                                    type: string
+                                    title: Namn
+                                  alias:
+                                    type: string
+                                    title: Alias (FTL-namn)
+                                  description:
+                                    type: string
+                                    title: Beskrivning
+                                  dataFormat:
+                                    type: string
+                                    title: Dataformat
+                                  length:
+                                    type: string
+                                    title: Längd
+                                  securityClass:
+                                    type: string
+                                    title: Skyddsklass
+                                    enum:
+                                      - 'Välj...'
+                                      - 'Inget skyddsbehov'
+                                      - 'Begränsat skyddsbehov'
+                                      - 'Måttligt skyddsbehov'
+                                      - 'Högt skyddsbehov'
+                                      - 'Mycket högt skyddsbehov'
+                                    default: 'Välj...'
+                                  domain:
+                                    type: string
+                                    title: Domän
+                                  allowEmptyValues:
+                                    type: boolean
+                                    title: Tillåt tomma värden
+                                    default: false
+
+                    # --- Tabell ---
+                    - properties:
+                        dataType:
+                          enum:
+                            - 'Tabell'
+                        table:
+                          type: object
+                          title: Tabell
+                          properties:
+                            tableEntity:
+                              type: string
+                              title: Tabell
+                              description: Välj från befintliga Table-entiteter som refererar vald databas.
+                            attributes:
+                              type: array
+                              title: Attributspecifikation
+                              items:
+                                type: object
+                                properties:
+                                  name:
+                                    type: string
+                                    title: Namn
+                                  alias:
+                                    type: string
+                                    title: Alias (FTL-namn)
+                                  description:
+                                    type: string
+                                    title: Beskrivning
+                                  dataFormat:
+                                    type: string
+                                    title: Dataformat
+                                  length:
+                                    type: string
+                                    title: Längd
+                                  securityClass:
+                                    type: string
+                                    title: Skyddsklass
+                                    enum:
+                                      - 'Välj...'
+                                      - 'Inget skyddsbehov'
+                                      - 'Begränsat skyddsbehov'
+                                      - 'Måttligt skyddsbehov'
+                                      - 'Högt skyddsbehov'
+                                      - 'Mycket högt skyddsbehov'
+                                    default: 'Välj...'
+                                  domain:
+                                    type: string
+                                    title: Domän
+                                  allowEmptyValues:
+                                    type: boolean
+                                    title: Tillåt tomma värden
+                                    default: false
+            geoportiaMetadataUiSchema:
+              database:
+                'ui:widget': DatabaseSelectWidget
+              databaseOwner:
+                'ui:widget': UserSearchWidget
+              vector:
+                dataset:
+                  'ui:widget': DatasetSelectWidget
+                attributes:
+                  'ui:options':
+                    addButtonText: Skapa nytt attribut
+                    emptyMessage: Inga attribut än. Klicka på knappen ovan för att lägga till ett.
+                    tableColumns:
+                      - name
+                      - alias
+                      - securityClass
+                      - description
+                      - domain
+                  items:
+                    description:
+                      'ui:widget': 'textarea'
+                      'ui:options':
+                        rows: 3
+              table:
+                tableEntity:
+                  'ui:widget': TableSelectWidget
+                attributes:
+                  'ui:options':
+                    addButtonText: Skapa nytt attribut
+                    emptyMessage: Inga attribut än. Klicka på knappen ovan för att lägga till ett.
+                    tableColumns:
+                      - name
+                      - alias
+                      - securityClass
+                      - description
+                      - domain
+                  items:
+                    description:
+                      'ui:widget': 'textarea'
+                      'ui:options':
+                        rows: 3
+
+    # ============================================================
+    # 3. Ägarskap och förvaltning
+    # ============================================================
+    - title: Ägarskap och förvaltning
+      required:
+        - ownership
+      properties:
+        ownership:
+          title: Ägarskap och förvaltning
+          type: object
+          ui:field: GeoPortiaMetadataField
+          ui:options:
+            headerTitle: Ägarskap och förvaltning
+            showSidebar: true
+            geoportiaMetadataSchema:
+              required:
+                - owner
+                - administrationRoutine
+                - maintenanceFrequency
+                - archiveOption
+              properties:
+                owner:
+                  type: string
+                  title: Ägare
+                administrationRoutine:
+                  type: string
+                  title: Administrationsrutin
+                  enum:
+                    - 'Välj...'
+                    - 'Informationsägaren gör jobbet själv'
+                    - 'Informationsägaren får stöd av kontaktperson på Projekt- och GIS-avdelningen som står för teknisk kvalitetssäkring'
+                    - 'Informationsägaren ger hela uppdraget till Projekt- och GIS-avdelningen'
+                    - 'Information om förvaltningsprocessen saknas'
+                  default: 'Välj...'
+                maintenanceFrequency:
+                  type: string
+                  title: Underhållsfrekvens
+                  enum:
+                    - 'Välj...'
+                    - 'Okänt - uppdateringsfrekvens är ej känd'
+                    - 'Kontinuerlig - data uppdateras ofta och kontinuerligt'
+                    - 'Dagligen - data uppdateras dagligen'
+                    - 'Veckovis - data uppdateras veckovis'
+                    - 'Var 14:e dag - data uppdateras varannan vecka'
+                    - 'Månadsvis - data uppdateras varje månad'
+                    - 'Kvartalsvis - data uppdateras kvartalsvis'
+                    - 'Halvårsvis - data uppdateras halvårsvis'
+                    - 'Årligen - data uppdateras årligen'
+                    - 'Vid behov - data uppdateras vid behov'
+                    - 'Oregelbundet - data uppdateras med oregelbundna intervall'
+                    - 'Ej planerad - data uppdateras planerad uppdatering'
+                  default: 'Välj...'
+                archiveOption:
+                  type: string
+                  title: Arkiveringsalternativ av datamängd
+                  enum:
+                    - 'Välj...'
+                    - 'Ingen arkivering'
+                    - 'Arkiveras enligt arkivplan'
+                    - 'Arkiveras vid avveckling'
+                    - 'Annan rutin'
+                  default: 'Välj...'
+                datasetStatus:
+                  type: string
+                  title: Status datamängd
+                  enum:
+                    - 'Välj...'
+                    - 'Komplett. Uppdateras eller kompletteras inte längre.'
+                    - 'Planerad men ej tillgänglig för närvarande.'
+                    - 'Under utveckling men ej normal tillgänglig.'
+                    - 'Uppdateras eller kompletteras kontinuerligt.'
+                  default: 'Välj...'
+                managementAgreementDate:
+                  type: string
+                  title: Datum för förvaltningsöverenskommelse
+                  description: 'Format: ÅÅÅÅ-MM-DD'
+                metadataContact:
+                  type: string
+                  title: Metadatakontakt
+                mainDatasetContact:
+                  type: string
+                  title: Huvuddatamängdkontakt
+            geoportiaMetadataUiSchema:
+              owner:
+                'ui:field': EntityPicker
+                'ui:options':
+                  catalogFilter:
+                    kind: Group
+                  defaultKind: Group
+              metadataContact:
+                'ui:widget': UserSearchWidget
+              mainDatasetContact:
+                'ui:widget': UserSearchWidget
+
+    # ============================================================
+    # 4. Tillkomsthistorik
+    # ============================================================
+    - title: Tillkomsthistorik
+      required:
+        - history
+      properties:
+        history:
+          title: Tillkomsthistorik
+          type: object
+          ui:field: GeoPortiaMetadataField
+          ui:options:
+            headerTitle: Tillkomsthistorik
+            showSidebar: true
+            geoportiaMetadataSchema:
+              properties:
+                source:
+                  type: string
+                  title: Källa
+                  enum:
+                    - 'Välj...'
+                    - 'Egen datafångst'
+                    - 'Lantmäteriet'
+                    - 'Trafikverket'
+                    - 'SCB'
+                    - 'Annan myndighet'
+                    - 'Privat aktör'
+                    - 'Annat'
+                  default: 'Välj...'
+                sourceText:
+                  type: string
+                  title: Källa (fritext)
+                quality:
+                  type: string
+                  title: Kvalitet
+                  enum:
+                    - 'Välj...'
+                    - 'Hög'
+                    - 'Medel'
+                    - 'Låg'
+                    - 'Ej bedömd'
+                    - 'Annat'
+                  default: 'Välj...'
+                qualityText:
+                  type: string
+                  title: Kvalitet (fritext)
+                dataCollectionMethod:
+                  type: string
+                  title: Datainsamlingsmetod
+                  enum:
+                    - 'Välj...'
+                    - 'Manuell digitalisering'
+                    - 'Fältmätning'
+                    - 'Fjärranalys'
+                    - 'Skanning'
+                    - 'Import från annan källa'
+                    - 'Beräknad / härledd'
+                    - 'Annat'
+                  default: 'Välj...'
+                processingSteps:
+                  type: string
+                  title: Bearbetningssteg
+                  enum:
+                    - 'Välj...'
+                    - 'Ingen bearbetning'
+                    - 'Filtrering / urval'
+                    - 'Sammanslagning / aggregering'
+                    - 'Topologisk rensning'
+                    - 'Generalisering'
+                    - 'Konvertering mellan format'
+                    - 'Beräkning av nya attribut'
+                    - 'Annat'
+                  default: 'Välj...'
+                processingStepsText:
+                  type: string
+                  title: Bearbetningssteg (fritext)
+            geoportiaMetadataUiSchema:
+              sourceText:
+                'ui:widget': 'textarea'
+                'ui:options':
+                  rows: 2
+              qualityText:
+                'ui:widget': 'textarea'
+                'ui:options':
+                  rows: 2
+              processingStepsText:
+                'ui:widget': 'textarea'
+                'ui:options':
+                  rows: 4
+
+    # ============================================================
+    # 5. Säkerhet och åtkomst
+    # ============================================================
+    - title: Säkerhet och åtkomst
+      required:
+        - security
+      properties:
+        security:
+          title: Säkerhet och åtkomst
+          type: object
+          ui:field: GeoPortiaMetadataField
+          ui:options:
+            headerTitle: Säkerhet och åtkomst
+            showSidebar: true
+            geoportiaMetadataSchema:
+              required:
+                - securityClass
+              properties:
+                securityClass:
+                  type: string
+                  title: Skyddsklass
+                  description: Påverkar öppna-data-valet för kartlagerspec/distribution.
+                  enum:
+                    - 'Välj...'
+                    - 'Inget skyddsbehov - tillgänglig för allmän åtkomst Anm: Ingen eller försumbar skada uppstår vid allmän tillgång till resursen.'
+                    - 'Begränsat skyddsbehov - tillgänglig för behörig Anm: Ringa skada uppstår vid obehörig tillgång till resursen.'
+                    - 'Måttligt skyddsbehov - tillgänglig för behörig Anm: Icke obetydlig skada uppstår vid obehörig tillgång till resursen.'
+                    - 'Högt skyddsbehov - tillgänglig för behörig Anm: Betydande skada uppstår vid obehörig tillgång till resursen.'
+                    - 'Mycket högt skyddsbehov - tillgänglig för behörig Anm: Allvarlig skada uppstår vid obehörig tillgång'
+                  default: 'Välj...'
+                personalData:
+                  type: boolean
+                  title: Personuppgifter
+                  default: false
+                legalBasis:
+                  type: string
+                  title: Lagrum
+                restrictionsAndPermissions:
+                  type: object
+                  title: Restriktioner och behörigheter
+                  properties:
+                    restrictions:
+                      type: object
+                      title: Restriktioner
+                      required:
+                        - accessRestrictions
+                        - usageRestrictions
+                      properties:
+                        accessRestrictions:
+                          type: string
+                          title: Åtkomstrestriktioner
+                          enum:
+                            - 'Välj...'
+                            - 'Inga restriktioner'
+                            - 'Endast för behörig personal'
+                            - 'Endast för intern användning'
+                            - 'Sekretessbelagd enligt lag'
+                          default: 'Välj...'
+                        usageRestrictions:
+                          type: string
+                          title: Restriktioner för användande
+                          enum:
+                            - 'Välj...'
+                            - 'Inga restriktioner'
+                            - 'Endast för internt bruk'
+                            - 'Får ej spridas vidare'
+                            - 'Licensierad användning'
+                          default: 'Välj...'
+                        otherRestrictions:
+                          type: string
+                          title: Övriga restriktioner
+                    permissions:
+                      type: object
+                      title: Behörigheter
+                      properties:
+                        permissionGroups:
+                          type: array
+                          title: Behörighetsgrupper
+                          items:
+                            type: object
+                            required:
+                              - name
+                              - status
+                            properties:
+                              name:
+                                type: string
+                                title: Namn
+                              description:
+                                type: string
+                                title: Beskrivning
+                              members:
+                                type: array
+                                title: Medlemmar (AD)
+                                items:
+                                  type: string
+                              status:
+                                type: string
+                                title: Status
+                                enum:
+                                  - 'Välj...'
+                                  - 'Aktiv'
+                                  - 'Inaktiv'
+                                  - 'Under granskning'
+                                default: 'Välj...'
+                              canRead:
+                                type: boolean
+                                title: Har behörighet att läsa (huvuddatamängder)
+                                default: false
+                              canEdit:
+                                type: boolean
+                                title: Har behörighet att redigera (huvuddatamängder)
+                                default: false
+                        readPermissionMembers:
+                          type: array
+                          title: Enskilda läsbehörigheter
+                          items:
+                            type: string
+                        editPermissionMembers:
+                          type: array
+                          title: Enskilda redigeringsbehörigheter
+                          items:
+                            type: string
+            geoportiaMetadataUiSchema:
+              legalBasis:
+                'ui:widget': 'textarea'
+                'ui:options':
+                  rows: 3
+              restrictionsAndPermissions:
+                restrictions:
+                  otherRestrictions:
+                    'ui:widget': 'textarea'
+                    'ui:options':
+                      rows: 3
+                permissions:
+                  permissionGroups:
+                    'ui:options':
+                      addButtonText: Lägg till behörighetsgrupp
+                      emptyMessage: Inga behörighetsgrupper än.
+                      tableColumns:
+                        - name
+                        - status
+                        - canRead
+                        - canEdit
+                    items:
+                      members:
+                        'ui:widget': UserSearchWidget
+                      description:
+                        'ui:widget': 'textarea'
+                        'ui:options':
+                          rows: 2
+                  readPermissionMembers:
+                    'ui:widget': UserSearchWidget
+                  editPermissionMembers:
+                    'ui:widget': UserSearchWidget
+
+  steps:
+    - id: log
+      name: Log values
+      action: debug:log
+      input:
+        message: 'Metadata collected (db-based)'
+
+    - id: store-metadata
+      name: Store Metadata
+      action: geoportia:metadata:store
+      input:
+        entityRef: metadataentry:default/${{ parameters.generalInfo.metadata.title | lower | replace(" ", "-") }}-metadata
+        schema:
+          type: object
+          properties:
+            generalInfo: ${{ parameters.generalInfo.schema }}
+            dataSource: ${{ parameters.dataSource.schema }}
+            ownership: ${{ parameters.ownership.schema }}
+            history: ${{ parameters.history.schema }}
+            security: ${{ parameters.security.schema }}
+        metadata:
+          generalInfo: ${{ parameters.generalInfo.metadata }}
+          dataSource: ${{ parameters.dataSource.metadata }}
+          ownership: ${{ parameters.ownership.metadata }}
+          history: ${{ parameters.history.metadata }}
+          security: ${{ parameters.security.metadata }}
+        sourceType: db
+
+  output:
+    links:
+      - title: View Metadata Entry
+        icon: catalog
+        entityRef: ${{ steps['store-metadata'].output.entityRef }}
