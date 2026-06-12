@@ -200,6 +200,10 @@ export const geodatasetManagementTranslationRef = createTranslationRef({
         cancel: 'Avbryt',
         errorRequired: 'Namn krävs',
       },
+    placeholders: {
+      select: 'Select',
+      selectEllipsis: 'Select...',
+      dash: '—',
     },
   },
 });
