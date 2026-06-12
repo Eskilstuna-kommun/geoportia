@@ -403,6 +403,7 @@ export const MainGeoDatasetPage = () => {
                 columnOptions={columnOptions}
                 visibleColumns={visibleColumns}
                 onVisibleColumnsChange={setVisibleColumns}
+                toolsToShow={['columnToggle', 'viewSelect', 'filter', 'addView']}
               />
 
               <DatasetPaginationInfo

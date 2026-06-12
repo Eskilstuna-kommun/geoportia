@@ -40,6 +40,7 @@ export type DatasetToolbarProps = {
   columnOptions?: ColumnOption[];
   visibleColumns?: string[];
   onVisibleColumnsChange?: (next: string[]) => void;
+  toolsToShow?: ('columnToggle' | 'viewSelect' | 'filter' | 'addView')[];
 };
 
 export const DatasetToolbar = ({
@@ -52,6 +53,7 @@ export const DatasetToolbar = ({
   columnOptions,
   visibleColumns,
   onVisibleColumnsChange,
+  toolsToShow,
 }: DatasetToolbarProps) => {
   const classes = useMainGeoDatasetStyles();
   const { t } = useTranslationRef(geodatasetManagementTranslationRef);
@@ -101,9 +103,11 @@ export const DatasetToolbar = ({
               ),
             }}
           />
-          <Button variant="outlined" startIcon={<FilterListIcon />}>
-            {t('toolbar.filter')}
-          </Button>
+          {toolsToShow?.includes('filter') && (
+            <Button variant="outlined" startIcon={<FilterListIcon />}>
+              {t('toolbar.filter')}
+            </Button>
+          )}
           <Button
             variant="outlined"
             startIcon={<ViewColumnIcon />}
@@ -138,48 +142,54 @@ export const DatasetToolbar = ({
               );
             })}
           </Menu>
-          <Button variant="outlined" startIcon={<AddIcon />}>
-            {t('toolbar.addView')}
-          </Button>{' '}
+          {toolsToShow?.includes('addView') && (
+            <Button variant="outlined" startIcon={<AddIcon />}>
+              {t('toolbar.addView')}
+            </Button>
+          )}
         </div>
 
-        <div className={classes.toolbarIcon}>
-          <div className={classes.densityGroup}>
-            <Tooltip title={t('toolbar.compactRows')}>
-              <IconButton
-                size="small"
-                className={`${classes.densityButton} ${
-                  rowDensity === 'compact' ? classes.densityButtonActive : ''
-                }`}
-                onClick={() => onRowDensityChange('compact')}
-              >
-                <ViewHeadlineIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={t('toolbar.standardRows')}>
-              <IconButton
-                size="small"
-                className={`${classes.densityButton} ${
-                  rowDensity === 'standard' ? classes.densityButtonActive : ''
-                }`}
-                onClick={() => onRowDensityChange('standard')}
-              >
-                <MenuIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={t('toolbar.comfortableRows')}>
-              <IconButton
-                size="small"
-                className={`${classes.densityButton} ${
-                  rowDensity === 'comfortable' ? classes.densityButtonActive : ''
-                }`}
-                onClick={() => onRowDensityChange('comfortable')}
-              >
-                <ViewStreamIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
+        {toolsToShow?.includes('columnToggle') && (
+          <div className={classes.toolbarIcon}>
+            <div className={classes.densityGroup}>
+              <Tooltip title={t('toolbar.compactRows')}>
+                <IconButton
+                  size="small"
+                  className={`${classes.densityButton} ${
+                    rowDensity === 'compact' ? classes.densityButtonActive : ''
+                  }`}
+                  onClick={() => onRowDensityChange('compact')}
+                >
+                  <ViewHeadlineIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={t('toolbar.standardRows')}>
+                <IconButton
+                  size="small"
+                  className={`${classes.densityButton} ${
+                    rowDensity === 'standard' ? classes.densityButtonActive : ''
+                  }`}
+                  onClick={() => onRowDensityChange('standard')}
+                >
+                  <MenuIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={t('toolbar.comfortableRows')}>
+                <IconButton
+                  size="small"
+                  className={`${classes.densityButton} ${
+                    rowDensity === 'comfortable'
+                      ? classes.densityButtonActive
+                      : ''
+                  }`}
+                  onClick={() => onRowDensityChange('comfortable')}
+                >
+                  <ViewStreamIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </div>
           </div>
-        </div>
+        )}
       </Box>
     </Box>
   );

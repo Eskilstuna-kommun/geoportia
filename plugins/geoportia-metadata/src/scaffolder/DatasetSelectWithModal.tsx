@@ -8,18 +8,10 @@ import {
   Box,
   Button,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  MenuItem,
-  Switch,
   Typography,
 } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import { makeStyles } from '@material-ui/core/styles';
-import useAsyncFn from 'react-use/lib/useAsyncFn';
 import useAsync from 'react-use/lib/useAsync';
 import {
   discoveryApiRef,
@@ -35,6 +27,7 @@ import {
 import { parseEntityRef, stringifyEntityRef } from '@backstage/catalog-model';
 import type { Entity } from '@backstage/catalog-model';
 import { geoportiaMetadataTranslationRef } from '../translation';
+import { CreateDatasetDialog } from '../components/CreateDatasetDialog';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -65,10 +58,7 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
 
   const parentFormData = (formContext as { parentFormData?: unknown })
     ?.parentFormData as Record<string, unknown> | undefined;
-  // The parent "Databas" field may emit either a plain catalog name
-  // ("my-arcgis-sde-database") or a full entity ref ("resource:default/test").
-  // The SDE-backed list returned by the backend uses plain names, so we
-  // normalize here to keep both dropdowns in sync.
+
   const selectedDatabase = useMemo(() => {
     const raw = parentFormData?.database;
     if (typeof raw !== 'string' || !raw) return undefined;
@@ -101,6 +91,7 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
 
   // Optimistic stubs created via the modal that aren't in the catalog yet.
   const [stubNames, setStubNames] = useState<string[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const {
     value: datasets,
@@ -165,118 +156,15 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
     [onChange],
   );
 
-  // ---------- modal state ----------
-  type Versioning = '' | 'NONE' | 'TRADITIONAL' | 'BRANCH';
-  type Status =
-    | ''
-    | 'TO_BE_SET'
-    | 'DELETED'
-    | 'SUGGESTED'
-    | 'APPROVED'
-    | 'TO_BE_UNPUBLISHED';
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newDescription, setNewDescription] = useState('');
-  const [newModalDatabase, setNewModalDatabase] = useState('');
-  const [newVersioning, setNewVersioning] = useState<Versioning>('');
-  const [newAllowZValues, setNewAllowZValues] = useState(false);
-  const [newZMin, setNewZMin] = useState<string>('');
-  const [newZMax, setNewZMax] = useState<string>('');
-  const [newStatus, setNewStatus] = useState<Status>('');
-
-  const handleOpenModal = () => {
-    setNewName('');
-    setNewDescription('');
-    setNewModalDatabase(selectedDatabase ?? '');
-    setNewVersioning('');
-    setNewAllowZValues(false);
-    setNewZMin('');
-    setNewZMax('');
-    setNewStatus('');
-    setModalOpen(true);
-  };
-  const handleCloseModal = () => setModalOpen(false);
-
-  const [createState, createDataset] = useAsyncFn(async () => {
-    const databaseToUse = newModalDatabase || selectedDatabase;
-    if (!databaseToUse) {
-      throw new Error(t('scaffolder.datasetSelect.modal.errorNoDatabase'));
-    }
-    if (
-      sdeBackedDatabases &&
-      !sdeBackedDatabases.includes(databaseToUse)
-    ) {
-      throw new Error(t('scaffolder.datasetSelect.modal.errorNotSdeBacked'));
-    }
-    const datasetName = newName.trim();
-    if (!datasetName) {
-      throw new Error(
-        t('scaffolder.datasetSelect.modal.errorDatasetNameRequired'),
+  const handleCreated = useCallback(
+    (datasetName: string) => {
+      setStubNames(prev =>
+        prev.includes(datasetName) ? prev : [...prev, datasetName],
       );
-    }
-
-    const baseUrl = await discoveryApi.getBaseUrl('geoportia-metadata');
-    const zMinNum = newZMin === '' ? NaN : Number(newZMin);
-    const zMaxNum = newZMax === '' ? NaN : Number(newZMax);
-    const hasValidZExtent =
-      newAllowZValues && Number.isFinite(zMinNum) && Number.isFinite(zMaxNum);
-    if (newAllowZValues && newZMin !== '' && newZMax !== '' && zMinNum >= zMaxNum) {
-      throw new Error(t('scaffolder.datasetSelect.modal.errorZExtentInvalid'));
-    }
-    const response = await fetchApi.fetch(
-      `${baseUrl}/arcgis-sde/databases/${encodeURIComponent(
-        databaseToUse,
-      )}/datasets`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          datasetName,
-          description: newDescription.trim() || undefined,
-          versioning: newVersioning || undefined,
-          isTraditionalVersioned: newVersioning === 'TRADITIONAL',
-          isBranchVersioned: newVersioning === 'BRANCH',
-          allowZValues: newAllowZValues,
-          zExtent: hasValidZExtent
-            ? { min: zMinNum, max: zMaxNum }
-            : undefined,
-          status: newStatus || undefined,
-        }),
-      },
-    );
-
-    if (!response.ok) {
-      const body = await response.text().catch(() => '');
-      throw new Error(
-        t('scaffolder.datasetSelect.modal.errorCreateFailed', {
-          status: String(response.status),
-          statusText: response.statusText,
-          body,
-        }),
-      );
-    }
-    setStubNames(prev =>
-      prev.includes(datasetName) ? prev : [...prev, datasetName],
-    );
-    onChange(datasetName);
-    handleCloseModal();
-  }, [
-    selectedDatabase,
-    newModalDatabase,
-    sdeBackedDatabases,
-    newName,
-    newDescription,
-    newVersioning,
-    newAllowZValues,
-    newZMin,
-    newZMax,
-    newStatus,
-    discoveryApi,
-    fetchApi,
-    onChange,
-    t,
-  ]);
+      onChange(datasetName);
+    },
+    [onChange],
+  );
 
   // ---------- render ----------
   if (loadingDatasets) {
@@ -305,7 +193,7 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
             color="primary"
             size="small"
             startIcon={<AddIcon />}
-            onClick={handleOpenModal}
+            onClick={() => setModalOpen(true)}
             disabled={
               disabled ||
               readonly ||
@@ -381,174 +269,11 @@ export const DatasetSelectWithModal = (props: WidgetProps) => {
         />
       </Box>
 
-      <Dialog
+      <CreateDatasetDialog
         open={modalOpen}
-        onClose={handleCloseModal}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>{t('scaffolder.datasetSelect.modal.title')}</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            required
-            margin="dense"
-            label={t('scaffolder.datasetSelect.modal.name')}
-            placeholder={t('scaffolder.datasetSelect.modal.namePlaceholder')}
-            fullWidth
-            variant="outlined"
-            value={newName}
-            onChange={e => setNewName(e.target.value)}
-            helperText={t('scaffolder.datasetSelect.modal.nameHelper')}
-          />
-          <TextField
-            margin="dense"
-            label={t('scaffolder.datasetSelect.modal.descriptionField')}
-            placeholder={t(
-              'scaffolder.datasetSelect.modal.descriptionPlaceholder',
-            )}
-            fullWidth
-            variant="outlined"
-            value={newDescription}
-            onChange={e => setNewDescription(e.target.value)}
-          />
-          <TextField
-            select
-            required
-            margin="dense"
-            label={t('scaffolder.datasetSelect.modal.database')}
-            fullWidth
-            variant="outlined"
-            value={newModalDatabase}
-            onChange={e => setNewModalDatabase(e.target.value)}
-          >
-            {(sdeBackedDatabases ?? []).map(db => (
-              <MenuItem key={db} value={db}>
-                {db}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            required
-            margin="dense"
-            label={t('scaffolder.datasetSelect.modal.versioning')}
-            fullWidth
-            variant="outlined"
-            value={newVersioning}
-            onChange={e => setNewVersioning(e.target.value as Versioning)}
-          >
-            <MenuItem value="" disabled>
-              {t('scaffolder.datasetSelect.modal.versioningSelect')}
-            </MenuItem>
-            <MenuItem value="NONE">
-              {t('scaffolder.datasetSelect.modal.versioningNone')}
-            </MenuItem>
-            <MenuItem value="TRADITIONAL">
-              {t('scaffolder.datasetSelect.modal.versioningTraditional')}
-            </MenuItem>
-            <MenuItem value="BRANCH">
-              {t('scaffolder.datasetSelect.modal.versioningBranch')}
-            </MenuItem>
-          </TextField>
-          <Box mt={1} mb={1}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={newAllowZValues}
-                  onChange={e => setNewAllowZValues(e.target.checked)}
-                  color="primary"
-                />
-              }
-              label={t('scaffolder.datasetSelect.modal.allowZValues')}
-            />
-          </Box>
-          {newAllowZValues && (
-            <Box display="flex" style={{ gap: 8 }}>
-              <TextField
-                margin="dense"
-                type="number"
-                label={t('scaffolder.datasetSelect.modal.zMin')}
-                fullWidth
-                variant="outlined"
-                value={newZMin}
-                onChange={e => setNewZMin(e.target.value)}
-                helperText={t('scaffolder.datasetSelect.modal.zExtentHelper')}
-              />
-              <TextField
-                margin="dense"
-                type="number"
-                label={t('scaffolder.datasetSelect.modal.zMax')}
-                fullWidth
-                variant="outlined"
-                value={newZMax}
-                onChange={e => setNewZMax(e.target.value)}
-              />
-            </Box>
-          )}
-          <TextField
-            select
-            required
-            margin="dense"
-            label={t('scaffolder.datasetSelect.modal.status')}
-            fullWidth
-            variant="outlined"
-            value={newStatus}
-            onChange={e => setNewStatus(e.target.value as Status)}
-          >
-            <MenuItem value="" disabled>
-              {t('scaffolder.datasetSelect.modal.statusSelect')}
-            </MenuItem>
-            <MenuItem value="TO_BE_SET">
-              {t('scaffolder.datasetSelect.modal.statusToBeSet')}
-            </MenuItem>
-            <MenuItem value="DELETED">
-              {t('scaffolder.datasetSelect.modal.statusDeleted')}
-            </MenuItem>
-            <MenuItem value="SUGGESTED">
-              {t('scaffolder.datasetSelect.modal.statusSuggested')}
-            </MenuItem>
-            <MenuItem value="APPROVED">
-              {t('scaffolder.datasetSelect.modal.statusApproved')}
-            </MenuItem>
-            <MenuItem value="TO_BE_UNPUBLISHED">
-              {t('scaffolder.datasetSelect.modal.statusToBeUnpublished')}
-            </MenuItem>
-          </TextField>
-          {createState.error && (
-            <Typography variant="body2" color="error" style={{ marginTop: 8 }}>
-              {createState.error.message}
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="outlined"
-            onClick={handleCloseModal}
-            disabled={createState.loading}
-          >
-            {t('scaffolder.datasetSelect.modal.back')}
-          </Button>
-          <Button
-            onClick={() => createDataset()}
-            color="primary"
-            variant="contained"
-            disabled={
-              !newName.trim() ||
-              !newModalDatabase ||
-              !newVersioning ||
-              !newStatus ||
-              createState.loading
-            }
-          >
-            {createState.loading ? (
-              <CircularProgress size={20} />
-            ) : (
-              t('scaffolder.datasetSelect.modal.save')
-            )}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onClose={() => setModalOpen(false)}
+        onCreated={handleCreated}
+      />
     </>
   );
 };

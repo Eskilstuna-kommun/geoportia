@@ -116,7 +116,11 @@ export const scaffolderModuleGeoportiaMetadata = createBackendModule({
           }
           if (Object.keys(databases).length > 0) {
             scaffolder.addActions(
-              createCreateArcgisSdeDatasetAction({ databases }),
+              createCreateArcgisSdeDatasetAction({
+                databases,
+                catalogApi: catalogClient,
+                auth,
+              }),
             );
           }
         }

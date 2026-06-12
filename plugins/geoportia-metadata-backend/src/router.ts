@@ -1,6 +1,13 @@
 import express, { Router } from 'express';
-import { HttpAuthService, PermissionsService, UserInfoService } from '@backstage/backend-plugin-api';
+import {
+  AuthService,
+  HttpAuthService,
+  PermissionsService,
+  UserInfoService,
+} from '@backstage/backend-plugin-api';
 import { AuthorizeResult } from '@backstage/plugin-permission-common';
+import { CatalogApi } from '@backstage/catalog-client';
+import { stringifyEntityRef } from '@backstage/catalog-model';
 import { createOpenApiRouter } from './schema/openapi';
 import {
   MetadataEntryCreate,
@@ -28,6 +35,8 @@ export async function createRouter({
   suggestionService,
   permissions,
   arcgisSdeDatabases,
+  catalogApi,
+  auth,
 }: {
   httpAuth: HttpAuthService;
   userInfo: UserInfoService;
@@ -35,6 +44,8 @@ export async function createRouter({
   suggestionService: SuggestionService;
   permissions: PermissionsService;
   arcgisSdeDatabases: ArcgisSdeDatabases;
+  catalogApi: CatalogApi;
+  auth: AuthService;
 }): Promise<express.Router> {
   const parentRouter = Router();
   parentRouter.use(express.json());
@@ -315,6 +326,24 @@ export async function createRouter({
           allowZValues: body.allowZValues,
           zExtent: body.zExtent,
         });
+
+        // Refresh the database Resource entity in the catalog so any related
+        // processing picks up the change.
+        const databaseName = decodeURIComponent(req.params.database);
+        try {
+          const databaseEntityRef = stringifyEntityRef({
+            kind: 'Resource',
+            namespace: 'default',
+            name: databaseName,
+          });
+          const { token } = await auth.getPluginRequestToken({
+            onBehalfOf: await auth.getOwnServiceCredentials(),
+            targetPluginId: 'catalog',
+          });
+          await catalogApi.refreshEntity(databaseEntityRef, { token });
+        } catch (_e) {
+          // best-effort refresh, don't fail the request if this fails
+        }
 
         res.status(201).json(result);
       } catch (error) {
