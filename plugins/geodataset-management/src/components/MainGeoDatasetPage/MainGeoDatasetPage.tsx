@@ -192,6 +192,15 @@ export const MainGeoDatasetPage = () => {
           return v;
         };
 
+        // EntityPicker stores values as full entity refs (e.g.
+        // "group:default/team-a"); strip kind/namespace so we can show the
+        // bare name in the dataset list.
+        const toEntityName = (v: unknown): unknown => {
+          if (typeof v !== 'string') return v;
+          const slashIdx = v.lastIndexOf('/');
+          return slashIdx >= 0 ? v.slice(slashIdx + 1) : v;
+        };
+
         const securityClass =
           cleanString(security.securityClass) ??
           cleanString(layerInfo.securityClass);
@@ -294,7 +303,7 @@ export const MainGeoDatasetPage = () => {
           protectionClassLabel: securityClass,
           contactPerson,
           owner:
-            cleanString(ownership.owner) ??
+            cleanString(toEntityName(ownership.owner)) ??
             (layerInfo.suggestedOwnerEnhet as string | undefined),
           database,
           dataType: sourceType === 'file' && dataType ? `Fil — ${dataType}` : dataType,

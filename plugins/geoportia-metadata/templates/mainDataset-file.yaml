@@ -336,7 +336,11 @@ spec:
                   title: Huvuddatamängdkontakt
             geoportiaMetadataUiSchema:
               owner:
-                'ui:widget': GroupSearchWidget
+                'ui:field': EntityPicker
+                'ui:options':
+                  catalogFilter:
+                    kind: Group
+                  defaultKind: Group
               metadataContact:
                 'ui:widget': UserSearchWidget
               mainDatasetContact:

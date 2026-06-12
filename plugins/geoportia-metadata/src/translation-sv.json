@@ -32,5 +32,6 @@
   "metadataViewer.buttons.save": "Spara",
   "metadataViewer.buttons.edit": "Redigera",
   "metadataViewer.addItem": "Lägg till",
+  "scaffolder.entitySelect.placeholder": "Välj...",
   "common.error": "Fel"
 }
