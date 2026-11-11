@@ -9,6 +9,7 @@ import { MetadataEntryProvider } from './MetadataEntryProvider';
 import { MetadataEntryProcessor } from './MetadataEntryProcessor';
 import { AttributeProvider } from './AttributeProvider';
 import { AttributeProcessor } from './AttributeProcessor';
+import { DataOwnerEntityProvider } from './DataOwnerEntityProvider';
 
 const geoportiaMetadataBackendModule = createBackendModule({
   pluginId: 'catalog',
@@ -55,6 +56,17 @@ const geoportiaMetadataBackendModule = createBackendModule({
 
         const attributeProvider = new AttributeProvider(client, attributeTaskRunner, logger);
         catalog.addEntityProvider(attributeProvider);
+
+        const dataOwnerTaskRunner = scheduler.createScheduledTaskRunner({
+          frequency: { seconds: 5 },
+          timeout: { minutes: 5 },
+        });
+        const dataOwnerProvider = new DataOwnerEntityProvider(
+          client,
+          dataOwnerTaskRunner,
+          logger,
+        );
+        catalog.addEntityProvider(dataOwnerProvider);
 
         // Register processors for bidirectional relation handling
         catalog.addProcessor(new MetadataEntryProcessor());

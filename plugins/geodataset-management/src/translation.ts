@@ -10,6 +10,7 @@ export const geodatasetManagementTranslationRef = createTranslationRef({
       myProposals: 'My Proposals',
       manageActiveProposals: 'Manage Active Proposals',
       managementAgreement: 'Management Agreement',
+      mainDataset: 'Main Dataset',
     },
     toolbar: {
       search: 'Search',
@@ -200,6 +201,7 @@ export const geodatasetManagementTranslationRef = createTranslationRef({
         cancel: 'Avbryt',
         errorRequired: 'Namn krävs',
       },
+    },
     placeholders: {
       select: 'Select',
       selectEllipsis: 'Select...',

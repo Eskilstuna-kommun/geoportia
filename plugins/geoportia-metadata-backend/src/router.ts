@@ -3,6 +3,7 @@ import {
   AuthService,
   HttpAuthService,
   PermissionsService,
+  RootConfigService,
   UserInfoService,
 } from '@backstage/backend-plugin-api';
 import { AuthorizeResult } from '@backstage/plugin-permission-common';
@@ -27,6 +28,8 @@ import {
   createArcgisSdeDataset,
 } from './arcgisSde/arcgisSdeConfig';
 import { NotFoundError, InputError } from '@backstage/errors';
+import { Knex } from 'knex';
+import { createDataOwnerRouter } from './dataOwnerRouter';
 
 export async function createRouter({
   httpAuth,
@@ -37,6 +40,8 @@ export async function createRouter({
   arcgisSdeDatabases,
   catalogApi,
   auth,
+  rootConfig,
+  database,
 }: {
   httpAuth: HttpAuthService;
   userInfo: UserInfoService;
@@ -46,11 +51,25 @@ export async function createRouter({
   arcgisSdeDatabases: ArcgisSdeDatabases;
   catalogApi: CatalogApi;
   auth: AuthService;
+  rootConfig: RootConfigService;
+  database: Knex;
 }): Promise<express.Router> {
   const parentRouter = Router();
   parentRouter.use(express.json());
 
   const openApiRouter = await createOpenApiRouter();
+
+  parentRouter.use(
+    '/data-owner-management',
+    createDataOwnerRouter({
+      httpAuth,
+      userInfo,
+      rootConfig,
+      database,
+      catalogApi,
+      auth,
+    }),
+  );
 
   parentRouter.put('/:entityRef/deleted', async (req, res, next) => {
     try {
