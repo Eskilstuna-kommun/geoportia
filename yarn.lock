@@ -9427,6 +9427,7 @@ __metadata:
     "@backstage/core-plugin-api": "npm:^1.10.7"
     "@backstage/dev-utils": "npm:^1.1.10"
     "@backstage/plugin-catalog-react": "npm:^1.15.3"
+    "@backstage/plugin-permission-react": "npm:^0.4.34"
     "@backstage/test-utils": "npm:^1.7.8"
     "@backstage/theme": "npm:^0.6.6"
     "@internal/backstage-plugin-geoportia-metadata": "workspace:^"
@@ -9436,6 +9437,7 @@ __metadata:
     "@testing-library/jest-dom": "npm:^6.0.0"
     "@testing-library/react": "npm:^14.0.0"
     msw: "npm:^1.0.0"
+    react-use: "npm:^17.2.4"
   peerDependencies:
     react: ^16.13.1 || ^17.0.0 || ^18.0.0
   languageName: unknown

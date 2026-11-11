@@ -63,7 +63,7 @@ export class PostgreSQLDatabaseService {
     let query = `CREATE VIEW ${distributionName}_view AS SELECT * FROM ${tableName}`;
 
     if (whereClause && whereClause.trim() !== '') {
-      query += ` WHERE ${whereClause}`;
+      query += ` ${whereClause}`;
     }
 
     try {

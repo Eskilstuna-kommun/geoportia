@@ -35,3 +35,17 @@ export interface GeoPortiaMetadataFieldUiOptions {
    */
   requireEntityRef?: boolean;
 }
+
+export interface GeoserverCommonInformationFieldValue {
+  schema: RJSFSchema;
+  metadata: Record<string, unknown> | unknown[];
+}
+
+export interface GeoserverCommonInformationFieldUiOptions {
+  geoserverMetadataSchema: RJSFSchema;
+  geoserverMetadataUiSchema?: RJSFUiSchema;
+  headerTitle?: string;
+  headerDescription?: string;
+  showSidebar?: boolean;
+  prefillFromEntity?: string;
+}

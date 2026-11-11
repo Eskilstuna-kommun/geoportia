@@ -10,6 +10,7 @@ import type {
   GeoPortiaMetadataFieldValue,
   GeoPortiaMetadataFieldUiOptions,
 } from './GeoPortiaMetadataField';
+import { GeoserverCommonInformationField } from './GeoserverCommonInformationField';
 
 const PLACEHOLDER_VALUES = new Set(['Välj...', '']);
 
@@ -103,5 +104,13 @@ export const GeoPortiaMetadataFieldExtension = scaffolderPlugin.provide(
     validation: validateGeoPortiaMetadata as any,
   }),
 );
+
+export const GeoserverCommonInformationFieldExtensions =
+  scaffolderPlugin.provide(
+    createScaffolderFieldExtension({
+      name: 'GeoserverCommonInformationField',
+      component: GeoserverCommonInformationField as any,
+    }),
+  );
 
 export type { GeoPortiaMetadataFieldValue, GeoPortiaMetadataFieldUiOptions };

@@ -11,6 +11,7 @@ export type {
 
 export {
   GeoPortiaMetadataFieldExtension,
+  GeoserverCommonInformationFieldExtensions,
   type GeoPortiaMetadataFieldValue,
   type GeoPortiaMetadataFieldUiOptions,
 } from './scaffolder';
