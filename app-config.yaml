@@ -132,6 +132,12 @@ catalog:
       rules:
         - allow: [Template]
 
+    # Create Data Owner template
+    - type: file
+      target: ../../plugins/geoportia-metadata/templates/create-data-owner.yaml
+      rules:
+        - allow: [Template]
+
     # Local example organizational data
     - type: file
       target: ../../examples/org.yaml
