@@ -1,0 +1,184 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-data-owner
+  title: Skapa dataägare
+  description: Skapa en standard Backstage Group-entitet för en dataägare.
+  tags:
+    - data-owner
+spec:
+  owner: group:default/geoportia-admin
+  type: data-owner
+
+  parameters:
+    - title: Dataägare
+      required:
+        - name
+        - internalOrganisation
+        - status
+        - receiveReminders
+      properties:
+        name:
+          title: Katalognamn
+          type: string
+          description: Ett unikt, Backstage-kompatibelt namn, till exempel gis-dataagare.
+          minLength: 1
+          maxLength: 63
+          pattern: '^[a-zA-Z0-9][a-zA-Z0-9._-]*$'
+          ui:help: Använd endast bokstäver, siffror, punkt, bindestreck och understreck.
+          ui:autofocus: true
+        displayName:
+          title: Namn
+          type: string
+          description: Dataägarens visningsnamn. Katalognamnet används om fältet lämnas tomt.
+          minLength: 1
+        description:
+          title: Beskrivning
+          type: string
+          ui:widget: textarea
+          ui:options:
+            rows: 4
+        internalOrganisation:
+          title: Internorganisation
+          type: boolean
+          default: true
+          description: Avmarkera för en extern organisation. Internt organisationsnamn hämtas från organization.name i backendkonfigurationen.
+        status:
+          title: Status
+          type: string
+          enum:
+            - Utkast
+            - Under granskning
+            - Godkänd
+            - Aktiv
+          default: Utkast
+        receiveReminders:
+          title: Ta emot påminnelser
+          type: boolean
+          default: true
+          description: I nya GeoPortia betyder ikryssad ruta att påminnelser ska tas emot.
+        responsible:
+          title: Ansvarig
+          type: string
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              kind: User
+            defaultKind: User
+      dependencies:
+        internalOrganisation:
+          oneOf:
+            - properties:
+                internalOrganisation:
+                  enum: [true]
+                administration:
+                  title: Förvaltning
+                  type: string
+                  ui:field: EntityPicker
+                  ui:options:
+                    catalogFilter:
+                      kind: Group
+                      spec.type: data-owner-hierarchy
+                      spec.hierarchyKind: administration
+                    defaultKind: Group
+                    allowArbitraryValues: false
+            - properties:
+                internalOrganisation:
+                  enum: [false]
+                organisationName:
+                  title: Namn på organisation
+                  type: string
+                  minLength: 1
+                organisationEmail:
+                  title: Mail till organisation
+                  type: string
+                  format: email
+                  minLength: 1
+              required:
+                - organisationName
+                - organisationEmail
+        administration:
+          properties:
+            department:
+              title: Avdelning/Område
+              type: string
+              ui:field: EntityPicker
+              ui:options:
+                catalogFilter:
+                  kind: Group
+                  spec.type: data-owner-hierarchy
+                  spec.hierarchyKind: department
+                defaultKind: Group
+                allowArbitraryValues: false
+        department:
+          properties:
+            unit:
+              title: Enhet
+              type: string
+              ui:field: EntityPicker
+              ui:options:
+                catalogFilter:
+                  kind: Group
+                  spec.type: data-owner-hierarchy
+                  spec.hierarchyKind: unit
+                defaultKind: Group
+                allowArbitraryValues: false
+
+    - title: Databasanvändare
+      properties:
+        databaseUsers:
+          title: Databasanvändare
+          type: array
+          default: []
+          description: Välj databasplattform och användarnamn. Ange aldrig lösenord eller andra autentiseringsuppgifter.
+          items:
+            type: object
+            required:
+              - platform
+              - name
+            properties:
+              platform:
+                title: Databasplattform
+                type: string
+                enum:
+                  - PostgreSQL
+                  - ArcGIS SDE
+              name:
+                title: Namn på databasanvändare
+                type: string
+                minLength: 1
+              description:
+                title: Beskrivning
+                type: string
+            additionalProperties: false
+
+  steps:
+    - id: create-data-owner
+      name: Generera dataägare
+      action: geoportia:dataowner:create
+      input:
+        name: ${{ parameters.name }}
+        displayName: ${{ parameters.displayName or parameters.name }}
+        description: ${{ parameters.description or '' }}
+        internalOrganisation: ${{ parameters.internalOrganisation }}
+        organisationName: ${{ parameters.organisationName }}
+        organisationEmail: ${{ parameters.organisationEmail }}
+        administration: ${{ parameters.administration }}
+        department: ${{ parameters.department }}
+        unit: ${{ parameters.unit }}
+        databaseUsers: ${{ parameters.databaseUsers or [] }}
+        responsible: ${{ parameters.responsible }}
+        status: ${{ parameters.status }}
+        receiveReminders: ${{ parameters.receiveReminders }}
+        managementAgreementHistory: []
+
+  output:
+    text:
+      - title: Genererad entitetsreferens
+        content: ${{ steps['create-data-owner'].output.entityRef }}
+      - title: Genererad katalogfil
+        content: ${{ steps['create-data-owner'].output.catalogInfoPath }}
+      - title: Nästa steg
+        content: >-
+          Katalogfilen har genererats i uppgiftens tillfälliga arbetskatalog.
+          Dataägaren är ännu inte publicerad eller registrerad i katalogen.

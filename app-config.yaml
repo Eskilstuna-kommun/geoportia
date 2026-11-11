@@ -5,6 +5,17 @@ app:
 organization:
   name: Eskilstuna
 
+geoportia:
+  dataOwner:
+    # Adjust these values to match the municipality's approved status list.
+    statuses:
+      - Utkast
+      - Under granskning
+      - Godkänd
+      - Aktiv
+    # Add approved accounts here; entries are display metadata only, never credentials.
+    databaseUsers: []
+
 backend:
   # Used for enabling authentication, secret is shared by all backend plugins
   # See https://backstage.io/docs/auth/service-to-service-auth for
@@ -118,6 +129,12 @@ catalog:
     # Create Database template (admin only)
     - type: file
       target: ../../plugins/geoportia-metadata/templates/create-database.yaml
+      rules:
+        - allow: [Template]
+
+    # Create Data Owner template
+    - type: file
+      target: ../../plugins/geoportia-metadata/templates/create-data-owner.yaml
       rules:
         - allow: [Template]
 

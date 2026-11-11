@@ -58,6 +58,8 @@ export const geoportiaMetadataBackendPlugin = createBackendPlugin({
             arcgisSdeDatabases,
             catalogApi: catalogClient,
             auth,
+            rootConfig,
+            database: client,
           }),
         );
       },
