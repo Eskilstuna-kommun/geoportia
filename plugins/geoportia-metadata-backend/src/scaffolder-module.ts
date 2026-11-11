@@ -11,6 +11,7 @@ import {
   createCreateArcgisSdeDatasetAction,
   createMetadataChangeSuggestionAction,
   createCreateDatabaseAction,
+  createCreateDataOwnerAction,
 } from './actions';
 import { MetadataService } from './services/MetadataService/MetadataService';
 import { SuggestionService } from './services/SuggestionService/SuggestionService';
@@ -48,6 +49,10 @@ export const scaffolderModuleGeoportiaMetadata = createBackendModule({
 
         const catalogClient = new CatalogClient({ discoveryApi: discovery });
         const metadataService = new MetadataService(client, catalogClient, auth);
+
+        scaffolder.addActions(
+          createCreateDataOwnerAction({ rootConfig, catalogClient, auth }),
+        );
 
         // Register the database creation action
         scaffolder.addActions(
