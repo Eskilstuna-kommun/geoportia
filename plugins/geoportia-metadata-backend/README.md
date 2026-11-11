@@ -70,6 +70,23 @@ management screen is available at `/listView` and requires an authenticated
 GeoPortia role for edits; only Admin/Super Admin users can change hierarchy
 value lists.
 
+## Data-owner scaffolder action
+
+The existing scaffolder module registers `geoportia:dataowner:create`. It generates
+a standard Backstage `Group` with `spec.type: data-owner` in the `default`
+namespace, without introducing a custom entity kind or storage API.
+
+- Input: `name` (required, Backstage-compatible entity name), `displayName`
+	(optional, defaults to `name`), and `description` (optional).
+- Output: `entityRef` and `catalogInfoPath` (`catalog-info.yaml`, relative to the
+	task workspace).
+- The action supports dry runs and refuses to overwrite an existing catalog file.
+
+The action only generates the catalog file. A later template can use built-in
+publish actions and `catalog:register` to publish and register it. No data-owner
+form, organisation hierarchy, AD lookup, reminders, agreement history, or admin UI
+is included in this action.
+
 ## Installation
 
 This plugin is installed via the `@internal/backstage-plugin-geoportia-metadata-backend` package. To install it to your backend package, run the following command:
