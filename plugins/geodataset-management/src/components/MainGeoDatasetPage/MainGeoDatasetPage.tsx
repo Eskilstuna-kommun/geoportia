@@ -36,6 +36,7 @@ import { MainDatasetPreviewDialog } from './MainDatasetPreviewDialog';
 import { EditDatasetDialog } from './EditDatasetDialog';
 import { setMetadataEntryDeleted } from './metadataApi';
 import { metadataEntryDeletePermission } from '@internal/backstage-plugin-geoportia-metadata-common';
+import { DataOwnerTable } from './DataOwnerTable';
 
 // Map security class to color
 const mapSecurityClass = (
@@ -477,11 +478,13 @@ export const MainGeoDatasetPage = () => {
               label={t('tabs.managementAgreement')}
               className={classes.tab}
             />
+            <Tab label={t('tabs.mainDataset')} className={classes.tab} />
           </Tabs>
         </Box>
 
         <Box>
-          {activeTab === 0 && (
+          {activeTab === 0 && <DataOwnerTable />}
+          {activeTab === 5 && (
             <>
               <Typography variant="h5" className={classes.pageTitle}>
                 {t('pageTitle.dataOwner')}
