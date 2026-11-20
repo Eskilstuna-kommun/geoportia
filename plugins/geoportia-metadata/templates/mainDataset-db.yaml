@@ -475,13 +475,10 @@ spec:
                   title: Källa
                   enum:
                     - 'Välj...'
-                    - 'Egen datafångst'
-                    - 'Lantmäteriet'
-                    - 'Trafikverket'
-                    - 'SCB'
-                    - 'Annan myndighet'
-                    - 'Privat aktör'
-                    - 'Annat'
+                    - 'Inte känt - När information saknas'
+                    - 'Inte dokumenterat - När information finns men ej är inskriven'
+                    - 'Inte relevant - När beskrivning av tillkomsthistorik inte är tillämpbart'
+                    - 'Originaldata'
                   default: 'Välj...'
                 sourceText:
                   type: string
@@ -505,13 +502,16 @@ spec:
                   title: Datainsamlingsmetod
                   enum:
                     - 'Välj...'
-                    - 'Manuell digitalisering'
-                    - 'Fältmätning'
-                    - 'Fjärranalys'
-                    - 'Skanning'
-                    - 'Import från annan källa'
-                    - 'Beräknad / härledd'
-                    - 'Annat'
+                    - 'Analys'
+                    - 'Fotogrammetrisk. Digital (Digital kamera, DMC)'
+                    - 'Geodetisk. Annan'
+                    - 'Geodetisk. Nätversk-RTK'
+                    - 'Ingen information'
+                    - 'Katografiskt läge'
+                    - 'Mobiltelefon/Surfplatta'
+                    - 'Skärmdigitalisering. Annat underlag'
+                    - 'Skärmdigitalisering. Ortofoto underlag'
+                    - 'Skärmdigitalisering. Skanningsdata'
                   default: 'Välj...'
                 processingSteps:
                   type: string
