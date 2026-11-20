@@ -31,6 +31,9 @@ spec:
                 - geographicExtent
                 - metadataStatus
               properties:
+                datasetName:
+                  type: string
+                  title: Datamängdsnamn
                 title:
                   type: string
                   title: Titel
@@ -126,9 +129,6 @@ spec:
                     - 'Vektor'
                     - 'Tabell'
                   default: 'Välj...'
-                datasetName:
-                  type: string
-                  title: Datamängdsnamn
               # Conditional subsections: only render the block matching the
               # selected dataType. RJSF merges the matching `oneOf` branch into
               # the form schema.
