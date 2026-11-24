@@ -37,6 +37,7 @@ spec:
                 title:
                   type: string
                   title: Titel
+                  maxLength: 100
                 summary:
                   type: string
                   title: Sammanfattning
