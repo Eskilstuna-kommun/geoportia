@@ -41,6 +41,7 @@ spec:
                 summary:
                   type: string
                   title: Sammanfattning
+                  maxLength: 1000
                 subjectArea:
                   type: array
                   title: Ämnesområde
