@@ -1,4 +1,3 @@
-import React from 'react';
 import type { WidgetProps, EnumOptionsType } from '@rjsf/utils';
 import { TextField, FormControl, Select, MenuItem, Checkbox, ListItemText, Chip, Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
@@ -37,7 +36,42 @@ export const FullWidthTextWidget = (props: WidgetProps) => {
       onFocus={(e) => onFocus && onFocus(id, e.target.value)}
       fullWidth
       multiline={multiline}
-      rows={rows}
+      minRows={rows}
+      variant="outlined"
+      size="small"
+    />
+  );
+};
+
+export const CharacterCountTextareaWidget = (props: WidgetProps) => {
+  const {
+    id,
+    readonly,
+    disabled,
+    value,
+    onChange,
+    onBlur,
+    onFocus,
+    schema,
+    uiSchema,
+  } = props;
+  const textValue = typeof value === 'string' ? value : '';
+  const maxLength = schema.maxLength;
+  const rows = uiSchema?.['ui:options']?.rows as number | undefined;
+
+  return (
+    <TextField
+      id={id}
+      disabled={disabled || readonly}
+      value={textValue}
+      onChange={event => onChange(event.target.value === '' ? undefined : event.target.value)}
+      onBlur={event => onBlur && onBlur(id, event.target.value)}
+      onFocus={event => onFocus && onFocus(id, event.target.value)}
+      inputProps={maxLength !== undefined ? { maxLength } : undefined}
+      helperText={maxLength !== undefined ? `${textValue.length} / ${maxLength} tecken` : undefined}
+      fullWidth
+      multiline
+      minRows={rows ?? 4}
       variant="outlined"
       size="small"
     />
@@ -141,6 +175,7 @@ export const MultiSelectWidget = (props: WidgetProps) => {
 export const customWidgets = {
   TextWidget: FullWidthTextWidget,
   TextareaWidget: FullWidthTextWidget,
+  CharacterCountTextareaWidget: CharacterCountTextareaWidget,
   SelectWidget: FullWidthSelectWidget,
   MultiSelectWidget: MultiSelectWidget,
   DatasetSelectWidget: DatasetSelectWithModal,
