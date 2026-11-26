@@ -96,7 +96,7 @@ spec:
                   default: 'Välj...'
             geoportiaMetadataUiSchema:
               summary:
-                'ui:widget': 'textarea'
+                'ui:widget': CharacterCountTextareaWidget
                 'ui:options':
                   rows: 4
               subjectArea:
