@@ -36,7 +36,7 @@ export const FullWidthTextWidget = (props: WidgetProps) => {
       onFocus={(e) => onFocus && onFocus(id, e.target.value)}
       fullWidth
       multiline={multiline}
-      rows={rows}
+      minRows={rows}
       variant="outlined"
       size="small"
     />
