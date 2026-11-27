@@ -472,16 +472,7 @@ spec:
               properties:
                 source:
                   type: string
-                  title: Källa
-                  enum:
-                    - 'Välj...'
-                    - 'Egen datafångst'
-                    - 'Lantmäteriet'
-                    - 'Trafikverket'
-                    - 'SCB'
-                    - 'Annan myndighet'
-                    - 'Privat aktör'
-                    - 'Annat'
+                  title: Källa                  
                   default: 'Välj...'
                 sourceText:
                   type: string
@@ -531,10 +522,41 @@ spec:
                   type: string
                   title: Bearbetningssteg (fritext)
             geoportiaMetadataUiSchema:
-              sourceText:
-                'ui:widget': 'textarea'
+              source:
+                'ui:widget': DropdownTextBoxWidget
                 'ui:options':
+                  valueFieldName: source
+                  textFieldName: sourceText
+                  selectLabel: Källa
+                  textLabel: Källa (fritext)
                   rows: 2
+                  choices:
+                    - id: 'Välj...'
+                      name: 'Välj...'
+                      description: ''
+                    - id: 'Egen datafångst'
+                      name: 'Egen datafångst'
+                      description: 'Egen datafångst'
+                    - id: 'Lantmäteriet'
+                      name: 'Lantmäteriet'
+                      description: 'Lantmäteriet'
+                    - id: 'Trafikverket'
+                      name: 'Trafikverket'
+                      description: 'Trafikverket'
+                    - id: 'SCB'
+                      name: 'SCB'
+                      description: 'SCB'
+                    - id: 'Annan myndighet'
+                      name: 'Annan myndighet'
+                      description: 'Annan myndighet'
+                    - id: 'Privat aktör'
+                      name: 'Privat aktör'
+                      description: 'Privat aktör'
+                    - id: 'Annat'
+                      name: 'Annat'
+                      description: 'Annat'
+              sourceText:
+                'ui:widget': hidden
               qualityText:
                 'ui:widget': 'textarea'
                 'ui:options':
