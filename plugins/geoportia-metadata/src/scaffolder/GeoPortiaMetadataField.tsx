@@ -160,6 +160,23 @@ export const GeoPortiaMetadataField = (
     onChange({ schema: metadataSchema, metadata: newArray });
   }, [metadataSchema, isArraySchema, onChange]);
 
+  //Callback to update fields - used by DropdownTextboxWidget
+  const updateMetadataFields = useCallback(
+    (updates: Record<string, unknown>) => {
+      if (
+        !metadataSchema ||
+        isArraySchema ||
+        Array.isArray(currentMetadataRef.current)
+      ) {
+        return;
+      }
+      const metadata = { ...currentMetadataRef.current, ...updates };
+      currentMetadataRef.current = metadata;
+      onChange({ schema: metadataSchema, metadata });
+    },
+    [metadataSchema, isArraySchema, onChange],
+  );
+
   // Callback to update an existing item in root array
   const updateArrayItem = useCallback((index: number, item: unknown) => {
     if (!metadataSchema || !isArraySchema) return;
@@ -179,12 +196,23 @@ export const GeoPortiaMetadataField = (
     onChange({ schema: metadataSchema, metadata: newArray });
   }, [metadataSchema, isArraySchema, onChange]);
 
-  const rjsfFormContext = useMemo(() => ({
-    addArrayItem: isArraySchema ? addArrayItem : undefined,
-    updateArrayItem: isArraySchema ? updateArrayItem : undefined,
-    deleteArrayItem: isArraySchema ? deleteArrayItem : undefined,
-    parentFormData: formData?.metadata,
-  }), [isArraySchema, addArrayItem, updateArrayItem, deleteArrayItem, formData?.metadata]);
+  const rjsfFormContext = useMemo(
+    () => ({
+      addArrayItem: isArraySchema ? addArrayItem : undefined,
+      updateArrayItem: isArraySchema ? updateArrayItem : undefined,
+      deleteArrayItem: isArraySchema ? deleteArrayItem : undefined,
+      updateMetadataFields: isArraySchema ? undefined : updateMetadataFields,
+      parentFormData: formData?.metadata,
+    }),
+    [
+      isArraySchema,
+      addArrayItem,
+      updateArrayItem,
+      deleteArrayItem,
+      updateMetadataFields,
+      formData?.metadata,
+    ],
+  );
 
   if (isLoadingPrefill) {
     return (

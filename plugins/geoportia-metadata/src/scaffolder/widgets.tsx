@@ -6,6 +6,7 @@ import { DatasetSelectWithModal } from './DatasetSelectWithModal';
 import { DatabaseSelectWidget } from './DatabaseSelectWidget';
 import { UserSearchWidget } from './UserSearchWidget';
 import { TableSelectWidget } from './TableSelectWidget';
+import { DropdownTextBoxWidget } from './DropdownTextBoxWidget';
 
 const useMultiSelectStyles = makeStyles((theme) => ({
   chips: {
@@ -147,4 +148,5 @@ export const customWidgets = {
   DatabaseSelectWidget: DatabaseSelectWidget,
   UserSearchWidget: UserSearchWidget,
   TableSelectWidget: TableSelectWidget,
+  DropdownTextBoxWidget: DropdownTextBoxWidget,
 };
